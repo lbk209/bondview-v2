@@ -1,12 +1,14 @@
-# Skeleton Implementation Strategy
+# Market Stance Skeleton Implementation Strategy
 
 ## Document Purpose
 
-This document defines a strategy for implementing an architectural skeleton before detailed model behavior is developed.
+This document defines the architectural-skeleton implementation strategy for the `market_stance` module of `bondview-v2` before detailed model behavior is developed.
+
+The `market_stance` module converts source-neutral runtime market inputs into derived features, component scores, classified or stabilized states, Duration, Curve, and Credit stances, and a completed market-stance result. This document does not define future ETF review, portfolio exposure measurement, allocation, or reporting modules, except for their possible role as consumers of the completed result.
 
 The skeleton is intended to expose system-wide design problems early, especially problems that would otherwise become visible only while implementing individual blocks, layers, functions, or other detailed units. It focuses on responsibility boundaries, dependency direction, interfaces, output ownership, orchestration, extension behavior, and the runtime data boundary.
 
-The skeleton is not intended to prove the numerical correctness of the final model. Detailed formulas, complete feature definitions, production data acquisition, and full calculation behavior are implemented after the skeleton has been accepted.
+The skeleton is not intended to prove the numerical correctness of the final `market_stance` model. Detailed formulas, complete feature definitions, production data acquisition, and full calculation behavior are implemented after the skeleton has been accepted.
 
 # 1. Purpose and Problem Definition
 
@@ -729,6 +731,8 @@ The following indicate a structural problem:
 
 # 8. Phased Skeleton Implementation
 
+Sections 8.1 through 8.6 are sequential phases within the skeleton stage. All six phases belong to skeleton implementation; detailed feature, unit, and calculation behavior begins only after the Phase 8.6 acceptance review is completed successfully. The phases may overlap locally during implementation, but every phase must be satisfied before the skeleton is accepted.
+
 ## 8.1 Structural Topology
 
 Establish:
@@ -940,9 +944,9 @@ The implementation should preserve at least:
 
 ## 10.4 Independent Contract-Conformance Review
 
-Review should not rely only on Codex’s summary.
+The skeleton acceptance review, and any later review triggered by an architectural-boundary change, should not rely only on Codex’s summary. Ordinary unit-local implementation PRs follow the lighter recurring process in Section 12.4 rather than repeating the full skeleton audit.
 
-The implementation should be compared independently against:
+When a full contract-conformance review is required, the implementation should be compared independently against:
 
 - the architecture contract;
 - this skeleton strategy;
@@ -1076,9 +1080,38 @@ A reasonable progression may include:
 9. labels and strengths;
 10. complete model definitions.
 
-Each implementation should preserve the accepted architecture and include focused validation.
+Each implementation should conform to the accepted skeleton structure and include focused validation.
 
-## 12.4 Transition to Production Data Integration
+## 12.4 Conformance During Detailed Implementation
+
+After skeleton acceptance, detailed implementation should be checked against the completed skeleton through three controls.
+
+### Permanent structural conformance checks
+
+The structural validation scenarios that can be checked reliably should remain as regression checks. They should cover the decisive invariants, including permitted dependency direction, authoritative output ownership, calculate-once reuse, source-neutral calculation boundaries, completed-result construction without recalculation, and use of the accepted orchestration path.
+
+### Lightweight PR change-boundary review
+
+Each implementation task should state the unit or responsibility it is expected to change. Review then compares that expected boundary with the changed-file list and relevant diff. Changes outside the expected boundary are not automatically invalid, but they require an explanation of why the detailed implementation could not remain local.
+
+This recurring review is intentionally lightweight. It does not require regenerating the full dependency graph, comparing every PR with the original skeleton commit, or repeating a complete architecture audit.
+
+### Explicit architectural-change trigger
+
+A deeper architectural review is required only when a change affects an accepted skeleton boundary, such as unit responsibility, an input or output contract, dependency direction, authoritative output ownership, orchestration or dispatch, the runtime input boundary, or the completed-result boundary.
+
+The normal process is therefore:
+
+```text
+every detailed implementation PR
+    → permanent structural checks
+    → lightweight expected-boundary review
+
+only a boundary-changing PR
+    → renewed architectural review
+```
+
+## 12.5 Transition to Production Data Integration
 
 Production data integration should build on the accepted source-neutral input boundary.
 
@@ -1096,7 +1129,7 @@ These additions should populate the existing runtime input contract rather than 
 
 # Summary
 
-The skeleton is a structurally complete, behaviorally simplified implementation intended to expose system-wide design problems before detailed calculations are built.
+The `market_stance` skeleton is a structurally complete, behaviorally simplified implementation intended to expose system-wide design problems before detailed calculations are built.
 
 Its success is measured primarily by locality of later change:
 
@@ -1110,4 +1143,4 @@ leave unrelated units unchanged
 
 Synthetic inputs and stub calculations are appropriate during early skeleton work. Interfaces, responsibility boundaries, output identities, dependency direction, and result structure should nevertheless reflect the intended architecture.
 
-Before the skeleton is accepted, structurally realistic fixtures and a small frozen actual-data sample should confirm that the runtime data boundary is not based on unrealistic assumptions. Live production acquisition and full numerical behavior remain later implementation work.
+Before the skeleton is accepted, structurally realistic fixtures and a small frozen actual-data sample should confirm that the runtime data boundary is not based on unrealistic assumptions. After acceptance, permanent structural checks and lightweight PR change-boundary review confirm that detailed implementations continue to conform to the completed skeleton; full architectural review is reserved for changes that cross an accepted boundary. Live production acquisition and full numerical behavior remain later implementation work.
