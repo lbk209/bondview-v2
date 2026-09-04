@@ -1,434 +1,199 @@
-# Bondview-v2 System Architecture
+# Bondview System Architecture
 
 ## Document Purpose
 
-This document defines the system-level architecture of `bondview-v2`.
+This document defines the system-level architecture of Bondview: its major responsibilities, their relationships and boundaries, and the system-wide principles that should guide future implementation.
 
-The project’s ultimate purpose is to support bond-ETF selection and review. The system separates four different kinds of information before the final ETF decision:
+Detailed model rules, configuration fields, schema definitions, calculator mechanics, diagnostics, and stance-specific scoring belong in their respective module or architecture contracts.
 
-- preferred bond-exposure structure;
-- broader macroeconomic context;
-- FX and currency-hedging information where applicable;
-- ETF- and index-specific information.
+---
 
-This document is authoritative for relationships among major system responsibilities. It does not define the internal calculation contracts of `market_stance` or the detailed model definition of `macro_context`.
+## 1. System Overview
 
-## Related Documents
+Bondview derives bond-exposure stances from market conditions, applies the macro constraints relevant to each stance, and then evaluates how those resulting views map to investable ETFs.
 
 ```text
-bondview_system_architecture.md
-│
-├── market_stance_architecture_contract.md
-├── market_stance_skeleton_implementation_strategy.md
-├── market_stance_capability_contracts.md
-└── macro_context_contract.md
+bond-market analysis              macro conditions analysis
+         └──────────────┬──────────────┘
+                        ↓
+                 stance calculation
+            (Duration / Curve / Credit)
+                        ↓
+                  ETF selection
 ```
 
-Future ETF-selection documentation may be added when that module is designed.
+---
 
-# 1. System Goal
+## 2. System Responsibilities
 
-The final problem is not simply:
+### 2.1 Stance Calculation
 
-> What is the bond-market stance?
+Bondview produces separate analytical stances for Duration, Curve, and Credit.
 
-It is:
+Each stance owns the components, classifications, rule structure, and calculation behavior needed to answer its own economic question.
 
-> Which available bond ETF is appropriate under the current bond-market structure, macroeconomic environment, currency conditions, and instrument characteristics?
-
-The conceptual flow is:
+The common conceptual structure is:
 
 ```text
-bond-market observations
-        ↓
-market_stance
-        ↓
-MarketStanceResult ───────────────┐
-                                  │
-macroeconomic observations        │
-        ↓                         │
-macro_context                     │
-        ↓                         │
-MacroContextResult ───────────────┼──→ ETF selection / review
-                                  │
-FX information ───────────────────┤
-                                  │
-ETF / index information ──────────┘
+stance components
+      ↓
+rule mapping
+      ↓
+core stance
+      ↓
+stance-specific macro constraint
+      ↓
+final stance
 ```
 
-`market_stance` and `macro_context` are sibling analytical inputs. Neither is the final ETF decision.
+#### Rule mapping
 
-# 2. Major Responsibilities
+Rule mapping converts the stance's core market-derived conditions into an economically meaningful core stance.
 
-## 2.1 `market_stance`
+A rule case should primarily represent combinations whose joint state has a distinct economic interpretation. Additional information should not automatically become another rule-case dimension merely because it is available.
 
-`market_stance` evaluates the preferred structure of bond exposure.
+This principle helps keep rule tables interpretable and limits unnecessary Cartesian expansion.
 
-Its initial stance outputs are:
+#### Macro constraints
 
-- Duration;
-- Curve;
-- Credit.
+Macro constraints are applied to a core stance when macroeconomic conditions materially affect how strongly that stance should be expressed.
 
-These outputs answer questions such as:
+They may:
 
-- whether shorter or longer duration is preferable;
-- which maturity or curve positioning is preferable;
-- how much or what quality of credit exposure is preferable.
+* leave the core stance unchanged;
+* strengthen or weaken it;
+* cap its magnitude;
+* restrict a particular direction;
+* reject an exposure only when a genuinely hard condition is justified.
 
-They do not by themselves mean that bonds are absolutely attractive relative to unrelated asset classes.
+Macro constraints are stance-specific. Duration, Curve, and Credit may therefore consume different macro conditions and apply different constraint logic.
 
-## 2.2 `macro_context`
+Macro inputs should be introduced only where their relevance to the affected stance can be economically justified.
 
-`macro_context` describes broader macroeconomic conditions relevant to interpreting the attractiveness of bond exposure.
+Shared constraint mechanics may be reused across stances, while the macro conditions and rules applied by each stance remain stance-specific.
 
-Initial dimensions may include:
+#### Bond-Exposure Stance Set
 
-- growth;
-- inflation;
-- monetary policy;
-- real-rate conditions.
+The final Duration, Curve, and Credit outputs together form the bond-exposure stance set used by ETF selection.
 
-It should not duplicate Duration, Curve, or Credit.
+The stance set represents the system's analytical view of bond-exposure structure after relevant macro constraints have been applied.
 
-It may expose separate scores or states and is not required to collapse all dimensions into one universal macro score.
+It is not itself an ETF recommendation.
 
-## 2.3 FX Information
+Each stance remains separately interpretable because Duration, Curve, and Credit answer different economic questions and may use different components, rule cases, and macro constraints.
 
-FX is distinct from Duration, Curve, and Credit.
+### 2.2 ETF Selection
 
-For a KRW-based investor holding a Korea-listed ETF whose underlying assets are foreign-currency bonds, realized return may depend on:
+ETF selection evaluates how well actual investable instruments express the bond-exposure stance set and whether their instrument-level characteristics justify selection.
 
-- underlying currency;
-- exchange-rate behavior;
-- hedged or unhedged structure;
-- hedge ratio;
-- hedge cost or carry where relevant.
+It may consider representative instrument and market characteristics such as:
 
-FX belongs at the downstream decision boundary unless later complexity justifies a separate `fx_context`.
+* yield or carry;
+* duration or maturity exposure;
+* price behavior;
+* fees and liquidity;
+* tracking or index characteristics;
+* currency or hedging exposure where relevant;
+* the applicable low-risk or risk-free alternative when the decision requires that comparison.
 
-A separate FX module should not be created merely for symmetry.
+ETF selection consumes the final stance outputs rather than recreating Duration, Curve, or Credit logic independently for each ETF.
 
-## 2.4 ETF and Index Information
-
-ETF selection may require information not owned by either analytical context module, including:
-
-- underlying index;
-- effective duration;
-- maturity distribution;
-- credit quality;
-- currency exposure;
-- hedging policy;
-- fees;
-- tracking characteristics;
-- liquidity;
-- market price behavior;
-- premium or discount behavior;
-- distribution characteristics;
-- other instrument-specific constraints.
-
-The detailed ETF-selection model is outside the current contract.
-
-# 3. Relative Exposure Versus Broader Attractiveness
-
-The main semantic separation is:
+The final decision therefore distinguishes between:
 
 ```text
-market_stance
-    → what type of bond exposure is preferable?
+What bond exposure is favored?
+        ↓
+stance calculation
 
-macro_context
-    → what broader macro environment are we in?
-
+Which ETF expresses that exposure appropriately
+and is attractive enough relative to alternatives?
+        ↓
 ETF selection
-    → given both, which instrument should be selected or avoided?
 ```
+---
 
-For example:
+## 3. Cross-Cutting Architecture Principles
 
-```text
-MarketStanceResult
-    Duration: prefer longer
-    Curve: prefer intermediate sector
-    Credit: prefer higher quality
+### 3.1 Data and Observation Boundaries
 
-MacroContextResult
-    Growth: weakening
-    Inflation: easing
-    Policy: easing
-    Real rate: restrictive but falling
-```
+#### Accepted Runtime Inputs
 
-The downstream module can interpret the combination without forcing the same macro information into every stance.
+Data acquisition and source-specific retrieval should remain outside analytical execution once runtime inputs have been accepted.
 
-This keeps two questions separate:
+Raw observations, prepared data, derived features, components, stances, and downstream evaluation inputs should remain distinguishable.
 
-1. relative structure within bond exposure;
-2. broader attractiveness of taking that exposure.
+#### Shared Raw Observations
 
-# 4. Data and Source Architecture
+The same raw observation may legitimately contribute to more than one analytical responsibility.
 
-## 4.1 Source Acquisition Versus Pure Calculation
+Raw-data reuse does not imply shared derived meaning.
 
-External acquisition and pure calculation are separate responsibilities.
+Each derived concept should have one authoritative owner. If multiple responsibilities require the same derived concept with the same semantics, it should be calculated once and reused rather than independently redefined.
 
-```text
-FRED / exchange / vendor / local file
-        ↓
-source adapter
-        ↓
-input assembly
-        ↓
-accepted in-memory snapshot
-        ↓
-analytical execution
-```
+#### Market Identity
 
-FRED download logic may exist in the repository and may even live in a package associated with an analytical module if that organization is useful.
+Analytical outputs are market-specific.
 
-The architectural requirement is narrower:
+The relevant market is determined by the underlying exposure, not merely by the ETF's listing venue. For example, a Korea-listed ETF holding U.S. Treasuries still requires U.S. rates and Treasury-market context for its bond stance interpretation.
 
-> Once an accepted runtime input has been supplied, the pure calculation path must not require network access, credentials, environment-variable lookup, source-specific clients, or file acquisition.
+Investor-currency and hedging considerations belong in ETF selection where they affect the investor’s realized exposure, rather than in the bond-exposure stance calculation.
 
-The source adapter and execution engine may therefore belong to the same broader module while remaining separate responsibilities.
+### 3.2 Shared Calculation Mechanics and Reuse
 
-## 4.2 Shared Raw Observations
+#### Shared Mechanics
 
-The same raw observation may be used by more than one analytical module.
+Reusable calculation mechanics should remain neutral with respect to any one stance.
 
-For example, a policy-rate series may be used:
+Examples include:
 
-- by `market_stance` to construct a bond-market relationship such as a yield-policy spread;
-- by `macro_context` to describe policy conditions.
+* normalization and smoothing;
+* state or bucket classification;
+* stabilization and hysteresis;
+* rule-case construction and score lookup;
+* score clipping;
+* generic constraint application.
 
-This is permitted because raw observations are not exclusively owned by one derived meaning.
+Model-specific configuration determines which mechanics each stance uses and how they are combined. Shared mechanics should not encode Duration-, Curve-, Credit-, or macro-specific economic meaning.
 
-What is prohibited is duplicated ownership of the same derived concept.
+#### Extract on Actual Second Use
 
-If `macro_context` owns an authoritative policy-restrictiveness state, `market_stance` should not independently calculate an equivalent policy-restrictiveness state under another name.
+Shared behavior should be extracted when a second real consumer requires semantically equivalent behavior.
 
-## 4.3 Scenario Coherence
+This improves efficiency and maintainability by preventing duplicated calculation logic without creating speculative shared frameworks.
 
-Outputs combined for one ETF decision should represent a coherent scenario.
+Extraction is appropriate when:
 
-The system should preserve, where relevant:
+* the second use is real;
+* the behavior is semantically equivalent;
+* a neutral input/output contract can be defined without domain-specific leakage.
 
-- observation dates;
-- revision vintages;
-- alignment choices;
-- market or country identity;
-- investor currency;
-- model or configuration version.
+### 3.3 Dependency Direction
 
-# 5. Shared Calculation Mechanics
+Duration, Curve, and Credit should not depend on each other's domain logic merely to reuse calculation mechanics. Behavior shared across stances should be owned by a neutral shared capability.
 
-## 5.1 Avoid Both Premature Generalization and Duplication
+ETF selection consumes the final stance outputs; stance calculations do not depend on ETF-selection logic.
 
-The system should avoid both:
+Macro constraints belong to the stance they affect. Their preparation and generic application mechanics may be shared, but their economic interpretation and rules remain stance-specific.
 
-```text
-premature shared framework        duplicated implementations
-            ✗                             ✗
-```
+### 3.4 Result Boundaries
 
-The preferred rule is:
+Formal stance outputs should preserve the core stance, the final constrained stance, and enough metadata to explain material differences between them.
 
-> Extract on actual second use.
+The exact field structure belongs in the stance/result contract rather than this system-level document.
 
-A calculation may initially live with the module that first genuinely needs it.
+---
 
-If a second sibling module later needs semantically identical behavior, the implementation should be extracted to a neutral owner rather than copied.
+## 4. Architecture Review Triggers
 
-## 5.2 Neutral Ownership
+The system architecture should be reviewed when a proposed change would:
 
-Conceptually:
+* move economic ownership of a derived concept from one responsibility to another;
+* introduce a new major analytical responsibility;
+* make one stance depend on another stance's domain logic;
+* duplicate an authoritative derived concept in multiple places;
+* materially change the public result boundary consumed by downstream responsibilities;
+* move macro information into or out of core rule cases in a way that changes model behavior;
+* introduce shared infrastructure broader than the demonstrated reuse requirement;
+* move ETF-selection logic into stance calculation or stance logic into ETF selection.
 
-```text
-market_stance ─────┐
-                   ↓
-          neutral calculation capability
-                   ↑
-macro_context ─────┘
-```
-
-The neutral owner may initially be one small module rather than a large shared package.
-
-The architecture does not require a hierarchy such as:
-
-```text
-shared/
-    scoring/
-    normalization/
-    classification/
-    stabilization/
-```
-
-unless actual complexity later justifies it.
-
-## 5.3 No Permanent Sibling-to-Sibling Utility Dependency
-
-`macro_context` should not permanently depend on methods semantically owned by a `MarketStanceCalculator`, and `market_stance` should not depend on a `MacroContextCalculator` merely to reuse generic mathematics.
-
-If a method is genuinely generic enough for both sibling modules, that is evidence that its proper owner is neutral.
-
-## 5.4 Extraction Criteria
-
-Extraction is justified when:
-
-- a second module actually needs the behavior;
-- the behavior is semantically equivalent, not merely numerically similar;
-- the input/output contract can be shared without domain leakage;
-- reuse avoids duplicate authoritative logic;
-- extraction does not create more complexity than it removes.
-
-# 6. Market, Investor Currency, and FX
-
-Market identity and investor currency must be considered together when applying `market_stance`, `macro_context`, and ETF-specific information.
-
-The analytical results must describe the market underlying the ETF, while FX becomes relevant when the underlying currency differs from the investor's base currency.
-
-Conceptually:
-
-```text
-market-specific MarketStanceResult ─┐
-                                    │
-market-specific MacroContextResult ─┼──→ ETF selection / review
-                                    │
-FX information, if applicable ──────┤
-                                    │
-ETF / index information ────────────┘
-```
-
-## 6.1 Market Identity
-
-`MarketStanceResult` and `MacroContextResult` MUST preserve enough metadata to identify the market or country context they describe.
-
-For example:
-
-- a U.S.-bond ETF should generally use a U.S. bond-market stance;
-- the associated macro context should generally describe the U.S. macroeconomic environment;
-- a Korean domestic-bond ETF should generally use Korean bond-market and Korean macroeconomic context.
-
-Downstream logic MUST NOT accidentally combine outputs from incompatible markets.
-
-A cross-market combination MAY be supported when deliberately defined, but it must not occur implicitly.
-
-## 6.2 Investor Currency and FX Applicability
-
-FX is relevant when the currency exposure of the underlying investment differs from the investor's base currency.
-
-For a KRW-based investor, relevant FX information for a foreign-bond ETF MAY include:
-
-- underlying currency;
-- KRW exchange-rate behavior;
-- currency-hedged or unhedged structure;
-- hedge ratio;
-- hedge cost or carry where relevant.
-
-For a KRW investor holding ordinary KRW-denominated domestic-bond exposure, foreign-exchange information may be not applicable.
-
-FX applicability is therefore conditional on the relationship among:
-
-- underlying bond market;
-- underlying currency exposure;
-- investor base currency;
-- ETF hedging structure.
-
-## 6.3 Korea-Listed U.S. Bond ETFs
-
-For a KRW investor evaluating a Korea-listed ETF that holds or tracks U.S. bonds, the downstream decision may combine:
-
-- a U.S.-bond `MarketStanceResult`;
-- a U.S.-relevant `MacroContextResult`;
-- USD/KRW and currency-hedging information;
-- ETF- and index-specific information.
-
-The fact that the ETF is listed in Korea does not change the market identity of the underlying bond exposure.
-
-The ETF-selection layer owns the interpretation of how the underlying U.S. bond exposure, macro context, currency exposure, and ETF structure interact.
-
-## 6.4 Korea-Listed Korean Bond ETFs
-
-The same overall architecture can be used for Korea-listed Korean-bond ETFs.
-
-The downstream decision may combine:
-
-- a Korean-bond `MarketStanceResult`;
-- a Korean `MacroContextResult`;
-- ETF- and index-specific information.
-
-For a KRW investor holding KRW-denominated domestic-bond exposure, ordinary foreign-exchange exposure is normally not applicable.
-
-The structural difference from the U.S.-bond case is therefore small. The main changes are the market-specific analytical inputs and the conditional presence or absence of FX information.
-
-## 6.5 Why FX Is Not a Bond Stance
-
-Duration, Curve, and Credit describe dimensions of the underlying bond exposure.
-
-FX describes how foreign-currency exposure is translated into the investor's base-currency return.
-
-```text
-Duration / Curve / Credit
-    → underlying bond-exposure structure
-
-FX
-    → investor-currency translation and hedge exposure
-```
-
-FX therefore SHOULD NOT become a fourth peer stance merely because it affects the final ETF decision.
-
-A separate `fx_context` module also SHOULD NOT be introduced merely for symmetry with `macro_context`.
-
-If FX analysis later develops substantial independent calculation logic, a separate result boundary MAY be considered at that time.
-
-# 7. Result Boundaries
-
-## 7.1 Market Stance Result
-
-The completed market-stance result is authoritative for its declared bond-exposure outputs.
-
-It is not the sole downstream information source.
-
-## 7.2 Macro Context Result
-
-The completed macro-context result is authoritative for its declared macro outputs.
-
-It does not overwrite or reinterpret Duration, Curve, or Credit.
-
-## 7.3 ETF Decision
-
-The ETF-selection responsibility owns the combination of:
-
-- market stance;
-- macro context;
-- FX information where applicable;
-- ETF and index information;
-- later approved instrument-level signals.
-
-Upstream modules should not know which particular ETF will eventually be selected.
-
-# 8. Architectural Review Triggers
-
-System-level architectural review is appropriate when a change:
-
-- moves a major decision responsibility between modules;
-- makes one sibling module unexpectedly depend on another sibling's domain result;
-- changes a public result boundary;
-- introduces a new major context such as an independent FX model;
-- creates a second authoritative producer for the same derived concept;
-- introduces a large shared framework without demonstrated second use;
-- requires ETF-selection logic to reach into upstream internal implementation details.
-
-# 9. Summary
-
-```text
-market_stance ─────────→ MarketStanceResult ───┐
-                                               │
-macro_context ─────────→ MacroContextResult ───┼──→ ETF selection / review
-                                               │
-FX information ────────────────────────────────┤
-                                               │
-ETF / index information ───────────────────────┘
-```
-
-`market_stance` defines preferred bond-exposure structure. `macro_context` describes the broader macro environment. FX represents investor-currency exposure where relevant. ETF-specific information describes the investable instrument. The downstream ETF-selection responsibility combines these distinct inputs.
+Model-specific rule changes may be significant even when the implementation change is technically small.
