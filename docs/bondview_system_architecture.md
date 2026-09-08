@@ -4,7 +4,7 @@
 
 This document defines the system-level architecture of Bondview: its major responsibilities, their relationships and boundaries, and the system-wide principles that should guide future implementation.
 
-Detailed model rules, configuration fields, schema definitions, calculator mechanics, diagnostics, and stance-specific scoring belong in their respective module or architecture contracts.
+Detailed model rules—including stance-specific scoring and schema and configuration definitions—belong in their respective module or architecture contracts.
 
 ---
 
@@ -112,7 +112,7 @@ ETF selection
 ```
 ---
 
-## 3. Cross-Cutting Architecture Principles
+## 3. Architecture Principles
 
 ### 3.1 Data and Observation Boundaries
 
