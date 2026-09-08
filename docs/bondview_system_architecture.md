@@ -50,7 +50,14 @@ final stance
 
 Rule mapping converts the stance's core market-derived conditions into an economically meaningful core stance.
 
-A rule case should primarily represent combinations whose joint state has a distinct economic interpretation. Additional information should not automatically become another rule-case dimension merely because it is available.
+A rule case should primarily represent combinations whose joint state has a distinct economic interpretation.
+
+```text
+credit spreads wide + spreads tightening
+→ positive core Credit stance
+```
+
+Additional information should not automatically become another rule-case dimension merely because it is available.
 
 This principle helps keep rule tables interpretable and limits unnecessary Cartesian expansion.
 
@@ -60,11 +67,16 @@ Macro constraints are applied to a core stance when macroeconomic conditions mat
 
 They may:
 
-* leave the core stance unchanged;
-* strengthen or weaken it;
-* cap its magnitude;
-* restrict a particular direction;
-* reject an exposure only when a genuinely hard condition is justified.
+- leave the core stance unchanged;
+- strengthen or weaken it;
+- cap its magnitude;
+- restrict a particular direction;
+- reject an exposure only when a genuinely hard condition is justified.
+
+```text
+growth weakening + unemployment rising
+→ weaken/cap positive core Credit stance
+```
 
 Macro constraints are stance-specific. Duration, Curve, and Credit may therefore consume different macro conditions and apply different constraint logic.
 
@@ -80,7 +92,7 @@ The stance set represents the system's analytical view of bond-exposure structur
 
 It is not itself an ETF recommendation.
 
-Each stance remains separately interpretable because Duration, Curve, and Credit answer different economic questions and may use different components, rule cases, and macro constraints.
+The stance set preserves Duration, Curve, and Credit as separate outputs rather than collapsing them into a single aggregate score.
 
 ### 2.2 ETF Selection
 
