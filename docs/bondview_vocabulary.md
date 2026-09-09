@@ -14,60 +14,30 @@ Definitions and diagrams in this document describe conceptual meaning and termin
 
 ## 1. Vocabulary Map
 
+The map is a compact guide to the major vocabulary areas defined in this document.
+
 ```text
 Bondview
 │
-├── Modules
-│   ├── Stance Calculation Module
-│   ├── ETF Selection Module
-│   └── Diagnostics Module
+├── System and Architecture
+│   ├── Modules
+│   └── Processing Structure
 │
-├── Processing Structure
-│   ├── Stage
-│   └── Capability
-│
-├── Component and State Model
-│   ├── Raw Observations
-│   ├── Feature
-│   ├── Component
-│   │   ├── Stance Component
-│   │   └── Macro Component
-│   ├── Component Value
-│   ├── Component State
-│   └── State Classification
+├── Component-State Structure
+│   ├── Stance Component
+│   └── Macro Component
 │
 ├── Rule Mapping
-│   ├── Rule Dimension
-│   ├── Rule Case
-│   ├── Rule-Case Construction
-│   ├── Rule Mapping
-│   ├── Rule Table
-│   └── Coverage Strategy
+│   ├── Stance Rule Case → Core Stance
+│   └── Macro Rule Case → Constraint Action
 │
-├── Stance Model
-│   ├── Stance
-│   ├── Stance Type
-│   ├── Stance Rule Case
-│   ├── Core Stance
-│   ├── Macro Rule Case
-│   ├── Constraint Action
-│   ├── Macro Constraint
-│   ├── Final Stance
-│   └── Bond-Exposure Stance Set
+├── Stance and Constraint Integration
 │
 ├── ETF Selection
-│   ├── ETF Universe
-│   ├── Exposure Profile
-│   ├── Stance Fit
-│   ├── Instrument Evaluation
-│   └── ETF Selection
+│
+├── Diagnostics
 │
 └── Model Definition / Interfaces
-    ├── Model Configuration
-    ├── Configuration Schema
-    ├── Resolved Model Specification
-    ├── Result Boundary
-    └── Result Contract
 ```
 
 ---
@@ -97,9 +67,9 @@ Capability
 
 ---
 
-## 3. Component and State Model
+## 3. Component-State Structure
 
-### 3.1 Common concepts
+### 3.1 Core Concepts
 
 The Component / Value / State vocabulary applies to both the market-derived side of stance calculation and the macro side of constraint calculation.
 
@@ -114,7 +84,7 @@ The Component / Value / State vocabulary applies to both the market-derived side
 | **Component State** | The discrete economic condition assigned to a Component. | wide, tightening, rising, easing |
 | **State Classification** | The process that converts a Component Value or other model-ready representation into a Component State. | spread percentile 87 → `wide` |
 
-### 3.2 Common preparation flow
+### 3.2 Component-State Derivation Flow
 
 ```text
 Raw Observations
@@ -146,7 +116,7 @@ Not every model path must physically contain every conceptual step. A Feature ma
 
 ## 4. Rule Mapping
 
-Rule-case construction is a general model structure. Both Stance Components and Macro Components may form Rule Cases when the joint state has an economically meaningful interpretation.
+Rule-case construction is a general model structure. Stance Components and Macro Components may independently form Rule Cases when the joint states within each group have an economically meaningful interpretation.
 
 ### 4.1 General rule-case structure
 
@@ -207,7 +177,9 @@ The existence of a Macro Rule Case does not imply that every stance must have a 
 
 ---
 
-## 5. Stance Model and Macro Constraint
+## 5. Stance and Constraint Integration
+
+This section defines how the Core Stance and Constraint Action combine to produce the authoritative Final Stance.
 
 | Term | Definition | Example |
 |---|---|---|
@@ -215,31 +187,24 @@ The existence of a Macro Rule Case does not imply that every stance must have a 
 | **Stance Type** | The exposure dimension analyzed by a Stance. | Duration, Curve, Credit |
 | **Core Stance** | The market-derived Stance produced from Stance Rule Mapping before Macro Constraint application. | positive Credit |
 | **Constraint Action** | The stance-specific action selected from macro rules for application to a Core Stance. | pass-through, weaken, cap positive magnitude |
-| **Macro Constraint** | The stance-specific constraint process that determines and applies macro-based limits or adjustments to a Core Stance. | rising inflation + tightening policy caps positive Duration |
+| **Macro Constraint** | The stance-specific process that determines and applies macro-based limits or adjustments to a Core Stance. | rising inflation + tightening policy caps positive Duration |
+| **Constraint Application** | The operation that applies a selected Constraint Action to the Core Stance. | cap positive stance at +1 |
 | **Final Stance** | The authoritative Stance after any applicable Macro Constraint and required final processing. | constrained positive Credit |
 | **Bond-Exposure Stance Set** | The combined final Duration, Curve, and Credit outputs consumed by ETF Selection. | Preserves the three Stances rather than collapsing them into one aggregate score. |
 
-### Constraint flow
+### 5.1 Integration Flow
 
 ```text
-Macro Component States
-        ↓
-[Rule-Case Construction]
-        ↓
-Macro Rule Case
-        ↓
-[Constraint Rule Mapping]
-        ↓
-Constraint Action
-        +
 Core Stance
+     +
+Constraint Action
         ↓
 [Constraint Application]
         ↓
 Final Stance
 ```
 
-`Macro Constraint` is the umbrella concept covering the stance-specific macro rules and their application to the Core Stance.
+`Macro Constraint` is the umbrella concept for the stance-specific macro rule interpretation and its application to the Core Stance.
 
 Typical Constraint Actions may include:
 
@@ -252,7 +217,9 @@ directional restriction
 hard rejection
 ```
 
-The economic rule answers:
+### 5.2 Economic Rules vs Application Mechanics
+
+Constraint Rule Mapping answers:
 
 ```text
 Which Constraint Action applies under this Macro Rule Case?
@@ -266,32 +233,32 @@ How is that action applied to the supplied Core Stance?
 
 One Macro Rule Case does not require a separate table entry for every possible Core Stance when the selected Constraint Action has well-defined application semantics.
 
+
 ---
 
 ## 6. ETF Selection
 
 ```text
+ETF Universe
+        +
 Bond-Exposure Stance Set
-          +
-      ETF Universe
-          ↓
-Candidate Preparation
-          ↓
-Exposure Fit Evaluation
-          ↓
-Instrument Evaluation
-          ↓
-ETF Selection
+        ↓
+[Exposure Fit Evaluation]
+        ↓
+[Instrument Evaluation]
+        ↓
+[ETF Selection]
 ```
 
 | Term | Definition |
 |---|---|
-| **ETF Universe** | The investable ETFs eligible for evaluation. |
-| **Candidate ETF** | An ETF currently under consideration in the selection process. |
+| **ETF Universe** | The set of ETFs eligible for stance-fit evaluation. |
 | **Exposure Profile** | The bond exposure represented by an ETF, such as duration/maturity, curve segment, credit exposure, underlying market, and relevant currency/hedging characteristics. |
 | **Stance Fit** | The degree to which an ETF's Exposure Profile expresses the Bond-Exposure Stance Set. |
+| **Exposure Fit Evaluation** | Evaluation of how well each ETF in the ETF Universe expresses the currently favored bond exposure. |
 | **Instrument Evaluation** | Evaluation of ETF-specific attractiveness after Exposure Fit, including relevant yield/carry, price behavior, fees, liquidity, tracking, hedging/currency structure, and alternatives. |
-| **ETF Selection** | The process that determines which evaluated ETFs remain preferred candidates. |
+| **ETF Selection** | The process that determines which evaluated ETFs remain preferred. |
+
 
 ---
 
