@@ -10,7 +10,6 @@ Definitions and diagrams in this document describe conceptual meaning and termin
 
 `bondview-v2` is the current project/repository name. Once it replaces the previous project, the intended system name is **Bondview**.
 
-
 ---
 
 ## 1. Vocabulary Map
@@ -27,16 +26,34 @@ Bondview
 │   ├── Stage
 │   └── Capability
 │
-├── Stance Model
+├── Component and State Model
 │   ├── Raw Observations
 │   ├── Feature
 │   ├── Component
+│   │   ├── Stance Component
+│   │   └── Macro Component
 │   ├── Component Value
-│   ├── State
+│   ├── Component State
+│   └── State Classification
+│
+├── Rule Mapping
+│   ├── Rule Dimension
 │   ├── Rule Case
+│   ├── Rule-Case Construction
+│   ├── Rule Mapping
+│   ├── Rule Table
+│   └── Coverage Strategy
+│
+├── Stance Model
+│   ├── Stance
+│   ├── Stance Type
+│   ├── Stance Rule Case
 │   ├── Core Stance
+│   ├── Macro Rule Case
+│   ├── Constraint Action
 │   ├── Macro Constraint
-│   └── Final Stance
+│   ├── Final Stance
+│   └── Bond-Exposure Stance Set
 │
 ├── ETF Selection
 │   ├── ETF Universe
@@ -64,7 +81,7 @@ Bondview
 | **Stage** | A semantic processing step within a module flow. | A stage does not imply a separate Python file/class. |
 | **Capability** | A defined implementation behavior that performs an operation and may be reused wherever the same semantics are required. | Reuse does not require the word `shared` in the capability name. |
 | **Stance Calculation Module** | Produces Duration, Curve, and Credit stances from market-derived conditions and stance-specific macro constraints. | Owns stance logic. |
-| **ETF Selection Module** | Evaluates how the bond-exposure stance set maps to investable ETFs and whether specific instruments justify selection. | Does not recreate stance logic. |
+| **ETF Selection Module** | Evaluates how the Bond-Exposure Stance Set maps to investable ETFs and whether specific instruments justify selection. | Does not recreate stance logic. |
 | **Diagnostics Module** | Inspects and explains calculated model behavior through comparison, historical context, visualization, and reporting. | Must not alter authoritative model behavior. |
 
 ### Stage vs Capability
@@ -78,43 +95,26 @@ Capability
   and can be reused by multiple consumers
 ```
 
-Example:
-
-```text
-State Classification Stage
-        ↓
-uses
-        ↓
-State Classification capability
-        ↑
-may also be reused elsewhere
-```
-
 ---
 
-## 3. Stance Model
+## 3. Component and State Model
 
-### 3.1 Core hierarchy
+### 3.1 Common concepts
+
+The Component / Value / State vocabulary applies to both the market-derived side of stance calculation and the macro side of constraint calculation.
 
 | Term | Definition | Example |
 |---|---|---|
-| **Stance** | An analytical view about one dimension of bond exposure. | Credit stance |
-| **Stance Type** | The exposure dimension analyzed by a stance. | Duration, Curve, Credit |
-| **Feature** | A quantitative measure derived from raw observations for model use. | spread percentile, yield change |
-| **Component** | An economically meaningful concept that a stance reasons about. | spread level, long-end yield trend |
-| **Component Value** | The calculated quantitative or model-ready value representing a component before discrete classification. | spread percentile = 87 |
-| **Component State** | A discrete economic condition assigned to a component or other classified concept. | wide, inverted, falling |
-| **State Classification** | The process that converts a component value or other model-ready input into a discrete state used downstream. | 87th spread percentile → `wide` |
-| **Rule Case** | A specific combination of component states whose joint condition has economic meaning. | `wide + tightening` |
-| **Rule Mapping** | The mapping from a rule case to a core stance. | `wide + tightening → positive Credit` |
-| **Core Stance** | The market-derived stance produced before macro constraints are applied. | positive Credit |
-| **Macro Constraint** | Stance-specific macro logic that modifies how strongly or in what direction the core stance may be expressed. | weakening growth caps positive Credit |
-| **Final Stance** | The authoritative stance after applicable macro constraints and required final processing. | constrained positive Credit |
-| **Bond-Exposure Stance Set** | The combined final Duration, Curve, and Credit outputs consumed by ETF selection. | Preserves the three stances rather than collapsing them into one aggregate score. |
+| **Raw Observations** | Accepted source observations used by Bondview, normally historical time-series data. | Treasury-yield history, CPI history, credit-spread history |
+| **Feature** | A quantitative measure derived from Raw Observations for model use. | spread percentile, yield change, inflation-trend measure |
+| **Component** | An economically meaningful model concept represented by a model-ready value and, where required, classified into a discrete state. | spread level, long-end yield trend, inflation trend |
+| **Stance Component** | A market-derived Component whose state contributes to the Core Stance. | spread level, recent long-end yield move |
+| **Macro Component** | A macroeconomic Component whose state may affect a stance through a Macro Constraint. | inflation trend, policy direction, growth |
+| **Component Value** | The calculated quantitative or model-ready representation of a Component before discrete classification. | spread percentile = 87 |
+| **Component State** | The discrete economic condition assigned to a Component. | wide, tightening, rising, easing |
+| **State Classification** | The process that converts a Component Value or other model-ready representation into a Component State. | spread percentile 87 → `wide` |
 
-### 3.2 Raw Observations → Feature → Component → State
-
-These terms should remain distinct because they answer different questions.
+### 3.2 Common preparation flow
 
 ```text
 Raw Observations
@@ -131,30 +131,24 @@ Component Value
         ↓
 Component State
 ```
-| Concept | Question it answers | Typical form |
-|---|---|---|
-| **Raw Observations** | What source data do we have? | Historical Treasury yields, CPI history, credit-spread history |
-| **Feature** | What quantitative information did we derive from the data? | 60-day yield change, spread percentile |
-| **Component** | What economic concept does the stance reason about? | spread level, yield trend |
-| **Component State** | What condition is that concept currently in? | wide, falling, inverted |
 
-Not every implementation path must physically contain every step. A feature may directly represent a component value when no additional calculation is required.
-
-### 3.3 Raw Observations
-
-**Raw Observations** means accepted source observations used by Bondview, normally historical time-series data rather than only a single current point.
+The same vocabulary applies whether the resulting Component State belongs to a Stance Component or a Macro Component.
 
 ```text
-DGS10 historical series
-CPI historical series
-credit-spread historical series
+Component
+├── Stance Component
+└── Macro Component
 ```
 
-An individual dated value is still an **observation**, but architectural flows should normally use the plural term **Raw Observations**.
+Not every model path must physically contain every conceptual step. A Feature may directly represent a Component Value when no additional Component Calculation is required.
 
 ---
 
 ## 4. Rule Mapping
+
+Rule-case construction is a general model structure. Both Stance Components and Macro Components may form Rule Cases when the joint state has an economically meaningful interpretation.
+
+### 4.1 General rule-case structure
 
 ```text
 Component States
@@ -165,58 +159,112 @@ Rule Case
         ↓
 [Rule Mapping]
         ↓
-Core Stance
+Mapped Result
 ```
 
 | Term | Definition |
 |---|---|
-| **Rule Dimension** | A component/state axis that participates in rule-case construction. |
-| **Rule Case** | One concrete combination of rule-dimension states. |
-| **Rule-Case Construction** | The process that assembles the relevant component states into a rule case. |
-| **Rule Mapping** | The operation or defined relationship that maps a rule case to a core stance. |
-| **Rule Table** | The configured set of rule mappings for a stance. |
-| **Coverage Strategy** | The stance-specific convention for handling the valid rule space, such as complete explicit mapping, explicit cases plus fallback, or justified interpolation. |
+| **Rule Dimension** | A Component whose State participates in Rule-Case Construction. |
+| **Rule Case** | One concrete combination of Rule-Dimension states. |
+| **Rule-Case Construction** | The process that assembles relevant Component States into a Rule Case. |
+| **Rule Mapping** | The operation or defined relationship that maps a Rule Case to a model result. |
+| **Rule Table** | The configured set of Rule Mappings for a defined model purpose. |
+| **Coverage Strategy** | The convention for handling the valid rule space, such as complete explicit mapping, explicit cases plus fallback, or justified interpolation. |
 
-Example:
+### 4.2 Stance Rule Case
+
+A **Stance Rule Case** is a Rule Case constructed from Stance Component States.
 
 ```text
-spread level       = wide
-spread direction   = tightening
+Stance Component States
         ↓
-Rule Case          = wide + tightening
+[Rule-Case Construction]
         ↓
-Rule Mapping
+Stance Rule Case
         ↓
-Core Credit Stance = positive
+[Rule Mapping]
+        ↓
+Core Stance
 ```
+
+### 4.3 Macro Rule Case
+
+A **Macro Rule Case** is a Rule Case constructed from Macro Component States for stance-specific constraint logic.
+
+```text
+Macro Component States
+        ↓
+[Rule-Case Construction]
+        ↓
+Macro Rule Case
+        ↓
+[Constraint Rule Mapping]
+        ↓
+Constraint Action
+```
+
+The existence of a Macro Rule Case does not imply that every stance must have a macro Rule Table. A stance may have no Macro Constraint, and a constraint model may use explicit cases plus a pass-through fallback rather than a complete Cartesian table.
 
 ---
 
-## 5. Macro Constraint
+## 5. Stance Model and Macro Constraint
+
+| Term | Definition | Example |
+|---|---|---|
+| **Stance** | An analytical view about one dimension of bond exposure. | Credit stance |
+| **Stance Type** | The exposure dimension analyzed by a Stance. | Duration, Curve, Credit |
+| **Core Stance** | The market-derived Stance produced from Stance Rule Mapping before Macro Constraint application. | positive Credit |
+| **Constraint Action** | The stance-specific action selected from macro rules for application to a Core Stance. | pass-through, weaken, cap positive magnitude |
+| **Macro Constraint** | The stance-specific constraint process that determines and applies macro-based limits or adjustments to a Core Stance. | rising inflation + tightening policy caps positive Duration |
+| **Final Stance** | The authoritative Stance after any applicable Macro Constraint and required final processing. | constrained positive Credit |
+| **Bond-Exposure Stance Set** | The combined final Duration, Curve, and Credit outputs consumed by ETF Selection. | Preserves the three Stances rather than collapsing them into one aggregate score. |
+
+### Constraint flow
 
 ```text
-Macro Condition
+Macro Component States
         ↓
-[State Classification]
+[Rule-Case Construction]
         ↓
-Macro State 
-        + 
+Macro Rule Case
+        ↓
+[Constraint Rule Mapping]
+        ↓
+Constraint Action
+        +
 Core Stance
         ↓
-[Macro Constraint]
+[Constraint Application]
         ↓
 Final Stance
 ```
 
-| Term | Definition |
-|---|---|
-| **Macro Condition** | A macroeconomic concept relevant to a particular stance. |
-| **Macro State** | The classified current condition of a macro concept. |
-| **Macro Constraint** | Stance-specific logic that modifies the expression of a core stance based on relevant macro states. |
+`Macro Constraint` is the umbrella concept covering the stance-specific macro rules and their application to the Core Stance.
 
-Typical constraint effects may include leaving the core stance unchanged, strengthening or weakening it, capping magnitude, restricting direction, or applying a deliberately justified hard rejection.
+Typical Constraint Actions may include:
 
-Macro information is not assumed to have one universal bond implication. The same macro condition may affect Duration, Curve, and Credit differently.
+```text
+pass-through
+strengthen
+weaken
+magnitude cap
+directional restriction
+hard rejection
+```
+
+The economic rule answers:
+
+```text
+Which Constraint Action applies under this Macro Rule Case?
+```
+
+Constraint Application answers:
+
+```text
+How is that action applied to the supplied Core Stance?
+```
+
+One Macro Rule Case does not require a separate table entry for every possible Core Stance when the selected Constraint Action has well-defined application semantics.
 
 ---
 
@@ -241,8 +289,8 @@ ETF Selection
 | **ETF Universe** | The investable ETFs eligible for evaluation. |
 | **Candidate ETF** | An ETF currently under consideration in the selection process. |
 | **Exposure Profile** | The bond exposure represented by an ETF, such as duration/maturity, curve segment, credit exposure, underlying market, and relevant currency/hedging characteristics. |
-| **Stance Fit** | The degree to which an ETF's exposure profile expresses the Bond-Exposure Stance Set. |
-| **Instrument Evaluation** | Evaluation of ETF-specific attractiveness after exposure fit, including relevant yield/carry, price behavior, fees, liquidity, tracking, hedging/currency structure, and alternatives. |
+| **Stance Fit** | The degree to which an ETF's Exposure Profile expresses the Bond-Exposure Stance Set. |
+| **Instrument Evaluation** | Evaluation of ETF-specific attractiveness after Exposure Fit, including relevant yield/carry, price behavior, fees, liquidity, tracking, hedging/currency structure, and alternatives. |
 | **ETF Selection** | The process that determines which evaluated ETFs remain preferred candidates. |
 
 ---
@@ -254,14 +302,14 @@ ETF Selection
 | **Diagnostics** | Analysis that explains or inspects authoritative model behavior without changing the model's calculations or decisions. |
 | **Historical Context** | Historical observations of authoritative calculated model outputs used to interpret current or past model behavior. |
 | **Historical Context Preparation** | The capability that prepares reusable historical context from authoritative outputs or accepted historical inputs. |
-| **Diagnostic Comparison** | Comparison of calculated features, components, states, stances, or related metadata for explanatory purposes. |
+| **Diagnostic Comparison** | Comparison of calculated Features, Components, Component States, Stances, or related metadata for explanatory purposes. |
 
 Historical Context is explanatory, not a second hidden model.
 
 ```text
 Authoritative Calculated Outputs
         ↓
-Historical Context Preparation
+[Historical Context Preparation]
         ↓
 Historical Context
         ↓
@@ -307,7 +355,10 @@ Concrete result objects should be defined individually when their contracts are 
 4. Use **Capability** for implementation behavior.
 5. Do not add `shared` to a capability name merely because it has multiple consumers.
 6. Reuse authoritative capabilities and outputs when equivalent semantics already exist.
-7. Keep **Feature**, **Component**, and **State** distinct.
-8. Use **Macro Constraint** for stance-specific macro effects rather than introducing a universal macro stance/score without a separate justification.
-9. Treat **Bond-Exposure Stance Set** as the formal collection of final Duration, Curve, and Credit outputs.
-10. Use **Result Boundary / Result Contract** as generic interface concepts, while defining concrete result structures separately.
+7. Keep **Feature**, **Component**, **Component Value**, and **Component State** distinct.
+8. Use **Component Value** and **Component State** consistently for both Stance Components and Macro Components.
+9. Use **Rule Case** and **Rule-Case Construction** as general concepts; qualify them as **Stance Rule Case** or **Macro Rule Case** when the distinction matters.
+10. Use **Macro Constraint** as the umbrella concept for stance-specific macro rule interpretation and Constraint Application rather than introducing a universal macro stance/score.
+11. Keep **Constraint Rule Mapping** conceptually separate from **Constraint Application**: economic rules choose the action; application mechanics execute it against the Core Stance.
+12. Treat **Bond-Exposure Stance Set** as the formal collection of final Duration, Curve, and Credit outputs.
+13. Use **Result Boundary / Result Contract** as generic interface concepts, while defining concrete result structures separately.
