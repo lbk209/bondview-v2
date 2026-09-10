@@ -4,7 +4,7 @@
 
 This document defines the system-level architecture of Bondview: its major responsibilities, their relationships and boundaries, and the system-wide principles that should guide future implementation.
 
-Detailed model rules—including stance-specific scoring and schema and configuration definitions—belong in their respective module or architecture contracts.
+Detailed model rules—including Stance and Constraint Rule Mappings, Model Configuration details, and Configuration Schema definitions—belong in their respective module or architecture contracts.
 
 ---
 
@@ -35,7 +35,7 @@ Each stance owns the components, classifications, rule structure, constraint log
 The common conceptual structure separates market-derived stance logic from stance-specific macro-constraint logic:
 
 ```text
-Stance Components
+Market Components
         ↓
 Stance Rule Case
         ↓
@@ -43,7 +43,7 @@ Core Stance
 
 Macro Components
         ↓
-Macro Rule Case
+Constraint Rule Case
         ↓
 Constraint Action
 
@@ -54,28 +54,28 @@ Final Stance
 
 #### Rule mapping
 
-Rule mapping converts economically meaningful combinations of component states into model results.
+Rule Mapping converts economically meaningful combinations of Component States into model results.
 
-On the stance path, Stance Rule Cases map to a Core Stance.
+On the stance path, Stance Rule Mapping maps each Stance Rule Case to a Core Stance.
 
 ```text
 credit spreads wide + spreads tightening
 → positive core Credit stance
 ```
 
-On the macro path, Macro Rule Cases map to a stance-specific Constraint Action.
+On the constraint path, Constraint Rule Mapping maps each Constraint Rule Case to a stance-specific Constraint Action.
 
-Stance and macro components remain separate rule inputs rather than being combined into one rule case by default.
+Market and Macro Components remain separate input domains whose states contribute to their respective Rule Cases rather than being combined into one Rule Case by default.
 
-Additional information should not automatically become another rule-case dimension merely because it is available.
+Additional information should not automatically become another Rule Dimension merely because it is available.
 
 This principle helps keep rule structures interpretable and limits unnecessary Cartesian expansion.
 
 #### Macro constraints
 
-Macro constraints are applied when macroeconomic conditions materially affect how strongly a Core Stance should be expressed.
+Macro Constraints are applied when macroeconomic conditions materially affect how strongly a Core Stance should be expressed.
 
-A macro rule determines the applicable Constraint Action, while constraint application determines how that action affects the Core Stance.
+Constraint Rule Mapping determines the applicable Constraint Action, while Constraint Application determines how that action affects the Core Stance.
 
 Constraint Actions may:
 
@@ -90,17 +90,17 @@ growth weakening + unemployment rising
 → weaken/cap positive core Credit stance
 ```
 
-Macro constraints are stance-specific. Duration, Curve, and Credit may therefore consume different Macro Components and apply different constraint logic.
+Macro Constraints are stance-specific. Duration, Curve, and Credit may therefore consume different Macro Components and apply different constraint logic.
 
 Macro inputs should be introduced only where their relevance to the affected stance can be economically justified.
 
-Reusable constraint mechanics may be used across stances, while the macro conditions and economic rules applied by each stance remain stance-specific.
+Reusable Constraint Application mechanics may be used across stances, while the Macro Components and Constraint Rule Mappings applied by each stance remain stance-specific.
 
 #### Bond-Exposure Stance Set
 
 The final Duration, Curve, and Credit outputs together form the Bond-Exposure Stance Set used by ETF selection.
 
-The stance set represents the system's analytical view of bond-exposure structure after relevant macro constraints have been applied.
+The stance set represents the system's analytical view of bond-exposure structure after relevant Macro Constraints have been applied.
 
 It is not itself an ETF recommendation.
 
@@ -145,11 +145,11 @@ ETF selection
 
 Data acquisition and source-specific retrieval should remain outside analytical execution once runtime inputs have been accepted.
 
-Raw observations, prepared data, derived features, components, stances, and downstream evaluation inputs should remain distinguishable.
+Raw Observations, prepared data, derived Features, Components, Stances, and downstream evaluation inputs should remain distinguishable.
 
 #### Raw Observation Reuse
 
-The same raw observation may legitimately contribute to more than one analytical responsibility.
+The same Raw Observations may legitimately contribute to more than one analytical responsibility.
 
 Raw-data reuse does not imply shared derived meaning.
 
@@ -174,9 +174,9 @@ Examples include:
 * normalization and smoothing;
 * state or bucket classification;
 * stabilization and hysteresis;
-* rule-case construction and score lookup;
+* Rule-Case Construction and Rule Mapping;
 * score clipping;
-* generic constraint application.
+* generic Constraint Application.
 
 Model-specific configuration determines which mechanics each stance uses and how they are combined. Reusable mechanics should not encode Duration-, Curve-, Credit-, or macro-specific economic meaning.
 
@@ -198,7 +198,7 @@ Duration, Curve, and Credit should not depend on each other's domain logic merel
 
 ETF selection consumes the final stance outputs; stance calculations do not depend on ETF-selection logic.
 
-Macro constraints belong to the stance they affect. Component preparation and generic calculation mechanics may reuse neutral capabilities where semantics are equivalent, while macro interpretation and constraint rules remain stance-specific.
+Macro Constraints belong to the stance they affect. Market- and Macro-Component preparation and generic calculation mechanics may reuse neutral capabilities where semantics are equivalent, while Stance Rule Mapping and Constraint Rule Mapping remain stance-specific.
 
 ### 3.4 Result Boundaries
 
@@ -216,8 +216,8 @@ The system architecture should be reviewed when a proposed change would:
 * introduce a new major analytical responsibility;
 * make one stance depend on another stance's domain logic;
 * duplicate an authoritative derived concept in multiple places;
-* materially change the public result boundary consumed by downstream responsibilities;
-* combine stance and macro conditions into one Rule Case, or otherwise blur the separation between Core Stance derivation and Macro Constraint logic;
+* materially change the public Result Boundary consumed by downstream responsibilities;
+* combine Market and Macro Component States into one Rule Case, or otherwise blur the separation between Core Stance derivation and Macro Constraint logic;
 * introduce reusable infrastructure broader than the demonstrated reuse requirement;
 * move ETF-selection logic into stance calculation or stance logic into ETF selection.
 

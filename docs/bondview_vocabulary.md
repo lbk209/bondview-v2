@@ -159,8 +159,7 @@ This section defines how the Core Stance and Constraint Action combine through C
 | **Stance** | An analytical view about one dimension of bond exposure. | Duration stance, Curve stance, Credit stance |
 | **Core Stance** | The market-derived Stance produced from Stance Rule Mapping before Macro Constraint application. | positive Credit |
 | **Constraint Action** | The stance-specific action selected from macro rules for application to a Core Stance. | pass-through, weaken, cap positive magnitude |
-| **Macro Constraint** | The stance-specific process that determines and applies macro-based limits or adjustments to a Core Stance. | rising inflation + tightening policy caps positive Duration |
-| **Constraint Application** | The operation that applies a selected Constraint Action to the Core Stance. | cap positive stance at +1 |
+| **Macro Constraint** | The umbrella concept for stance-specific macro-based constraint logic and its application to a Core Stance. | rising inflation + tightening policy caps positive Duration |
 | **Bond-Exposure Stance Set** | The combined final Duration, Curve, and Credit outputs consumed by ETF Selection. | Preserves the three Stances rather than collapsing them into one aggregate score. |
 
 ### 5.1 Integration Flow
