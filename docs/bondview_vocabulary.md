@@ -141,37 +141,11 @@ Mapped Result
 | **Rule Table** | The configured set of Rule Mappings for a defined model purpose. |
 | **Coverage Strategy** | The convention for handling the valid rule space, such as complete explicit mapping, explicit cases plus fallback, or justified interpolation. |
 
-### 4.2 Stance Rule Case
+### 4.2 Stance and Macro Rule Cases
 
-A **Stance Rule Case** is a Rule Case constructed from Stance Component States.
+A Stance Rule Case is constructed from Stance Component States, and Stance Rule Mapping maps that Rule Case to a Core Stance.
 
-```text
-Stance Component States
-        ↓
-[Rule-Case Construction]
-        ↓
-Stance Rule Case
-        ↓
-[Rule Mapping]
-        ↓
-Core Stance
-```
-
-### 4.3 Macro Rule Case
-
-A **Macro Rule Case** is a Rule Case constructed from Macro Component States for stance-specific constraint logic.
-
-```text
-Macro Component States
-        ↓
-[Rule-Case Construction]
-        ↓
-Macro Rule Case
-        ↓
-[Constraint Rule Mapping]
-        ↓
-Constraint Action
-```
+A Macro Rule Case is constructed from Macro Component States, and Constraint Rule Mapping maps that Rule Case to a Constraint Action.
 
 The existence of a Macro Rule Case does not imply that every stance must have a macro Rule Table. A stance may have no Macro Constraint, and a constraint model may use explicit cases plus a pass-through fallback rather than a complete Cartesian table.
 
