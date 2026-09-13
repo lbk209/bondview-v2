@@ -685,7 +685,7 @@ Feature B:
     recent realized-policy action
     horizon: TBD shorter horizon
 
-Feature A state + Feature B state
+Feature A input + Feature B input
         ↓
 [rule-based State Classification]
         ↓
@@ -718,9 +718,9 @@ The configuration should support at least:
 For example, Policy Direction may use:
 
 ```text
-broader policy-trajectory state
+broader policy-trajectory input
         +
-recent policy-action state
+recent policy-action input
         ↓
 [rule-based State Classification]
         ↓
@@ -927,7 +927,7 @@ Resolved items should be moved into the relevant substantive section rather than
 - Define the Inflation Trend Feature horizon and transformation.
 - Define the broader realized-policy trajectory Feature and its horizon.
 - Define the recent realized-policy action Feature and its horizon.
-- Define the rule-based State Classification table that maps those lower-level policy states to `easing / stable / tightening`.
+- Define the rule-based State Classification table that maps those lower-level policy inputs to `easing / stable / tightening`.
 - Define how isolated opposing policy moves and sequences of policy holds affect transitions among Policy Direction states.
 - Define whether smoothing is necessary.
 - Define whether additional stabilization / hysteresis is necessary for any Component beyond the explicit Policy Direction transition logic.

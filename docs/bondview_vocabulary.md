@@ -112,6 +112,8 @@ Component
 
 Not every model path must physically contain every conceptual step. A Feature may directly represent a Component Value when no additional Component Calculation is required.
 
+State Classification may be threshold-based or may use rule-based interpretation of multiple lower-level model-ready inputs. When the purpose is to derive a Component State, this remains State Classification rather than Rule Mapping.
+
 ---
 
 ## 4. Rule Mapping

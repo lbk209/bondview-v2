@@ -75,6 +75,8 @@ This principle helps keep rule structures interpretable and limits unnecessary C
 
 Macro Constraints are applied when macroeconomic conditions materially affect how strongly a Core Stance should be expressed.
 
+Macro Constraints should normally modify the strength or permitted expression of the Core Stance rather than independently recreate it. Direction reversal or hard rejection should require explicit stance-specific economic justification.
+
 Constraint Rule Mapping determines the applicable Constraint Action, while Constraint Application determines how that action affects the Core Stance.
 
 Constraint Actions may:
@@ -179,6 +181,8 @@ Examples include:
 * generic Constraint Application.
 
 Model-specific configuration determines which mechanics each stance uses and how they are combined. Reusable mechanics should not encode Duration-, Curve-, Credit-, or macro-specific economic meaning.
+
+Equivalent calculation mechanics may be reused across different semantic stages, such as State Classification and Rule Mapping, without collapsing those stages into one architectural concept.
 
 #### Extract on Actual Second Use
 
