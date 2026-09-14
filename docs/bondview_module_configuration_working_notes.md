@@ -39,7 +39,224 @@ Current working ideas include:
 
 As other modules become more concrete, Model Configuration may need to describe their module-specific inputs or parameters as well. This should be added only when those responsibilities have sufficiently stable semantics.
 
-## 2. Positioning Context Module
+## 2. Duration Stance Implementation Working Notes
+
+This section records implementation-oriented Duration discussions that are not yet authoritative model design.
+
+The canonical seven-level Duration stance scale and the complete 3 × 3 Stance Rule Table defined in `bondview_stance_design_draft.md` are treated as fixed inputs to this work. The purpose here is to determine how the two Duration Market Components can be calculated from market data without reopening those economic-model decisions.
+
+Once the Feature transformation is sufficiently confirmed, the corresponding Duration sections of `bondview_stance_design_draft.md` should be updated and this working material can be reduced or removed.
+
+### Current Raw Observation direction
+
+The current working choice for the Duration market branch is:
+
+- FRED `DGS10` — 10-Year Treasury Constant Maturity Rate.
+
+Both Duration Market Components are expected to be derived from the same long-end yield Raw Observation:
+
+```text
+DGS10
+  ├──→ Long-End Yield Trend
+  └──→ Recent Long-End Yield Move
+```
+
+The distinction between the two Components is therefore expected to come from Feature transformation and horizon rather than from separate Raw Observations.
+
+### Current transformation direction
+
+The current preferred baseline is a moving-average-difference construction.
+
+The general working form uses up to four horizons:
+
+```text
+Recent Feature
+= MA(R_fast) - MA(R_slow)
+
+Trend Feature
+= MA(T_fast) - MA(T_slow)
+```
+
+with the intended ordering:
+
+```text
+R_fast < R_slow ≤ T_fast < T_slow
+```
+
+This formulation allows the Recent and Trend Features to use separate fast/slow comparisons while still permitting a shared intermediate horizon.
+
+When:
+
+```text
+R_slow = T_fast
+```
+
+the general formulation reduces to the previously discussed three-MA structure:
+
+```text
+Recent = MA(short)  - MA(medium)
+Trend  = MA(medium) - MA(long)
+```
+
+When:
+
+```text
+R_slow < T_fast
+```
+
+all four horizons may be distinct:
+
+```text
+Recent = MA(short)      - MA(recent-reference)
+Trend  = MA(trend-fast) - MA(long)
+```
+
+The shared-middle case should therefore be treated as one candidate configuration within the general horizon specification rather than as a separate model architecture.
+
+The exact moving-average definition is not yet fixed. In particular, whether the authoritative calculation should use a simple moving average or another deliberately chosen averaging convention remains open.
+
+### Why moving averages are the current baseline
+
+The initial endpoint-change formulation was:
+
+```text
+Trend(t)  = yield(t) - yield(t - h_trend)
+Recent(t) = yield(t) - yield(t - h_recent)
+```
+
+This is simple and directly expresses two horizons, but it depends on particular endpoint observations. If the resulting states are unstable, it may be difficult to distinguish a poor horizon choice from endpoint sensitivity or from a later need for stabilization logic.
+
+Using moving averages removes much of the single-observation endpoint-sensitivity issue before horizon comparison begins. This should make later diagnosis cleaner:
+
+```text
+Raw DGS10 observations
+        ↓
+MA-based Features
+        ↓
+State Classification
+        ↓
+Core Stance behavior
+        ↓
+remaining instability, if any
+        ↓
+possible stabilization / hysteresis
+```
+
+Endpoint change is therefore no longer an active candidate for the authoritative transformation. It may remain useful as a simple diagnostic benchmark.
+
+Other transformations previously discussed remain fallback candidates rather than part of the initial comparison:
+
+- regression slope;
+- split-window mean difference.
+
+They should be brought back into active comparison only if the MA-based construction reveals a substantive transformation-level problem that cannot reasonably be addressed through horizon or threshold selection.
+
+### State Classification and normalization
+
+Each Feature will eventually be classified independently into:
+
+```text
+falling
+stable
+rising
+```
+
+before entering the existing 3 × 3 Stance Rule Table.
+
+Conceptually:
+
+```text
+Trend Feature
+        ↓
+falling / stable / rising
+        │
+        ├──────────────┐
+        │              │
+Recent Feature         │
+        ↓              │
+falling / stable / rising
+        │              │
+        └──────┬───────┘
+               ↓
+       3 × 3 Stance Rule Table
+               ↓
+           Core Stance
+```
+
+Because the Stance Rule Table consumes discrete Component States rather than directly combining raw Feature magnitudes, cross-Feature normalization is not currently required.
+
+Normalization may be reconsidered later if fixed thresholds prove unsuitable across materially different yield-volatility regimes, but it should not be introduced before evidence shows that it is needed.
+
+The exact `falling / stable / rising` thresholds remain unresolved. A provisional symmetric stable band may be used for initial horizon comparison, but threshold refinement should remain separate from horizon selection as far as practical.
+
+### Initial historical comparison strategy
+
+The first validation pass should use a deliberately minimal Core Duration pipeline:
+
+```text
+DGS10
+  ↓
+candidate MA Features
+  ↓
+provisional State Classification
+  ↓
+Long-End Yield Trend State
+        ×
+Recent Long-End Yield Move State
+  ↓
+existing 3 × 3 Stance Rule Table
+  ↓
+Core Stance
+```
+
+The initial comparison should exclude:
+
+- Macro Constraint calculation;
+- Constraint Application;
+- hysteresis;
+- state-transition confirmation;
+- stance-level stabilization;
+- ETF Selection.
+
+The purpose is first to determine whether the underlying Feature and horizon structure produces economically sensible Core Stance behavior. Hysteresis and similar mechanisms should be treated as later corrective mechanisms for residual transition instability, not as a way to rescue a poorly behaving basic Feature specification.
+
+Candidate horizon sets should be compared using more than transition count alone. Useful diagnostics include:
+
+- Component-State occupancy and persistence;
+- occupancy of the nine Stance Rule Cases;
+- frequency and persistence of Core Stance transitions;
+- frequency of counter-trend Rule Cases;
+- whether counter-trend cases correspond to plausible historical transition periods;
+- dependence between Trend and Recent Feature values;
+- robustness to modest changes in nearby horizons;
+- whether the resulting investment timescale is sufficiently active for the intended use without becoming dominated by short-lived noise.
+
+A rough opportunity-frequency requirement, such as capturing meaningful changes at least on the order of once per year, may be useful as a sanity constraint. It should not by itself be the optimization target.
+
+### Historical validation vs Historical Context
+
+Historical model calibration and validation should not overload the canonical term **Historical Context**.
+
+Under the current vocabulary, Historical Context is a Diagnostics concept built from authoritative calculated model outputs after the model behavior is defined.
+
+For Duration Feature development, historical yield episodes or a curated set of rate-market events may still be useful as qualitative reference points during validation. Such event references should be treated as validation material rather than as canonical Historical Context or as a hidden input to the model.
+
+Full-history statistics should remain important so that horizon selection is not tuned only to a small set of famous events.
+
+### Current open decisions
+
+The main unresolved Duration market-branch questions are:
+
+- exact moving-average convention;
+- candidate values for `R_fast`, `R_slow`, `T_fast`, and `T_slow`;
+- whether the best horizon configuration uses `R_slow = T_fast` or distinct intermediate horizons;
+- provisional and final thresholds for `falling / stable / rising`;
+- whether reasonable nearby horizon choices produce broadly similar behavior;
+- whether any volatility-aware normalization is eventually justified;
+- whether residual instability remains after MA aggregation and therefore justifies hysteresis or other stabilization;
+- whether regression slope or split-window mean difference needs to be reconsidered after the MA-based baseline is evaluated.
+
+## 3. Positioning Context Module
 
 ### Purpose and architectural gap
 
@@ -136,7 +353,7 @@ Important unresolved questions include:
 - what output semantics are stable enough to define a Result Contract;
 - whether the practical benefit is large enough to justify implementation complexity.
 
-## 3. ETF Selection Module
+## 4. ETF Selection Module
 
 The current canonical flow remains:
 
