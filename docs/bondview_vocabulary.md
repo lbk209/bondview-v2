@@ -51,6 +51,7 @@ Bondview
 | **Stage** | A semantic processing step within a module flow. | A stage does not imply a separate Python file/class. |
 | **Capability** | A defined implementation behavior that performs an operation and may be reused wherever the same semantics are required. | Reuse does not require the word `shared` in the capability name. |
 | **Stance Calculation Module** | Produces Duration, Curve, and Credit stances from market-derived conditions and stance-specific macro constraints. | Owns stance logic. |
+| **Positioning Context Module** | Provides market-wide or exposure-level positioning, sentiment, crowding, or similar context that may affect how readily an otherwise valid bond-exposure stance should be implemented. | Remains separate from authoritative stance calculation; exact inputs, calculation logic, and output representation are not yet defined. |
 | **ETF Selection Module** | Evaluates how the Bond-Exposure Stance Set maps to investable ETFs and whether specific instruments justify selection. | Does not recreate stance logic. |
 | **Diagnostics Module** | Inspects and explains calculated model behavior through comparison, historical context, visualization, and reporting. | Must not alter authoritative model behavior. |
 
@@ -136,7 +137,7 @@ Mapped Result
 
 | Term | Definition |
 |---|---|
-| **Rule Dimension** | A Component whose State participatesin a Rule Case |
+| **Rule Dimension** | A Component whose State participates in a Rule Case |
 | **Rule Case** | One concrete combination of Rule-Dimension states. |
 | **Rule Mapping** | The operation or defined relationship that maps a Rule Case to a model result. |
 | **Rule Table** | The configured set of Rule Mappings for a defined model purpose. |
@@ -204,7 +205,6 @@ How is that action applied to the supplied Core Stance?
 ```
 
 One Constraint Rule Case does not require a separate table entry for every possible Core Stance when the selected Constraint Action has well-defined application semantics.
-
 
 ---
 
