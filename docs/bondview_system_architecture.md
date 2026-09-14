@@ -26,7 +26,7 @@ bond-market conditions              macro conditions
 
 ## 2. System Responsibilities
 
-### 2.1 Stance Calculation
+### 2.1 Stance Calculation Module
 
 Bondview produces separate analytical stances for Duration, Curve, and Credit.
 
@@ -108,7 +108,28 @@ It is not itself an ETF recommendation.
 
 The stance set preserves Duration, Curve, and Credit as separate outputs rather than collapsing them into a single aggregate score.
 
-### 2.2 ETF Selection
+### 2.2 Positioning Context Module
+
+Positioning Context represents market-wide or exposure-level positioning, sentiment, crowding, or similar conditions that may affect how readily an otherwise valid bond-exposure stance should be implemented.
+
+It occupies an intermediate analytical role: such information does not redefine the economic stance itself, but is also not an intrinsic characteristic of an individual ETF.
+
+```text
+Stance Calculation
+→ What bond exposure is economically favored?
+
+Positioning Context
+→ Is the favored exposure unusually crowded, extended, or otherwise difficult to express cleanly?
+
+ETF Selection
+→ Which specific ETF implements that exposure appropriately?
+```
+
+The module remains separate from authoritative stance calculation and should not recreate or directly modify the Core Stance or Final Stance.
+
+Its exact inputs, calculation logic, and output representation are not yet defined.
+
+### 2.3 ETF Selection Module
 
 ETF selection evaluates ETFs in the eligible ETF Universe according to how well they express the Bond-Exposure Stance Set and whether their instrument-level characteristics justify selection.
 
@@ -124,6 +145,8 @@ It may consider representative instrument and market characteristics such as:
 
 ETF selection consumes the final stance outputs rather than recreating Duration, Curve, or Credit logic independently for each ETF.
 
+Positioning Context may provide additional exposure-level context when available, without redefining the Bond-Exposure Stance Set or becoming an intrinsic property of an individual ETF.
+
 The final decision therefore distinguishes between:
 
 ```text
@@ -136,6 +159,14 @@ and is attractive enough relative to alternatives?
         ↓
 ETF selection
 ```
+
+### 2.4 Diagnostics Module
+
+Diagnostics inspects and explains authoritative model behavior through comparison, Historical Context, visualization, and reporting.
+
+It may consume authoritative outputs and supporting metadata from other modules where relevant.
+
+Diagnostics must not alter authoritative model calculations or decisions.
 
 ---
 
@@ -163,7 +194,7 @@ Analytical outputs are market-specific.
 
 The relevant market is determined by the underlying exposure, not merely by the ETF's listing venue. For example, a Korea-listed ETF holding U.S. Treasuries still requires U.S. rates and Treasury-market context for its bond stance interpretation.
 
-Investor-currency and hedging considerations belong in ETF selection where they affect the investor’s realized exposure, rather than in the bond-exposure stance calculation.
+Investor-currency and hedging considerations belong in the ETF Selection Module where they affect the investor’s realized exposure, rather than in the bond-exposure stance calculation.
 
 ### 3.2 Reusable Calculation Mechanics and Reuse
 
@@ -200,7 +231,11 @@ Extraction is appropriate when:
 
 Duration, Curve, and Credit should not depend on each other's domain logic merely to reuse calculation mechanics. Reusable behavior should be owned by a neutral capability when extraction is justified.
 
-ETF selection consumes the final stance outputs; stance calculations do not depend on ETF-selection logic.
+The ETF Selection Module consumes the final stance outputs; the Stance Calculation Module does not depend on ETF-selection logic.
+
+Positioning Context may inform ETF selection but does not modify authoritative stance outputs.
+
+The Diagnostics Module may consume authoritative outputs from other modules but must not become an upstream dependency of their authoritative calculations.
 
 Macro Constraints belong to the stance they affect. Market- and Macro-Component preparation and generic calculation mechanics may reuse neutral capabilities where semantics are equivalent, while Stance Rule Mapping and Constraint Rule Mapping remain stance-specific.
 
@@ -208,7 +243,7 @@ Macro Constraints belong to the stance they affect. Market- and Macro-Component 
 
 Formal stance outputs should preserve the Core Stance, the Final Stance, and enough metadata—including the applied Constraint Action where relevant—to explain material differences between them.
 
-The exact field structure belongs in the stance/result contract rather than this system-level document.
+The exact field structure belongs in the relevant result contract rather than this system-level document.
 
 ---
 
@@ -223,6 +258,6 @@ The system architecture should be reviewed when a proposed change would:
 * materially change the public Result Boundary consumed by downstream responsibilities;
 * combine Market and Macro Component States into one Rule Case, or otherwise blur the separation between Core Stance derivation and Macro Constraint logic;
 * introduce reusable infrastructure broader than the demonstrated reuse requirement;
-* move ETF-selection logic into stance calculation or stance logic into ETF selection.
+* move ETF-selection logic into the Stance Calculation Module or stance logic into the ETF Selection Module.
 
 Model-specific rule changes may be significant even when the implementation change is technically small.
