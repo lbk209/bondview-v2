@@ -30,7 +30,7 @@ bond-market conditions              macro conditions
 
 Bondview produces separate analytical stances for Duration, Curve, and Credit.
 
-Each stance owns the components, classifications, rule structure, constraint logic, and calculation behavior needed to answer its own economic question.
+Each stance owns its economic question, selected Rule Dimensions, rule structure, constraint logic, and stance-specific calculation behavior needed to answer that question.
 
 The common conceptual structure separates market-derived stance logic from stance-specific macro-constraint logic:
 
@@ -96,7 +96,7 @@ Macro Constraints are stance-specific. Duration, Curve, and Credit may therefore
 
 Macro inputs should be introduced only where their relevance to the affected stance can be economically justified.
 
-Reusable Constraint Application mechanics may be used across stances, while the Macro Components and Constraint Rule Mappings applied by each stance remain stance-specific.
+Reusable Constraint Application mechanics may be used across stances, while the selection of Macro Components and the Constraint Rule Mappings applied by each stance remain stance-specific.
 
 #### Bond-Exposure Stance Set
 
@@ -116,10 +116,10 @@ It occupies an intermediate analytical role: such information does not redefine 
 
 ```text
 Stance Calculation
-→ What bond exposure is economically favored?
+→ What positioning is preferred within the bond-exposure dimensions?
 
 Positioning Context
-→ Is the favored exposure unusually crowded, extended, or otherwise difficult to express cleanly?
+→ Is the preferred positioning unusually crowded, extended, or otherwise difficult to express cleanly?
 
 ETF Selection
 → Which specific ETF implements that exposure appropriately?
@@ -150,7 +150,7 @@ Positioning Context may provide additional exposure-level context when available
 The final decision therefore distinguishes between:
 
 ```text
-What bond exposure is favored?
+What positioning is preferred within the bond-exposure dimensions?
         ↓
 stance calculation
 
@@ -186,7 +186,9 @@ The same Raw Observations may legitimately contribute to more than one analytica
 
 Raw-data reuse does not imply shared derived meaning.
 
-Each derived concept should have one authoritative owner. If multiple responsibilities require the same derived concept with the same semantics, it should be calculated once and reused rather than independently redefined.
+Each derived concept should have one authoritative definition and calculation. If multiple responsibilities require the same derived concept with the same semantics, it should be calculated once and reused rather than independently redefined.
+
+The same authoritative Component may therefore be consumed by more than one stance when its semantics are identical.
 
 #### Market Identity
 
@@ -231,6 +233,8 @@ Extraction is appropriate when:
 
 Duration, Curve, and Credit should not depend on each other's domain logic merely to reuse calculation mechanics. Reusable behavior should be owned by a neutral capability when extraction is justified.
 
+Consuming the same authoritative Component does not by itself create such a dependency.
+
 The ETF Selection Module consumes the final stance outputs; the Stance Calculation Module does not depend on ETF-selection logic.
 
 Positioning Context may inform ETF selection but does not modify authoritative stance outputs.
@@ -251,7 +255,7 @@ The exact field structure belongs in the relevant result contract rather than th
 
 The system architecture should be reviewed when a proposed change would:
 
-* move economic ownership of a derived concept from one responsibility to another;
+* change the authoritative definition or analytical responsibility of a derived concept;
 * introduce a new major analytical responsibility;
 * make one stance depend on another stance's domain logic;
 * duplicate an authoritative derived concept in multiple places;
