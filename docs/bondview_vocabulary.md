@@ -78,9 +78,9 @@ The Component / Value / State vocabulary applies to both the market-derived side
 |---|---|---|
 | **Raw Observations** | Accepted source observations used by Bondview, normally historical time-series data. | Treasury-yield history, CPI history, credit-spread history |
 | **Feature** | A quantitative measure derived from Raw Observations for model use. | spread percentile, yield change, inflation-trend measure |
-| **Component** | An economically meaningful model concept represented by a model-ready value and, where required, classified into a discrete state. | spread level, long-end yield trend, inflation trend |
-| **Market Component** | A bond-market-derived Component whose state may contribute to stance calculation. | spread level, recent long-end yield move |
-| **Macro Component** | A macroeconomic Component whose state may contribute to stance-specific constraint logic. | inflation trend, policy direction, growth |
+| **Component** | A canonical economically meaningful model concept represented by a model-ready value and, where required, classified into a discrete state. A Component may be consumed by one or more analytical responsibilities when its semantics are identical. | spread level, long-end yield trend, inflation trend |
+| **Market Component** | A bond-market-derived Component whose state may contribute to one or more stance calculations. | spread level, recent long-end yield move |
+| **Macro Component** | A macroeconomic Component whose state may contribute to one or more stance-specific constraint calculations. | inflation trend, policy direction, growth |
 | **Component Value** | The calculated quantitative or model-ready representation of a Component before discrete classification. | spread percentile = 87 |
 | **Component State** | The discrete economic condition assigned to a Component. | wide, tightening, rising, easing |
 | **State Classification** | The process that converts a Component Value or other model-ready representation into a Component State. | spread percentile 87 → `wide` |
@@ -137,7 +137,7 @@ Mapped Result
 
 | Term | Definition |
 |---|---|
-| **Rule Dimension** | A Component whose State participates in a Rule Case |
+| **Rule Dimension** | A Component whose State participates in a particular Rule Case; the same Component may serve as a Rule Dimension in multiple Rule Cases. |
 | **Rule Case** | One concrete combination of Rule-Dimension states. |
 | **Rule Mapping** | The operation or defined relationship that maps a Rule Case to a model result. |
 | **Rule Table** | The configured set of Rule Mappings for a defined model purpose. |
@@ -159,7 +159,7 @@ This section defines how the Core Stance and Constraint Action combine through C
 
 | Term | Definition | Example |
 |---|---|---|
-| **Stance** | An analytical view about one dimension of bond exposure. | Duration stance, Curve stance, Credit stance |
+| **Stance** | An exposure-oriented analytical result expressing preferred positioning within one dimension of bond exposure. A Stance is not by itself an absolute investment-attractiveness judgment or an ETF recommendation. | Duration stance, Curve stance, Credit stance |
 | **Core Stance** | The market-derived Stance produced from Stance Rule Mapping before Macro Constraint application. | positive Credit |
 | **Constraint Action** | The stance-specific action selected from macro rules for application to a Core Stance. | pass-through, weaken, cap positive magnitude |
 | **Macro Constraint** | The umbrella concept for stance-specific macro-based constraint logic and its application to a Core Stance. | rising inflation + tightening policy caps positive Duration |
@@ -288,7 +288,7 @@ Concrete result objects should be defined individually when their contracts are 
 3. Use **Stage** for semantic positions in a processing flow.
 4. Use **Capability** for implementation behavior.
 5. Do not add `shared` to a capability name merely because it has multiple consumers.
-6. Reuse authoritative capabilities and outputs when equivalent semantics already exist.
+6. Reuse authoritative Components, capabilities, and outputs when equivalent semantics already exist.
 7. Keep **Feature**, **Component**, **Component Value**, and **Component State** distinct.
 8. Use **Market Component** and **Macro Component** for the two input domains, and use **Component Value** and **Component State** consistently for both.
 10. Use **Rule Case** as the general concept; use **Stance Rule Case** or **Constraint Rule Case** when the processing role matters.
