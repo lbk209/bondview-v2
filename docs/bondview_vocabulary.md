@@ -2,97 +2,126 @@
 
 ## Purpose
 
-This document defines the current canonical working vocabulary for **Bondview v2**.
+This document defines the canonical vocabulary for **Bondview**.
 
-The objective is to keep conceptual design, documentation, configuration, labels, implementation discussions, and future file/API naming consistent. The vocabulary may evolve as the model is refined, but these terms should be preferred unless a later design decision explicitly replaces them.
+Its purpose is to provide a consistent set of terms for describing how Bondview represents bond-market and macro conditions, interprets bond exposure, evaluates ETFs, and explains model behavior.
 
-Definitions and diagrams in this document describe conceptual meaning and terminology rather than prescribing implementation structure.
-
-`bondview-v2` is the current project/repository name. Once it replaces the previous project, the intended system name is **Bondview**.
+The definitions describe conceptual meaning and relationships rather than prescribing a particular implementation structure.
 
 ---
 
-## 1. Vocabulary Map
-
-The map is a compact guide to the major vocabulary areas defined in this document.
+# 1. Vocabulary Map
 
 ```text
 Bondview
 │
-├── System and Architecture
-│   ├── Modules
-│   └── Processing Structure
+├── System Responsibilities
 │
-├── Component-State Structure
-│   ├── Market Component
-│   └── Macro Component
+├── Component Model
+│   ├── Core Concepts
+│   ├── Component Structure
+│   └── Bond Exposure Concepts
 │
-├── Rule Mapping
-│   ├── Stance Rule Case → Core Stance
-│   └── Constraint Rule Case → Constraint Action
+├── Calculation Mechanics
 │
-├── Stance and Constraint Integration
-│
-├── ETF Selection
+├── ETF Evaluation
+│   ├── Core Concepts
+│   ├── Exposure Evaluation
+│   ├── Positioning Overlay
+│   └── Instrument Quality
 │
 ├── Diagnostics
+│   ├── Core Concepts
+│   └── Bond Exposure View
 │
-└── Model Definition / Interfaces
+├── Model Definition and Interfaces
+│   ├── Model Definition
+│   └── Result Interfaces
+│
+└── Naming Principles
 ```
 
 ---
 
-## 2. System and Architecture Terms
+# 2. System Responsibilities
 
-| Term | Definition | Notes |
-|---|---|---|
-| **Bondview** | The complete bond-ETF decision-support system. | Current development project: `bondview-v2`. |
-| **Module** | A major system responsibility with a meaningful input/output boundary. | Prefer semantic names rather than numbered names such as `Module 1`. |
-| **Stage** | A semantic processing step within a module flow. | A stage does not imply a separate Python file/class. |
-| **Capability** | A defined implementation behavior that performs an operation and may be reused wherever the same semantics are required. | Reuse does not require the word `shared` in the capability name. |
-| **Stance Calculation Module** | Produces Duration, Curve, and Credit stances from market-derived conditions and stance-specific macro constraints. | Owns stance logic. |
-| **Positioning Context Module** | Provides market-wide or exposure-level positioning, sentiment, crowding, or similar context that may affect how readily an otherwise valid bond-exposure stance should be implemented. | Remains separate from authoritative stance calculation; exact inputs, calculation logic, and output representation are not yet defined. |
-| **ETF Selection Module** | Evaluates how the Bond-Exposure Stance Set maps to investable ETFs and whether specific instruments justify selection. | Does not recreate stance logic. |
-| **Diagnostics Module** | Inspects and explains calculated model behavior through comparison, historical context, visualization, and reporting. | Must not alter authoritative model behavior. |
-
-### Stage vs Capability
+| Term | Definition |
+|---|---|
+| **Bondview** | The complete bond-ETF analytical and decision-support system. |
+| **Module** | A major system responsibility with a meaningful input/output boundary. |
+| **Capability** | Reusable implementation behavior with defined semantics. |
+| **Bond Analysis Module** | Produces canonical bond-relevant Components from accepted observations. |
+| **ETF Evaluation Module** | Produces ETF-specific evaluation results by applying Components to ETF Exposure Profiles and implementation characteristics. |
+| **Diagnostics Module** | Inspects and explains Components and evaluation results through historical analysis, interpretation, comparison, visualization, and sanity checking. |
 
 ```text
-Stage
-= where an operation belongs in a conceptual flow
+Bond Analysis
+→ What bond-market and macro conditions exist?
 
-Capability
-= implementation behavior that performs an operation
-  and can be reused by multiple consumers
+ETF Evaluation
+→ How suitable are ETFs under those conditions?
+
+Diagnostics
+→ Does the analytical and evaluation model behave plausibly and explainably?
 ```
 
 ---
 
-## 3. Component-State Structure
+# 3. Component Model
 
-### 3.1 Core Concepts
+## 3.1 Core Concepts
 
-The Component / Value / State vocabulary applies to both the market-derived side of stance calculation and the macro side of constraint calculation.
+| Term                     | Definition                                                                                                                              |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
+| **Raw Observation**      | An accepted source observation used by Bondview, normally from historical time-series data.                                             |
+| **Feature**              | A quantitative measure derived from Raw Observations for model use.                                                                     |
+| **Component**            | A canonical, economically meaningful analytical concept represented by a Component Value and, where useful, a discrete Component State. |
+| **Component Value**      | The calculated quantitative or structured representation of a Component before discrete classification.                                 |
+| **Component State**      | A discrete economic condition assigned to a Component.                                                                                  |
+| **State Classification** | The process that converts a Component Value into a Component State.                                                                     |
 
-| Term | Definition | Example |
-|---|---|---|
-| **Raw Observations** | Accepted source observations used by Bondview, normally historical time-series data. | Treasury-yield history, CPI history, credit-spread history |
-| **Feature** | A quantitative measure derived from Raw Observations for model use. | spread percentile, yield change, inflation-trend measure |
-| **Component** | A canonical economically meaningful model concept represented by a model-ready value and, where required, classified into a discrete state. A Component may be consumed by one or more analytical responsibilities when its semantics are identical. | spread level, long-end yield trend, inflation trend |
-| **Market Component** | A bond-market-derived Component whose state may contribute to one or more stance calculations. | spread level, recent long-end yield move |
-| **Macro Component** | A macroeconomic Component whose state may contribute to one or more stance-specific constraint calculations. | inflation trend, policy direction, growth |
-| **Component Value** | The calculated quantitative or model-ready representation of a Component before discrete classification. | spread percentile = 87 |
-| **Component State** | The discrete economic condition assigned to a Component. | wide, tightening, rising, easing |
-| **State Classification** | The process that converts a Component Value or other model-ready representation into a Component State. | spread percentile 87 → `wide` |
 
-### 3.2 Component-State Derivation Flow
+A Feature is generally closer to calculation mechanics, while a Component represents an economically meaningful analytical concept.
+
+Example:
+
+```text
+10Y yield change over a defined horizon
+→ Feature
+
+Long-End Yield Move
+→ Component
+
+Falling / Stable / Rising
+→ Component State
+```
+
+
+## 3.2 Component Structure
+
+Components carry Bondview's authoritative analytical information.
+
+Typical Component examples include:
+
+* Long-End Yield Trend;
+* Long-End Yield Move;
+* Curve Configuration;
+* Curve Movement;
+* Curve Driver;
+* Credit Spread Level;
+* Credit Spread Direction;
+* Inflation Trend;
+* Policy Direction;
+* Term Premium.
+
+Conceptually:
 
 ```text
 Raw Observations
         ↓
 [Feature Calculation]
         ↓
-Feature
+Features
         ↓
 [Component Calculation]
         ↓
@@ -103,27 +132,66 @@ Component Value
 Component State
 ```
 
-The same vocabulary applies whether the resulting Component State belongs to a Market Component or a Macro Component.
+A Component may also be calculated from other Components or their Values when the relationship is economically meaningful.
+
+Example:
 
 ```text
-Component
-├── Market Component
-└── Macro Component
+Short-End Yield Move
+        +
+Long-End Yield Move
+        ↓
+[Curve Movement Calculation]
+        ↓
+Curve Movement
 ```
 
-Not every model path must physically contain every conceptual step. A Feature may directly represent a Component Value when no additional Component Calculation is required.
+Two analytical concepts should normally be treated as the same Component only when their economic meaning, calculation, relevant horizon, and classification semantics are equivalent.
 
-State Classification may be threshold-based or may use rule-based interpretation of multiple lower-level model-ready inputs. When the purpose is to derive a Component State, this remains State Classification rather than Rule Mapping.
+Some Components may partially overlap because they provide different economically meaningful views of the same underlying observations. This is acceptable when the distinction is analytically useful.
+
+## 3.3 Bond Exposure Concepts
+
+| Term                        | Definition                                                                                                           |
+| --------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| **Bond Exposure Dimension** | A principal bond-exposure dimension represented in Bondview. The current dimensions are Duration, Curve, and Credit. |
+| **Bond Exposure View**      | A high-level human-readable interpretation of one Bond Exposure Dimension, derived from selected Components.         |
+| **Duration View**           | Interpretation of the Duration Dimension and current rate-sensitivity conditions.                                    |
+| **Curve View**              | Interpretation of the Curve Dimension and current relative-maturity / term-structure conditions.                     |
+| **Credit View**             | Interpretation of the Credit Dimension and current credit-risk conditions.                                           |
+
+Bond Exposure Views are not authoritative ETF-selection inputs. ETF Evaluation consumes the underlying Components directly.
+
+Views are primarily useful for explanation, historical inspection, expert sanity checking, and parameter validation.
+
 
 ---
 
-## 4. Rule Mapping
+# 4. Calculation Mechanics
 
-Rule-case construction is a general model structure. Market and Macro Components may independently contribute states to Rule Cases. Each Rule Case should represent a joint state with an economically meaningful interpretation.
+Calculation Mechanics are reusable conceptual structures used across Components, ETF Evaluation, and Diagnostics.
 
-### 4.1 General rule-case structure
+**State Classification** converts a Component Value into a Component State.
 
-```text
+```
+Credit Spread Percentile = 87
+        ↓
+[State Classification]
+        ↓
+Credit Spread Level = Wide
+```
+
+**Rule Mapping** defines how a combination of Component States produces a model result.
+
+| Term                  | Definition                                                                                                             |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| **Rule Dimension**    | A Component whose State participates in a particular Rule Case.                                                        |
+| **Rule Case**         | One concrete combination of Rule-Dimension States.                                                                     |
+| **Rule Mapping**      | The defined relationship that maps a Rule Case to a model result.                                                      |
+| **Rule Table**        | The configured set of Rule Mappings for one defined model purpose.                                                     |
+| **Coverage Strategy** | The convention for handling the valid Rule-Case space, such as explicit mapping, fallback, or justified interpolation. |
+
+```
 Component States
         ↓
 [Rule-Case Construction]
@@ -135,164 +203,197 @@ Rule Case
 Mapped Result
 ```
 
-| Term | Definition |
-|---|---|
-| **Rule Dimension** | A Component whose State participates in a particular Rule Case; the same Component may serve as a Rule Dimension in multiple Rule Cases. |
-| **Rule Case** | One concrete combination of Rule-Dimension states. |
-| **Rule Mapping** | The operation or defined relationship that maps a Rule Case to a model result. |
-| **Rule Table** | The configured set of Rule Mappings for a defined model purpose. |
-| **Coverage Strategy** | The convention for handling the valid rule space, such as complete explicit mapping, explicit cases plus fallback, or justified interpolation. |
+The distinction is:
 
-### 4.2 Stance and Constraint Rule Cases
+```
+State Classification
+→ What State represents this Component Value?
 
-A **Stance Rule Case** is constructed from **Market Component States**, and **Stance Rule Mapping** maps that Rule Case to a **Core Stance**.
+Rule Mapping
+→ What result follows from this combination of Component States?
+```
 
-A **Constraint Rule Case** is constructed from **Macro Component States**, and **Constraint Rule Mapping** maps that Rule Case to a **Constraint Action**.
-
-The existence of a Constraint Rule Case does not imply that every stance must have a macro Rule Table. A stance may have no Macro Constraint, and a constraint model may use explicit cases plus a pass-through fallback rather than a complete Cartesian table.
 
 ---
 
-## 5. Stance and Constraint Integration
+# 5. ETF Evaluation
 
-This section defines how the Core Stance and Constraint Action combine through Constraint Application to produce the authoritative Final Stance.
+## 5.1 Core Concepts
 
-| Term | Definition | Example |
-|---|---|---|
-| **Stance** | An exposure-oriented analytical result expressing preferred positioning within one dimension of bond exposure. A Stance is not by itself an absolute investment-attractiveness judgment or an ETF recommendation. | Duration stance, Curve stance, Credit stance |
-| **Core Stance** | The market-derived Stance produced from Stance Rule Mapping before Macro Constraint application. | positive Credit |
-| **Constraint Action** | The stance-specific action selected from macro rules for application to a Core Stance. | pass-through, weaken, cap positive magnitude |
-| **Macro Constraint** | The umbrella concept for stance-specific macro-based constraint logic and its application to a Core Stance. | rising inflation + tightening policy caps positive Duration |
-| **Bond-Exposure Stance Set** | The combined final Duration, Curve, and Credit outputs consumed by ETF Selection. | Preserves the three Stances rather than collapsing them into one aggregate score. |
+| Term                     | Definition                                                                                                                                                                                                       |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **ETF Exposure Profile** | The economically relevant identity of an ETF's bond exposure, including properties such as maturity, duration, credit exposure, underlying market, portfolio construction, currency, and hedging where relevant. |
+| **Exposure Evaluation**  | The combined economic assessment of whether an ETF's Exposure Profile is appropriate under current bond-market and macroeconomic conditions.                                                                     |
+| **Positioning Overlay**  | A post-Exposure-Evaluation adjustment reflecting crowding, sentiment, positioning, or similar implementation context.                                                                                            |
+| **Instrument Quality**   | The degree to which an ETF provides its intended Exposure Profile reliably, efficiently, and with acceptable implementation friction.                                                                            |
+| **Candidate Set**        | The set of ETFs remaining eligible at a defined point in the Evaluation flow.                                                                                                                                    |
 
-### 5.1 Integration Flow
+High-level flow:
 
-```text
-Core Stance
-     +
-Constraint Action
-        ↓
-[Constraint Application]
-        ↓
-Final Stance
 ```
-
-`Macro Constraint` is the umbrella concept for stance-specific constraint logic based on Macro Components and its application to the Core Stance.
-
-Typical Constraint Actions may include:
-
-```text
-pass-through
-strengthen
-weaken
-magnitude cap
-directional restriction
-hard rejection
-```
-
-### 5.2 Constraint Rules vs Constraint Application
-
-Constraint Rule Mapping answers:
-
-```text
-Which Constraint Action applies under this Constraint Rule Case?
-```
-
-Constraint Application answers:
-
-```text
-How is that action applied to the supplied Core Stance?
-```
-
-One Constraint Rule Case does not require a separate table entry for every possible Core Stance when the selected Constraint Action has well-defined application semantics.
-
----
-
-## 6. ETF Selection
-
-| Term | Definition |
-|---|---|
-| **ETF Universe** | The set of ETFs eligible for exposure-fit evaluation. |
-| **Exposure Profile** | The bond exposure represented by an ETF, such as duration/maturity, curve segment, credit exposure, underlying market, and relevant currency/hedging characteristics. |
-| **Exposure Fit** | The degree to which an ETF's Exposure Profile expresses the Bond-Exposure Stance Set. |
-| **Instrument Evaluation** | Evaluation of ETF-specific attractiveness after Exposure Fit, including relevant yield/carry, price behavior, fees, liquidity, tracking, hedging/currency structure, and alternatives. |
-| **ETF Selection** | The process that determines which evaluated ETFs remain preferred. |
-
-```text
-ETF Universe
+Canonical Components
         +
-Bond-Exposure Stance Set
+ETF Exposure Profile
         ↓
-[Exposure Fit Evaluation]
+[Exposure Evaluation]
         ↓
-[Instrument Evaluation]
+Exposure Evaluation Result
         ↓
-[ETF Selection]
-```
----
-
-## 7. Diagnostics
-
-| Term | Definition |
-|---|---|
-| **Diagnostics** | Analysis that explains or inspects authoritative model behavior without changing the model's calculations or decisions. |
-| **Historical Context** | Historical observations of authoritative calculated model outputs used to interpret current or past model behavior. |
-| **Diagnostic Comparison** | Comparison of calculated Features, Components, Component States, Stances, or related metadata for explanatory purposes. |
-
-Historical Context is explanatory, not a second hidden model.
-
-```text
-Authoritative Calculated Outputs
+[Positioning Overlay]
         ↓
-[Historical Context Preparation]
+Positioning-Adjusted Exposure Evaluation
         ↓
-Historical Context
+[Instrument Quality]
         ↓
-Diagnostics / Visualization / Reporting
+Evaluated Candidate Set
 ```
 
+## 5.2 Exposure Evaluation
+
+Exposure Evaluation combines several ETF-specific evaluations and related adjustment logic.
+
+| Term                           | Definition                                                                                                                                                    |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Duration Evaluation**        | ETF-specific evaluation of whether the ETF's interest-rate sensitivity is appropriate under current conditions.                                               |
+| **Curve Evaluation**           | ETF-specific evaluation of whether the ETF's maturity / curve exposure is appropriate under current term-structure conditions.                                |
+| **Credit Evaluation**          | ETF-specific evaluation of whether the ETF's credit-risk exposure is appropriate under current credit conditions.                                             |
+| **Rates Valuation Evaluation** | ETF-specific evaluation of whether compensation for accepting the ETF's rates exposure is sufficiently attractive.                                            |
+| **Macro Adjustment**           | A dimension-specific modification applied within an Evaluation when macroeconomic Components materially affect how strongly the exposure should be expressed. |
+
+The four Evaluations—Duration, Curve, Credit, and Rates Valuation—are parallel analytical dimensions and do not need to share identical output semantics or weighting.
+
+**Macro Adjustment** is applied within the relevant Evaluation rather than as a separate peer Evaluation.
+
+```
+Core Duration Evaluation Result
+        +
+Relevant Macro Components
+        ↓
+[Duration Macro Adjustment]
+        ↓
+Final Duration Evaluation Result
+```
+
+Possible adjustment semantics include pass-through, weaken, cap, or directional restriction.
+
+The resulting dimension-level Evaluation results are then combined through Exposure Evaluation.
+
+```
+Final Duration Evaluation Result
+        +
+Final Curve Evaluation Result
+        +
+Final Credit Evaluation Result
+        +
+Rates Valuation Evaluation Result
+        ↓
+[Exposure Evaluation]
+        ↓
+Exposure Evaluation Result
+```
+
+Additional inputs may include ETF-level Yield / Carry and Underlying Rate Volatility where relevant to the applicable Evaluation.
+
+## 5.3 Positioning Overlay
+
+**Positioning Overlay** modifies implementation willingness after Exposure Evaluation without redefining the underlying economic assessment.
+
+Typical inputs may include crowding, sentiment, speculative positioning, unusual directional consensus, or exposure-level extension after a large market move. Possible effects include pass-through, weaker implementation preference, limits on aggressive expression, preference for less-extreme exposure, or reduced implementation intensity.
+
+```
+Exposure Evaluation Result
+        +
+Positioning Inputs
+        ↓
+[Positioning Overlay]
+        ↓
+Positioning-Adjusted Exposure Evaluation
+```
+
+## 5.4 Instrument Quality
+
+**Instrument Quality** evaluates whether an ETF is a sufficiently good vehicle for an exposure that has already passed Exposure Evaluation and Positioning Overlay.
+
+Typical inputs include expense ratio or implementation cost, liquidity, bid-ask spread, and tracking quality. Instrument Quality may serve as both a minimum-quality filter and a relative ranking criterion among acceptable ETFs.
+
+```
+Positioning-Adjusted Exposure Evaluation
+        +
+Instrument Quality Inputs
+        ↓
+[Instrument Quality]
+        ↓
+Evaluated Candidate Set
+```
+
+Final ETF choice may be made from the Evaluated Candidate Set using simple ranking, weighting, thresholds, or other decision rules as appropriate.
+
+
+
 ---
 
-## 8. Model Definition and Interface
+# 6. Diagnostics
 
-| Term | Definition |
-|---|---|
-| **Model Configuration** | The declarative definition of model-specific structure and parameters consumed by Bondview calculation, currently represented in YAML. |
-| **Configuration Schema** | The contract that validates whether Model Configuration is structurally and semantically acceptable. |
-| **Resolved Model Specification** | The validated, explicit runtime representation produced from Model Configuration before calculation. |
-| **Result Boundary** | A formal interface through which one responsibility exposes authoritative outputs to downstream consumers. |
-| **Result Contract** | The documented semantics and required contents of a particular Result Boundary. |
+| Term                      | Definition                                                                                                                                                 |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Diagnostics**           | Analysis that explains, validates, or inspects authoritative model behavior without changing the model's calculations or decisions.                        |
+| **Historical Context**    | Historical observations of authoritative calculated outputs used to interpret current or past model behavior.                                              |
+| **Diagnostic Comparison** | Comparison of Features, Components, Component States, Bond Exposure Views, Evaluation results, or related metadata for explanatory or validation purposes. |
 
-Conceptually:
+Historical Context is diagnostic, not a second hidden decision model.
 
-```text
-Model Configuration (YAML)
+**Bond Exposure Views** can serve as sanity-check projections of Component behavior. Diagnostics may inspect their frequency, persistence, state transitions, historical episodes, Component-to-View traceability, and sensitivity to horizon or threshold choices.
+
+For a selected date or period, Diagnostics should expose enough Component and supporting Feature / Raw Observation information for an expert to assess whether the interpretation is economically plausible.
+
+
+---
+
+# 7. Model Definition and Interfaces
+
+| Term                             | Definition                                                                                              |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| **Model Configuration**          | The declarative definition of model-specific structure and parameters consumed by Bondview calculation. |
+| **Configuration Schema**         | The contract that validates whether Model Configuration is structurally and semantically acceptable.    |
+| **Resolved Model Specification** | The validated, explicit runtime representation produced from Model Configuration before calculation.    |
+
+**Model Definition** describes how model structure and parameters are declared, validated, and resolved for runtime use.
+
+```
+Model Configuration
         ↓
-Configuration Schema
+[Configuration Validation]
         ↓
 Resolved Model Specification
-        ↓
-Runtime Calculation
-        ↓
-Result Boundary
 ```
 
-Concrete result objects should be defined individually when their contracts are designed rather than forcing all modules into one generic result class.
+| Term                | Definition                                                                                                 |
+| ------------------- | ---------------------------------------------------------------------------------------------------------- |
+| **Result Boundary** | A formal interface through which one responsibility exposes authoritative outputs to downstream consumers. |
+| **Result Contract** | The documented semantics and required contents of a particular Result Boundary.                            |
+
+**Result Interfaces** define how authoritative outputs are exposed across responsibility boundaries. Concrete result objects should be defined individually when their contracts are designed rather than forcing all Modules into one generic result class.
+
 
 ---
 
-## 9. Naming Principles
+# 8. Naming Principles
 
 1. Prefer semantic names over numbered names.
-2. Use **Module** for major system responsibilities.
-3. Use **Stage** for semantic positions in a processing flow.
-4. Use **Capability** for implementation behavior.
-5. Do not add `shared` to a capability name merely because it has multiple consumers.
-6. Reuse authoritative Components, capabilities, and outputs when equivalent semantics already exist.
-7. Keep **Feature**, **Component**, **Component Value**, and **Component State** distinct.
-8. Use **Market Component** and **Macro Component** for the two input domains, and use **Component Value** and **Component State** consistently for both.
-10. Use **Rule Case** as the general concept; use **Stance Rule Case** or **Constraint Rule Case** when the processing role matters.
-11. Use **Macro Constraint** as the umbrella concept for stance-specific macro rule interpretation and Constraint Application rather than introducing a universal macro stance/score.
-12. Keep **Constraint Rule Mapping** conceptually separate from **Constraint Application**: economic rules choose the action; application mechanics execute it against the Core Stance.
-13. Treat **Bond-Exposure Stance Set** as the formal collection of final Duration, Curve, and Credit outputs.
-14. Use **Result Boundary / Result Contract** as generic interface concepts, while defining concrete result structures separately.
+2. Use **Module** only for major system responsibilities with meaningful boundaries.
+3. Use **Capability** for implementation behavior.
+4. Keep **Raw Observation**, **Feature**, and **Component** distinct.
+5. Keep **Component Value** and **Component State** distinct where a discrete State exists.
+6. Treat **Component** as the authoritative reusable analytical concept.
+7. A Component may be derived from Features or from other Components / Component Values when economically meaningful.
+8. Do not introduce a formal `Derived Component` subtype unless implementation later demonstrates a need for it.
+9. Do not use `Market Component` and `Macro Component` as architectural subtypes. Domain labels may be retained as descriptive metadata when useful.
+10. Use **Bond Exposure Dimension** for Duration, Curve, and Credit.
+11. Use **Bond Exposure View** for their high-level human-readable interpretations.
+12. Use **Exposure Evaluation** for the combined economic assessment of an ETF's exposure.
+13. Use **Macro Adjustment** for evaluator-specific macro modification.
+14. Use **Positioning Overlay** for post-economic-evaluation crowding / sentiment / positioning adjustment.
+15. Use **Instrument Quality** only for implementation quality, not for economic attractiveness.
+16. Use **Candidate Set** as the general term for ETFs remaining eligible at a defined point in the Evaluation flow.
+17. Use **Rule Case**, **Rule Mapping**, **Rule Table**, and **Coverage Strategy** as general Calculation Mechanics.
+18. Use **Result Boundary / Result Contract** as generic interface concepts while defining concrete results separately.
