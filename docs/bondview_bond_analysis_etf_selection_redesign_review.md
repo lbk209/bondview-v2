@@ -92,7 +92,7 @@ A Stance may summarize selected Components for human interpretation without dete
 
 # 3. Module Boundaries
 
-The revised design now points toward three major responsibilities rather than one enlarged ETF Selection module.
+The revised design now points toward two core modules on the authoritative selection path, with Diagnostics as a separate consumer of canonical Components and Stance interpretations.
 
 ```text
 Upstream Analysis Module
@@ -107,6 +107,8 @@ Final ETF Selection
 ```
 
 Human-facing Stances remain a derived interpretation path from canonical Components and are not authoritative ETF-selection inputs.
+
+Diagnostics may consume the same Components and Stance interpretations to inspect historical frequency, persistence, transitions, and traceability. This diagnostics path is separate from the authoritative ETF-selection path.
 
 ## 3.1 Upstream Analysis Module
 
@@ -244,6 +246,15 @@ A separate `Macro Analysis Module` is not currently justified.
 
 A Component is an authoritative analytical concept that preserves information needed by one or more downstream consumers.
 
+Downstream consumers may include:
+
+- ETF Evaluation;
+- Diagnostics;
+- human-readable interpretations;
+- other future analytical capabilities.
+
+A Component does **not** need to be consumed by every downstream consumer.
+
 Its identity should eventually define:
 
 - economic meaning;
@@ -268,6 +279,10 @@ Curve Movement
 `Curve Movement` can still be a Component because `steepening / stable / flattening` is itself an economically meaningful reusable concept.
 
 The design does **not** require a formal `Primitive Component` / `Derived Component` taxonomy. Where useful, an individual Component description may simply state that it is derived from other Components or their Values.
+
+Some Components may partially overlap because they provide different economically meaningful interpretations of the same underlying observations. This is acceptable when the distinction is analytically useful.
+
+The design should avoid meaningless duplication, but it should not require every Component to be unique in raw-data lineage or to be consumed by every evaluator. Each downstream consumer selects the Components relevant to its own purpose.
 
 A Component is not defined by the Stance or ETF evaluator that consumes it.
 
@@ -331,6 +346,7 @@ The catalog is still provisional.
 | **Short-End Yield Move** | Curve-relevant short-end movement aligned with Yield Move B | Strong candidate; horizon unresolved |
 | **Curve Movement** | Relative term-structure movement: steepening / stable / flattening | Strong candidate |
 | **Curve Configuration** | Current curve shape / slope condition | Strong candidate |
+| **Curve Driver** | Bull / bear steepener / flattener interpretation derived from short- and long-end moves | Candidate; diagnostics value clear, ETF-evaluation use unresolved |
 | **Term Premium** | Candidate compensation measure for bearing long-horizon interest-rate risk | Coverage candidate; inclusion unresolved |
 | **Real Long-End Yield** | Candidate broader real-income / valuation context | Coverage candidate; inclusion unresolved |
 | **Nominal Long-End Yield Level** | Observable starting-yield / income context; may overlap with ETF yield / carry | Coverage candidate; inclusion unresolved |
@@ -371,7 +387,9 @@ A Stance is no longer an authoritative ETF-selection input.
 
 Working definition:
 
-> **Stance:** a human-readable analytical interpretation of selected canonical Components along one specified bond-market dimension.
+> **Stance:** one of Bondview's three named high-level human-readable interpretations—Duration, Curve, or Credit—constructed from selected canonical Components.
+
+Not every human-readable interpretation is a Stance. Other Component States or diagnostic interpretations may remain outside the Stance concept.
 
 Examples:
 
@@ -385,6 +403,8 @@ Curve Stance
 Credit Stance
 → interpretation of the credit-risk dimension
 ```
+
+For example, `Curve Driver = Bull Steepener` may be a Component State or diagnostic interpretation without becoming an additional Stance.
 
 Stances do not need homogeneous output semantics.
 
@@ -517,9 +537,11 @@ short end rises more than long end
 → bear flattener
 ```
 
-The bull / bear label itself is initially best treated as a **derived interpretation**.
+The bull / bear concept may be represented as a canonical `Curve Driver` Component if Bondview wants an authoritative historical series for diagnostics and interpretation.
 
-If later coverage testing shows that bull vs bear curve drivers change ETF maturity choice beyond what Duration and Curve Evaluations already capture, the underlying Yield Move Components should affect ETF Evaluation directly. The label itself does not need to become an authoritative Component merely for that reason.
+Its Component status does **not** depend on immediate use in ETF Evaluation. The justification is that bull / bear steepener / flattener is itself an economically meaningful reusable description of curve dynamics.
+
+Whether ETF Evaluation consumes `Curve Driver` is a separate consumer-logic question. If it adds no incremental selection information beyond the underlying Yield Move and Curve Components, it may remain diagnostics-only while still being a valid Component.
 
 ---
 
@@ -667,9 +689,11 @@ Question:
 
 > **How appropriate is this ETF's position on the maturity structure under the current curve environment?**
 
-Curve Evaluation may act as a relative-maturity qualifier to Duration Evaluation rather than as an independent directional preference.
+Curve Evaluation is an independent ETF-level evaluation alongside Duration Evaluation.
 
-Bull / bear steepener / flattener information can be derived from Short-End Yield Move and Long-End Yield Move B if needed. Whether that derived information changes ETF choice remains a coverage question.
+Its interpretation is relative-maturity / term-structure-oriented rather than an outright duration-direction view, but that semantic distinction does not make Curve Evaluation subordinate to Duration Evaluation.
+
+Bull / bear steepener / flattener information can be represented by the `Curve Driver` Component derived from Short-End Yield Move, Long-End Yield Move B, and Curve Movement. Whether ETF Evaluation consumes `Curve Driver` remains a separate coverage question.
 
 ### 8.3.3 Credit Evaluation
 
@@ -749,7 +773,7 @@ For example:
 
 This ETF-by-ETF application test should help decide which candidates deserve canonical Component status.
 
-### 8.3.5 Instrument-level yield / carry
+### 8.3.5 Candidate input: instrument-level yield / carry
 
 Instrument-level yield / carry should **not** be treated as Instrument Quality.
 
@@ -757,16 +781,17 @@ Higher yield is not evidence that an ETF is a better-constructed instrument.
 
 Yield / carry belongs on the **economic-evaluation side** because it contributes to the expected economics of holding the bond exposure.
 
-The exact placement remains open:
+It is **not a fifth peer evaluation** in the current design. The exact placement remains open:
 
 ```text
 Rates Valuation / Compensation Evaluation
-Credit Evaluation
 or
-a later explicit Carry / Income Evaluation
+Credit Evaluation
 ```
 
 depending on the exposure.
+
+A separate Carry / Income Evaluation should be introduced only if later work shows that yield / carry contains enough distinct decision information to justify its own evaluation dimension.
 
 The main design risk is double counting because:
 
@@ -781,7 +806,7 @@ can contain overlapping compensation information.
 
 The decision should therefore be based on incremental information value, not on adding every available yield measure.
 
-### 8.3.6 Underlying rate volatility
+### 8.3.6 Candidate input: underlying rate volatility
 
 Generic `rate volatility` should be split into distinct concepts.
 
@@ -791,14 +816,11 @@ Underlying Rate Volatility
 
 Positioning data
 → Positioning Overlay
-
-ETF realized price volatility
-→ ETF Price Review
 ```
 
-Underlying rate volatility may reduce the attractiveness of extreme duration exposure even when the directional Duration Evaluation is favorable.
+`Underlying Rate Volatility` is **not a fifth peer evaluation** in the current design. If retained, it would most naturally act as a candidate input or modifier inside Duration Evaluation because very high rate volatility may reduce the attractiveness of extreme duration exposure even when the directional Duration view is favorable.
 
-It should not be classified as Positioning merely because both can restrain implementation.
+It should not be classified as Positioning merely because both can restrain implementation. ETF realized price volatility belongs to the optional future price-diagnostics domain, which is outside the initial authoritative Bondview scope.
 
 ## 8.4 Exposure / Market Evaluation
 
@@ -1363,7 +1385,7 @@ Terms requiring review include:
 - **Stance Calculation Module**
 - **Market Component**
 - **Macro Component**
-- **Bond-Exposure Stance Set**
+- **Bond-Exposure Stance Set** — expected to be retired
 - **Core Stance**
 - **Final Stance**
 - **Macro Constraint**
@@ -1373,9 +1395,9 @@ Terms requiring review include:
 - **Exposure / Market Evaluation**
 - **Positioning Overlay**
 - **Instrument Quality**
-- **ETF Price Review**
+- optional future **ETF Price Diagnostics** — out of initial scope
 - **Candidate Set**
-- names for the three major modules and their result boundaries.
+- names for the core modules and their result boundaries.
 
 Because these terms will be used repeatedly in detailed design, stabilizing vocabulary before extensive Step-4+ work should improve consistency and reduce rework.
 
@@ -1394,9 +1416,9 @@ Those belong in lower-level contracts.
 Before revising the architecture document, the main architectural items that should be settled are:
 
 1. final names of the major modules;
-2. whether the ETF Evaluation / ETF Price Review split is accepted;
-3. Result Boundary names;
-4. formal status of Stances and retirement / redefinition of `Bond-Exposure Stance Set`.
+2. Result Boundary names;
+3. formal status of Stances;
+4. removal of `Bond-Exposure Stance Set` from the authoritative decision boundary.
 
 Once those are settled, the architecture can be revised without waiting for every lower-level open decision.
 
@@ -1428,7 +1450,7 @@ This review remains non-authoritative until those authoritative documents are re
 
 # 17. Main Open Decisions
 
-The remaining decisions should be separated into **architecture-level** and **lower-level design** items.
+The remaining decisions should be separated into **architecture-level**, **lower-level design**, and **resolved scope** items.
 
 ## 17.1 Architecture-level decisions
 
@@ -1438,8 +1460,6 @@ These can still materially affect the authoritative architecture document:
 2. **Final name of the ETF Evaluation Module**
 3. **Exact Result Boundary of the ETF Evaluation Module**
 4. **Role and formal status of Stances, including their diagnostic / sanity-check role**
-5. **Whether `Bond-Exposure Stance Set` should remain a vocabulary term at all**
-6. **Whether optional ETF Price Diagnostics should exist later as a non-authoritative capability**
 
 The current expectation is that these decisions may adjust names and boundaries but are unlikely to reverse the Component-authoritative design.
 
@@ -1452,20 +1472,28 @@ These are important for implementation but are less likely to overturn the high-
 3. **Whether Term Premium, Real Long-End Yield, and/or Nominal Long-End Yield Level provide distinct enough value**
 4. **Whether Underlying Rate Volatility becomes a canonical Component**
 5. **Exact Curve Evaluation semantics**
-6. **Whether bull / bear curve-driver information changes ETF choice beyond existing Components**
+6. **Whether the `Curve Driver` Component adds incremental value to ETF Evaluation beyond diagnostics / interpretation**
 7. **Credit Component completeness**
 8. **Exact Rates Valuation / Compensation Evaluation inputs**
 9. **Exact placement and semantics of ETF-level yield / carry**
 10. **Minimum ETF Exposure Profile required for market-derived evaluations**
 11. **Positioning Overlay inputs, semantics, and application mechanics**
 12. **Instrument Quality thresholds and ranking semantics**
-13. **Whether optional ETF Price Diagnostics are useful enough to add later**
-14. **How macroeconomic Components modify ETF-specific evaluations**
-15. **Whether a reusable `Constraint Action` abstraction remains useful**
-16. **Exposure / Market Evaluation aggregation method**
-17. **Final ETF selection / ranking method**
+13. **How macroeconomic Components modify ETF-specific evaluations**
+14. **Whether a reusable `Constraint Action` abstraction remains useful**
+15. **Exposure / Market Evaluation aggregation method**
+16. **Final ETF selection / ranking method**
 
 Most of these should refine evaluator behavior rather than change the major module topology.
+
+## 17.3 Resolved scope decisions
+
+The following are no longer active open decisions in this review:
+
+- **`Bond-Exposure Stance Set` should be retired from the formal redesigned vocabulary and authoritative selection boundary.** Stances no longer form the input contract to ETF Evaluation.
+- **ETF Price Diagnostics are outside the initial Bondview scope.** They may be reconsidered later only if a concrete analytical or monitoring use case emerges.
+- **Stance remains limited to Duration / Curve / Credit high-level interpretations.** Other human-readable Component States or diagnostic interpretations do not automatically become Stances.
+- **A Component may serve ETF Evaluation, Diagnostics, human-readable interpretation, or another consumer without being used by every consumer.**
 
 ---
 
@@ -1475,18 +1503,20 @@ The revised direction can be summarized as:
 
 ```text
 Canonical Components
-= authoritative analytical information
+= authoritative analytical information that may serve ETF Evaluation,
+  Diagnostics, Stances, and other downstream consumers
 
 ETF Evaluation Module
 = authoritative economic / implementation-quality evaluation
   using Components + ETF Exposure Profile
 
 ETF price-history diagnostics
-= excluded from the initial authoritative selection flow;
-  optional later diagnostic capability only
+= outside the initial Bondview scope;
+  revisit only if a concrete future use case emerges
 
 Stances
-= derived human-readable interpretations
+= Duration / Curve / Credit human-readable interpretations
+  and diagnostic sanity-check projections
 
 Macro effects
 = internal modifiers inside relevant market-derived ETF evaluations
@@ -1497,9 +1527,6 @@ Positioning
 Instrument Quality
 = downstream quality filter / ranker among economically suitable ETFs
 
-Stances
-= human-readable interpretations and historical sanity-check projections
-  for validating Component behavior and parameter choices
 ```
 
 The core selection flow is:
