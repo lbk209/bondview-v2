@@ -123,7 +123,7 @@ The **Diagnostics Module** explains, inspects, and validates authoritative model
 
 Diagnostics is **lineage-scoped by default**. For a result or interpretation being inspected, Diagnostics should normally use only the Raw Observations, Features, Components, intermediate results, and metadata that belong to the actual upstream dependency lineage of that target. It should not introduce unrelated supplemental analytical data as a parallel diagnostic decision path.
 
-A diagnostic target may be a Bond Exposure View, an ETF Evaluation Result, the Evaluated Candidate Set, an included or excluded ETF, or another authoritative result whose lineage is available.
+A diagnostic target is normally a Canonical Component, Bond Exposure View, or ETF Evaluation Result whose analytical derivation requires explanation. Diagnostics primarily traces how the relevant market or economic evaluation was produced; comparison of that evaluation with an ETF Exposure Profile remains part of ETF Evaluation rather than the primary Diagnostics responsibility.
 
 Diagnostics is downstream of authoritative calculations and must not become an upstream dependency of Bond Analysis or ETF Evaluation. Detailed diagnostic behavior is defined in Section 5.2.
 
@@ -391,13 +391,19 @@ ETF Evaluation combines this identity with Canonical Components to determine whe
 
 **Exposure Evaluation** is the broader economic assessment process that determines whether an ETF's Exposure Profile is appropriate under current bond-market and macroeconomic conditions.
 
-It contains:
+Its internal hierarchy is:
 
-- constituent evaluations of distinct aspects of the ETF's exposure;
-- evaluator-specific Macro Adjustments where relevant;
-- synthesis of the completed evaluation results into an overall Exposure Evaluation Result.
+```text
+[Exposure Evaluation]
+├── [Constituent Evaluations]
+│   ├── [Core Evaluation]
+│   └── [Macro Adjustment, where applicable]
+└── [Evaluation Synthesis]
+        ↓
+Exposure Evaluation Result
+```
 
-The internal operation label **Evaluation Synthesis** is descriptive architecture terminology rather than a separate system responsibility.
+Macro Adjustment therefore belongs within the applicable constituent evaluation rather than operating as a peer analytical layer. The internal operation label **Evaluation Synthesis** is descriptive architecture terminology rather than a separate system responsibility.
 
 ### 4.2.1 Constituent Evaluations
 
@@ -417,9 +423,7 @@ The general pattern is:
 ```text
 Relevant Canonical Components
         ↓
-[Constituent Evaluation] <──────── Relevant ETF Exposure Profile
-        ↑
-Applicable ETF-Level Economic Inputs
+[Constituent Evaluation] <──────── Relevant ETF Exposure Profile + Applicable ETF-Level Economic Inputs
         ↓
 Core Evaluation Result
 ```
