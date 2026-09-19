@@ -23,61 +23,38 @@ Accepted Raw Observations
         ↓
 [Bond Analysis]
         ↓
-Canonical Components ───────────────→ [Bond Exposure View Calculation]
-        +                                      ↓
-ETF Exposure Profile                   Bond Exposure Views
-        ↓                                      │
-[ETF Evaluation]                               │
-        ↓                                      │
-ETF Evaluation Results ────────────────────────┤
-        ↓                                      ↓
-Evaluated Candidate Set                  [Diagnostics]
-                                               ↓
-                                      Diagnostic Results
+Canonical Components ─────────────> [Bond Exposure View Calculation]
+        +                                 ↓
+ETF Exposure Profile                Bond Exposure Views
+        ↓                                      
+[ETF Evaluation]                          ↓
+        ↓                                      
+ETF Evaluation Results ───────────> [Diagnostics]
+        ↓                                 ↓
+Evaluated Candidate Set             Diagnostic Results
 ```
 
-The authoritative ETF Evaluation path therefore remains complete even when the explanatory and diagnostic branch is omitted:
-
-```text
-Accepted Raw Observations
-        ↓
-[Bond Analysis]
-        ↓
-Canonical Components
-        +
-ETF Exposure Profile
-        ↓
-[ETF Evaluation]
-        ↓
-ETF Evaluation Results
-        ↓
-Evaluated Candidate Set
-```
+The authoritative ETF Evaluation path is complete without the explanatory and diagnostic branch; that branch consumes authoritative outputs for interpretation and validation but is not required for ETF Evaluation.
 
 The internal ETF Evaluation path is:
 
 ```text
 Canonical Components
-        +
-ETF Exposure Profile
         ↓
-[Dimension Evaluations]
+[Dimension Evaluations] <────────── ETF Exposure Profile
         ↓
 Dimension Evaluation Results
         ↓
 [Exposure Evaluation]
         ↓
 Exposure Evaluation Result
-        +
-Positioning Inputs
         ↓
-[Positioning Overlay]
+[Positioning Overlay] <──────────── Positioning Inputs
         ↓
-Positioning-Adjusted Exposure Evaluation
-        +
-Instrument Quality Inputs
+Positioning-Adjusted 
+ Exposure Evaluation
         ↓
-[Instrument Quality]
+[Instrument Quality] <───────────── Instrument Quality Inputs
         ↓
 Evaluated Candidate Set
 ```
