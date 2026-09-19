@@ -121,9 +121,7 @@ The internal structure of ETF Evaluation is defined in Section 4.
 
 The **Diagnostics Module** explains, inspects, and validates authoritative model behavior without changing authoritative calculations or decisions.
 
-Diagnostics is **lineage-scoped by default**. For a result or interpretation being inspected, Diagnostics should normally use only the Raw Observations, Features, Components, intermediate results, and metadata that belong to the actual upstream dependency lineage of that target. It should not introduce unrelated supplemental analytical data as a parallel diagnostic decision path.
-
-A diagnostic target is normally a Canonical Component, Bond Exposure View, or ETF Evaluation Result whose analytical derivation requires explanation. Diagnostics primarily traces how the relevant market or economic evaluation was produced; comparison of that evaluation with an ETF Exposure Profile remains part of ETF Evaluation rather than the primary Diagnostics responsibility.
+Diagnostics is lineage-scoped by default: it traces the authoritative analytical lineage needed to explain a Component, Bond Exposure View, or ETF Evaluation Result, without introducing unrelated supplemental analytical data. Comparison of an evaluation with an ETF Exposure Profile remains part of ETF Evaluation rather than the primary Diagnostics responsibility.
 
 Diagnostics is downstream of authoritative calculations and must not become an upstream dependency of Bond Analysis or ETF Evaluation. Detailed diagnostic behavior is defined in Section 5.2.
 
