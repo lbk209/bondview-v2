@@ -333,25 +333,18 @@ Detailed ETF traded-price-history analysis is outside the current authoritative 
 
 ## 4.1 ETF Exposure Profile
 
-The **ETF Exposure Profile** is the economically relevant identity of an ETF's bond exposure.
+The **ETF Exposure Profile** is the economic identity of the bond exposure that an ETF is designed to provide.
 
-It may include properties such as:
+Bondview consumes the ETF Exposure Profile as an input and does not prescribe a single method for constructing it. In practice, the ETF's declared benchmark or other reference exposure may provide a convenient basis for the profile, supplemented where necessary by material exposure characteristics such as currency hedging, leverage, or explicit duration, maturity, or credit characteristics.
 
-- maturity exposure;
-- duration;
-- credit exposure;
-- underlying market;
-- portfolio construction;
-- currency;
-- hedging where relevant.
+The ETF Exposure Profile answers:
 
-The ETF Exposure Profile is an input identity, not an evaluation result.
+> What bond exposure is this ETF designed to provide?
 
-It answers:
+Determining whether the ETF's actual holdings, tracking behavior, or realized performance faithfully deliver that exposure is outside the current ETF Exposure Profile responsibility.
 
-> What economic bond exposure does this ETF provide?
+ETF Evaluation combines the ETF Exposure Profile with Canonical Components to determine how appropriate that exposure is under current conditions.
 
-ETF Evaluation combines this identity with Canonical Components to determine whether the exposure is appropriate under current conditions.
 
 ## 4.2 Exposure Evaluation
 
@@ -361,26 +354,24 @@ Its internal hierarchy is:
 
 ```text
 [Exposure Evaluation]
-├── [Constituent Evaluations]
-│   ├── [Core Evaluation]
-│   └── [Macro Adjustment, where applicable]
-└── [Evaluation Combination]
-        ↓
-Exposure Evaluation Result
+     ├── [Constituent Evaluations]
+     │        ├── [Core Evaluation]
+     │        └── [Macro Adjustment, where applicable]
+     └── [Evaluation Combination]
 ```
 
 Macro Adjustment therefore belongs within the applicable constituent evaluation rather than operating as a peer analytical layer.
 
 ### 4.2.1 Constituent Evaluations
 
-A constituent evaluation assesses one economically distinct aspect of an ETF's Exposure Profile using the Canonical Components and ETF-specific information relevant to that question.
+A constituent evaluation assesses one economically distinct aspect of an ETF's Exposure Profile using the Canonical Components relevant to that question.
 
 The current constituent evaluations are:
 
-- **Duration Evaluation** — whether the ETF's interest-rate sensitivity is appropriate under current conditions;
-- **Curve Evaluation** — whether the ETF's maturity / curve exposure is appropriate under current term-structure conditions;
-- **Credit Evaluation** — whether the ETF's credit-risk exposure is appropriate under current credit conditions;
-- **Rates Valuation Evaluation** — whether compensation for accepting the ETF's rates exposure is sufficiently attractive.
+* **Duration Evaluation** — whether the ETF's interest-rate sensitivity is appropriate under current conditions;
+* **Curve Evaluation** — whether the ETF's maturity / curve exposure is appropriate under current term-structure conditions;
+* **Credit Evaluation** — whether the ETF's credit-risk exposure is appropriate under current credit conditions;
+* **Rates Valuation Evaluation** — whether compensation for accepting the ETF's rates exposure is sufficiently attractive.
 
 These evaluations operate in parallel but do not need to share identical output semantics, scales, weighting, State semantics, or Rule Mapping structures.
 
@@ -389,12 +380,15 @@ The general pattern is:
 ```text
 Relevant Canonical Components
         ↓
-[Constituent Evaluation] <──────── Relevant ETF Exposure Profile + Applicable ETF-Level Economic Inputs
+[Constituent Evaluation] <──────── Relevant ETF Exposure Profile
         ↓
 Core Evaluation Result
 ```
 
-The specific Component set, economic mapping, and ETF-level inputs belong to the relevant evaluator design rather than this system-level architecture.
+A constituent evaluation may additionally consume ETF-level economic inputs when its economic question specifically requires them. In the current design, the clearest example is a defined ETF Yield / Carry measure used by Rates Valuation Evaluation.
+
+The specific Component set, economic mapping, Profile information, and any additional ETF-level economic inputs belong to the relevant evaluator design rather than this system-level architecture.
+
 
 ### 4.2.2 Macro Adjustment
 
@@ -416,13 +410,7 @@ Macro Adjustment may modify how strongly an economically attractive exposure sho
 
 The architecture does not prescribe the exact adjustment actions, thresholds, Rule Cases, or Rule Mappings. Those belong in evaluator-specific design.
 
-The architectural constraints are:
-
-- macroeconomic conditions remain Canonical Components;
-- the relevant evaluator chooses which macro Components it consumes;
-- macro effects are applied within the applicable constituent evaluation;
-- macro logic must not redefine upstream Component meaning;
-- a macro Component may be used by more than one evaluator when economically justified.
+Macro Adjustment may consume any Macro Components economically relevant to the evaluator, and the same Macro Component may be used by more than one evaluator where justified. Such use must not redefine the meaning of the upstream Canonical Components.
 
 The completed constituent evaluation results are combined into the overall Exposure Evaluation Result:
 
@@ -441,6 +429,7 @@ Exposure Evaluation Result
 ```
 
 The exact combination logic may use weighting, rules, conditional mappings, or other justified mechanics. It belongs in ETF Evaluation design rather than this system-level architecture.
+
 
 ## 4.3 Positioning Overlay
 
@@ -466,6 +455,8 @@ Positioning Inputs are not assumed to be Canonical Components merely because the
 
 If a positioning concept later satisfies the Component definition and requires broader reuse, that treatment should be established explicitly rather than inferred from its use in Positioning Overlay.
 
+Positioning Overlay does not imply that the underlying economic thesis is incorrect; for example, heavy crowding may justify weaker implementation even when Exposure Evaluation remains strongly positive.
+
 Positioning Overlay must not redefine the underlying Exposure Evaluation Result. It modifies implementation willingness or intensity around that result.
 
 ## 4.4 Instrument Quality
@@ -475,7 +466,8 @@ Positioning Overlay must not redefine the underlying Exposure Evaluation Result.
 Potential implementation characteristics may include:
 
 - expense ratio or implementation cost;
-- tracking quality;
+- tracking quality, where tracking is an intended objective;
+- active-management effectiveness, where applicable and supported by defined data and rules;
 - other instrument-specific implementation characteristics supported by defined data and rules.
 
 Execution-specific conditions that Bondview does not currently model, such as live liquidity, bid-ask spread, order size, or market conditions at the time of trading, remain outside the current authoritative ETF Evaluation logic and are considered by the user or consuming workflow at execution time.
