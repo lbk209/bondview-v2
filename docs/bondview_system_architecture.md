@@ -4,7 +4,7 @@
 
 This document defines the system-level architecture of **Bondview**: its major responsibilities, authoritative analytical boundaries, dependency direction, result boundaries, and system-wide design principles.
 
-Bondview transforms accepted bond-market and macroeconomic observations into reusable Canonical Components and applies those Components to ETF evaluation, human-readable interpretation, and diagnostics.
+Bondview transforms accepted bond-market and macroeconomic observations into reusable Canonical Components and applies those Components to ETF evaluation, human-facing interpretation, and diagnostics.
 
 Detailed economic rules, Component catalogs, calculation formulas, thresholds, evaluator-specific scoring logic, and concrete configuration schemas belong in more specific design documents and contracts.
 
@@ -27,16 +27,16 @@ Canonical Components ─────────────> [Bond Exposure Vie
         ↓                                  ↓
 [ETF Evaluation]                    Bond Exposure Views
         ↓                                  ↓
-ETF Evaluation Results ───────────────> [Diagnostics]
-        ↓                                  ↓
-Evaluated Candidate Set              Diagnostic Results
+ETF Evaluation Results ───────────> [Diagnostics]
+                                           ↓
+                                    Diagnostic Results
 ```
 
 The architecture distinguishes four kinds of system output:
 
 - **Canonical Components** as authoritative analytical information;
-- **ETF Evaluation Results**, including the **Evaluated Candidate Set**, as ETF-specific decision-support outputs;
-- **Bond Exposure Views** as human-readable interpretations;
+- **ETF Evaluation Results** as ETF-specific decision-support outputs;
+- **Bond Exposure Views** as human-facing interpretations;
 - **Diagnostic Results** as non-authoritative validation and explanation outputs.
 
 The authoritative ETF Evaluation path is complete without the explanatory and diagnostic branch; that branch consumes authoritative outputs for interpretation and validation but is not required for ETF Evaluation.
@@ -50,7 +50,7 @@ Canonical Components
         ↓
 Constituent Evaluation Results
         ↓
-[Evaluation Synthesis]
+[Evaluation Combination]
         ↓
 Exposure Evaluation Result
         ↓
@@ -61,10 +61,8 @@ Exposure Evaluation
         ↓
 [Instrument Quality] <───────────── Instrument Quality Inputs
         ↓
-Evaluated Candidate Set
+ETF Evaluation Results
 ```
-
-`Constituent Evaluations` and `Evaluation Synthesis` are descriptive architecture labels for internal processing. Their detailed semantics are defined in Section 4.
 
 ---
 
@@ -78,40 +76,25 @@ The **Bond Analysis Module** produces Canonical Components from accepted Raw Obs
 
 Its responsibility includes:
 
-- Feature Calculation;
-- Component Calculation;
-- State Classification where a discrete Component State is useful;
-- authoritative reuse of Components across downstream consumers.
+* applying the Resolved Model Specification to accepted Raw Observations;
+* Feature Calculation;
+* Component Calculation;
+* State Classification where a discrete Component State is useful;
+* preserving the lineage required by authoritative Component results;
+* exposing Canonical Components through its Result Boundary for downstream reuse.
 
-Its authoritative result boundary is the set of Canonical Components required by downstream consumers.
+Its authoritative Result Boundary is the set of Canonical Components required by downstream consumers.
 
-Conceptually:
+Data acquisition and source-specific retrieval are outside Bond Analysis once Raw Observations have been accepted. Bond Analysis also does not perform ETF-specific interpretation or evaluation.
 
-```text
-Raw Observations
-        ↓
-[Feature Calculation]
-        ↓
-Features
-        ↓
-[Component Calculation]
-        ↓
-Component Value
-        ↓
-[State Classification, where applicable]
-        ↓
-Component State
-```
+The internal preparation flow and Component result semantics are defined in Section 3.
 
-A Component may expose a Value, a State, or both according to its defined result representation.
-
-The Bond Analysis Module does not make ETF-specific decisions.
 
 ## 2.2 ETF Evaluation Module
 
 The **ETF Evaluation Module** evaluates ETFs by combining Canonical Components with the economic identity and implementation characteristics of each ETF.
 
-It owns ETF-specific economic assessment, positioning adjustment, and instrument-quality assessment, and exposes ETF Evaluation Results and the Evaluated Candidate Set.
+It owns ETF-specific economic assessment, positioning adjustment, and instrument-quality assessment, and exposes ETF Evaluation Results through its Result Boundary.
 
 The ETF Evaluation Module does not redefine upstream Components. When an evaluator needs an analytical concept already represented by a Canonical Component, it consumes that Component rather than independently recreating it.
 
@@ -121,7 +104,7 @@ The internal structure of ETF Evaluation is defined in Section 4.
 
 The **Diagnostics Module** explains, inspects, and validates authoritative model behavior without changing authoritative calculations or decisions.
 
-Diagnostics is lineage-scoped by default: it traces the authoritative analytical lineage needed to explain a Component, Bond Exposure View, or ETF Evaluation Result, without introducing unrelated supplemental analytical data. Comparison of an evaluation with an ETF Exposure Profile remains part of ETF Evaluation rather than the primary Diagnostics responsibility.
+Diagnostics is lineage-scoped by default: it traces the authoritative analytical lineage needed to explain a Component, Bond Exposure View, or ETF Evaluation Result without introducing unrelated supplemental analytical data. Comparison of an evaluation with an ETF Exposure Profile remains part of ETF Evaluation rather than the primary Diagnostics responsibility.
 
 Diagnostics is downstream of authoritative calculations and must not become an upstream dependency of Bond Analysis or ETF Evaluation. Detailed diagnostic behavior is defined in Section 5.2.
 
@@ -132,6 +115,8 @@ Diagnostics is downstream of authoritative calculations and must not become an u
 Canonical Components are the principal analytical boundary of Bondview.
 
 This section defines the system-level Component invariants that more detailed Component design and implementation must preserve.
+
+The Bond Analysis Module owns the authoritative preparation of Canonical Components. The sections below define the analytical structures, identity rules, lineage requirements, calculation mechanics, and result semantics that govern that responsibility.
 
 ## 3.1 Component Model
 
@@ -146,6 +131,8 @@ A Component may be consumed by one or more downstream responsibilities, includin
 A Component does not need to be consumed by every responsibility.
 
 The meaning of a Component is independent of the consumer that uses it. ETF evaluators, Bond Exposure Views, and Diagnostics may interpret the same Component differently, but they must not redefine its authoritative economic meaning.
+
+If multiple consumers require the same Component with equivalent semantics, they should reuse the same authoritative Component rather than create consumer-specific versions or alternative authoritative calculations. Downstream consumers may select, combine, and interpret the Components relevant to their own responsibilities without altering the Components themselves.
 
 ### 3.1.2 Component Value, State, and Preparation Flow
 
@@ -194,8 +181,6 @@ Curve Configuration
 are all Canonical Components from the perspective of system architecture.
 
 The relevance of a Component is determined by the consumer that uses it.
-
----
 
 ## 3.2 Calculation Mechanics
 
@@ -247,8 +232,6 @@ Rule Mapping is reusable as a calculation structure, but the economic meaning of
 
 System-wide principles for reusable mechanics are defined in Section 6.3.
 
----
-
 ## 3.3 Component Construction and Identity
 
 ### 3.3.1 Component Derivation
@@ -271,14 +254,14 @@ The resulting `Curve Movement` remains a Component when it represents an economi
 
 The architecture does not require separate structural Component types based on whether a Component is calculated directly from Features or from other Components.
 
-### 3.3.2 Component Identity and Horizon
+### 3.3.2 Component Identity
 
 Two analytical concepts should normally be treated as the same Component only when the following are equivalent:
 
-- economic meaning;
-- calculation;
-- relevant horizon;
-- classification semantics where State Classification applies.
+* economic meaning;
+* calculation;
+* relevant horizon;
+* classification semantics where State Classification applies.
 
 Shared Raw Observations, shared State labels, or shared downstream consumers do not by themselves imply shared Component identity.
 
@@ -286,31 +269,42 @@ Relevant horizon is part of Component identity when changing the horizon materia
 
 Component consolidation should occur only when semantic equivalence is established, not merely because data lineage overlaps.
 
----
-
-## 3.4 Component Definition, Lineage, and Reuse
+## 3.4 Component Definition and Lineage
 
 ### 3.4.1 Canonical Definition and Result Contract
 
 Each authoritative Component should have one canonical definition and one authoritative calculation path.
 
-At architecture level, the Component definition and associated Result Contract should be capable of representing:
+The Component definition captures the Component's economic identity and configured calculation semantics. Its Result Contract defines the authoritative runtime representation exposed to downstream consumers, including the required Value or State representation and sufficient lineage references for traceability.
 
-- economic meaning;
-- accepted inputs;
-- calculation semantics;
-- relevant horizon;
-- Value representation;
-- State Classification where applicable;
-- State labels and semantics;
-- authoritative result representation;
-- upstream lineage references sufficient for traceability.
+A compact example of how the system-wide configuration principle applies to one Component is:
+
+```text
+Long-End Yield Trend definition
+├── economic meaning
+├── input references
+├── calculation / transform specification
+├── relevant horizon
+└── State Classification specification / semantics
+        ↓
+[Configuration Validation]
+        ↓
+Resolved Model Specification
+        ↓
+[Component Calculation] <──────── Input Features
+        ↓
+Long-End Yield Trend result
+├── Value / State as defined
+└── lineage references
+```
 
 Concrete field names and serialization formats belong in the Component design and Configuration Schema rather than this system architecture.
 
 ### 3.4.2 Lineage and Traceability
 
 A Component result should preserve enough lineage or provenance information to identify the upstream inputs that materially contributed to that result.
+
+The arrows below represent **backward traceability from the Component result to its upstream analytical dependencies**, rather than the forward calculation direction used in most other diagrams.
 
 The intended traceability direction is:
 
@@ -326,34 +320,6 @@ When one Component is derived from other Components, the lineage should preserve
 
 Lineage exists to support explanation, reproducibility, and lineage-scoped Diagnostics. It does not require every result object to duplicate all upstream data values; stable references or other explicit provenance may satisfy the Result Contract when they allow the authoritative calculation path to be reconstructed or inspected.
 
-### 3.4.3 Consumer Reuse
-
-If multiple consumers require the same concept with equivalent semantics, the Component should be calculated once and reused.
-
-A downstream consumer may select the Components relevant to its purpose, combine multiple Components, map Component States to a consumer-specific result, and apply consumer-specific information.
-
-A downstream consumer should not independently redefine an existing Component, create a second authoritative calculation of the same concept, or alter the Component's meaning to fit a local decision rule.
-
----
-
-## 3.5 Component Consumers
-
-Canonical Components may feed several downstream responsibilities:
-
-```text
-Canonical Components
-        ├──────────────> [ETF Evaluation]
-        │
-        ├──────────────> [Bond Exposure View Calculation]
-        │
-        └──────────────> [Diagnostics]
-```
-
-**ETF Evaluation** consumes Components for ETF-specific economic assessment and combines them with ETF-specific exposure and implementation information without redefining the Components.
-
-**Bond Exposure Views** derive human-readable interpretations of Duration, Curve, and Credit from selected Components. Views may summarize Component information for interpretation but do not replace the underlying Components as authoritative ETF Evaluation inputs.
-
-**Diagnostics** consumes Components as part of the dependency lineage of a result being inspected. It may trace those Components through supporting Features and Raw Observations, but it does not alter Component authority or calculation.
 
 ---
 
@@ -363,27 +329,22 @@ ETF Evaluation applies Canonical Components to ETF-specific exposure and impleme
 
 The module separates economic exposure assessment from positioning context and instrument quality.
 
+Detailed ETF traded-price-history analysis is outside the current authoritative ETF Evaluation flow. It may be introduced later only where a defined analytical or diagnostic purpose justifies it.
+
 ## 4.1 ETF Exposure Profile
 
-The **ETF Exposure Profile** is the economically relevant identity of an ETF's bond exposure.
+The **ETF Exposure Profile** is the economic identity of the bond exposure that an ETF is designed to provide.
 
-It may include properties such as:
+Bondview consumes the ETF Exposure Profile as an input and does not prescribe a single method for constructing it. In practice, the ETF's declared benchmark or other reference exposure may provide a convenient basis for the profile, supplemented where necessary by material exposure characteristics such as currency hedging, leverage, or explicit duration, maturity, or credit characteristics.
 
-- maturity exposure;
-- duration;
-- credit exposure;
-- underlying market;
-- portfolio construction;
-- currency;
-- hedging where relevant.
+The ETF Exposure Profile answers:
 
-The ETF Exposure Profile is an input identity, not an evaluation result.
+> What bond exposure is this ETF designed to provide?
 
-It answers:
+Determining whether the ETF's actual holdings, tracking behavior, or realized performance faithfully deliver that exposure is outside the current ETF Exposure Profile responsibility.
 
-> What economic bond exposure does this ETF provide?
+ETF Evaluation combines the ETF Exposure Profile with Canonical Components to determine how appropriate that exposure is under current conditions.
 
-ETF Evaluation combines this identity with Canonical Components to determine whether the exposure is appropriate under current conditions.
 
 ## 4.2 Exposure Evaluation
 
@@ -393,26 +354,24 @@ Its internal hierarchy is:
 
 ```text
 [Exposure Evaluation]
-├── [Constituent Evaluations]
-│   ├── [Core Evaluation]
-│   └── [Macro Adjustment, where applicable]
-└── [Evaluation Synthesis]
-        ↓
-Exposure Evaluation Result
+     ├── [Constituent Evaluations]
+     │        ├── [Core Evaluation]
+     │        └── [Macro Adjustment, where applicable]
+     └── [Evaluation Combination]
 ```
 
-Macro Adjustment therefore belongs within the applicable constituent evaluation rather than operating as a peer analytical layer. The internal operation label **Evaluation Synthesis** is descriptive architecture terminology rather than a separate system responsibility.
+Macro Adjustment therefore belongs within the applicable constituent evaluation rather than operating as a peer analytical layer.
 
 ### 4.2.1 Constituent Evaluations
 
-A constituent evaluation assesses one economically distinct aspect of an ETF's Exposure Profile using the Canonical Components and ETF-specific information relevant to that question.
+A constituent evaluation assesses one economically distinct aspect of an ETF's Exposure Profile using the Canonical Components relevant to that question.
 
 The current constituent evaluations are:
 
-- **Duration Evaluation** — whether the ETF's interest-rate sensitivity is appropriate under current conditions;
-- **Curve Evaluation** — whether the ETF's maturity / curve exposure is appropriate under current term-structure conditions;
-- **Credit Evaluation** — whether the ETF's credit-risk exposure is appropriate under current credit conditions;
-- **Rates Valuation Evaluation** — whether compensation for accepting the ETF's rates exposure is sufficiently attractive.
+* **Duration Evaluation** — whether the ETF's interest-rate sensitivity is appropriate under current conditions;
+* **Curve Evaluation** — whether the ETF's maturity / curve exposure is appropriate under current term-structure conditions;
+* **Credit Evaluation** — whether the ETF's credit-risk exposure is appropriate under current credit conditions;
+* **Rates Valuation Evaluation** — whether compensation for accepting the ETF's rates exposure is sufficiently attractive.
 
 These evaluations operate in parallel but do not need to share identical output semantics, scales, weighting, State semantics, or Rule Mapping structures.
 
@@ -421,12 +380,15 @@ The general pattern is:
 ```text
 Relevant Canonical Components
         ↓
-[Constituent Evaluation] <──────── Relevant ETF Exposure Profile + Applicable ETF-Level Economic Inputs
+[Constituent Evaluation] <──────── Relevant ETF Exposure Profile
         ↓
 Core Evaluation Result
 ```
 
-The specific Component set, economic mapping, and ETF-level inputs belong to the relevant evaluator design rather than this system-level architecture.
+A constituent evaluation may additionally consume ETF-level economic inputs when its economic question specifically requires them. In the current design, the clearest example is a defined ETF Yield / Carry measure used by Rates Valuation Evaluation.
+
+The specific Component set, economic mapping, Profile information, and any additional ETF-level economic inputs belong to the relevant evaluator design rather than this system-level architecture.
+
 
 ### 4.2.2 Macro Adjustment
 
@@ -448,17 +410,9 @@ Macro Adjustment may modify how strongly an economically attractive exposure sho
 
 The architecture does not prescribe the exact adjustment actions, thresholds, Rule Cases, or Rule Mappings. Those belong in evaluator-specific design.
 
-The architectural constraints are:
+Macro Adjustment may consume any Macro Components economically relevant to the evaluator, and the same Macro Component may be used by more than one evaluator where justified. Such use must not redefine the meaning of the upstream Canonical Components.
 
-- macroeconomic conditions remain Canonical Components;
-- the relevant evaluator chooses which macro Components it consumes;
-- macro effects are applied within the applicable constituent evaluation;
-- macro logic must not redefine upstream Component meaning;
-- a macro Component may be used by more than one evaluator when economically justified.
-
-### 4.2.3 Evaluation Synthesis
-
-The completed constituent evaluation results are synthesized into the overall Exposure Evaluation Result.
+The completed constituent evaluation results are combined into the overall Exposure Evaluation Result:
 
 ```text
 Duration Evaluation Result
@@ -469,14 +423,13 @@ Credit Evaluation Result
         +
 Rates Valuation Evaluation Result
         ↓
-[Evaluation Synthesis]
+[Evaluation Combination]
         ↓
 Exposure Evaluation Result
 ```
 
-Exposure Evaluation therefore answers a broader question than any individual constituent evaluation: taken together, how appropriate is the ETF's overall economic bond exposure?
+The exact combination logic may use weighting, rules, conditional mappings, or other justified mechanics. It belongs in ETF Evaluation design rather than this system-level architecture.
 
-The exact synthesis logic may use weighting, rules, conditional mappings, or other justified mechanics. That logic belongs in ETF Evaluation design rather than this system-level architecture.
 
 ## 4.3 Positioning Overlay
 
@@ -502,19 +455,22 @@ Positioning Inputs are not assumed to be Canonical Components merely because the
 
 If a positioning concept later satisfies the Component definition and requires broader reuse, that treatment should be established explicitly rather than inferred from its use in Positioning Overlay.
 
+Positioning Overlay does not imply that the underlying economic thesis is incorrect; for example, heavy crowding may justify weaker implementation even when Exposure Evaluation remains strongly positive.
+
 Positioning Overlay must not redefine the underlying Exposure Evaluation Result. It modifies implementation willingness or intensity around that result.
 
 ## 4.4 Instrument Quality
 
 **Instrument Quality** evaluates whether an ETF is a sufficiently good vehicle for an exposure after Exposure Evaluation and Positioning Overlay have been applied.
 
-Typical implementation characteristics may include:
+Potential implementation characteristics may include:
 
 - expense ratio or implementation cost;
-- liquidity;
-- bid-ask spread;
-- tracking quality;
-- other instrument-specific implementation friction.
+- tracking quality, where tracking is an intended objective;
+- active-management effectiveness, where applicable and supported by defined data and rules;
+- other instrument-specific implementation characteristics supported by defined data and rules.
+
+Execution-specific conditions that Bondview does not currently model, such as live liquidity, bid-ask spread, order size, or market conditions at the time of trading, remain outside the current authoritative ETF Evaluation logic and are considered by the user or consuming workflow at execution time.
 
 Architecturally:
 
@@ -523,30 +479,28 @@ Positioning-Adjusted Exposure Evaluation
         ↓
 [Instrument Quality] <───────────── Instrument Quality Inputs
         ↓
-Evaluated Candidate Set
+ETF Evaluation Results
 ```
 
 Instrument Quality may support both minimum-quality filtering and relative comparison among otherwise acceptable ETFs.
 
 It must remain separate from economic attractiveness. A high-quality ETF can represent an unattractive exposure, and an attractive exposure can be implemented through a poor-quality ETF.
 
-## 4.5 Evaluated Candidate Set
+## 4.5 ETF Evaluation Results and Downstream Choice
 
-The **Evaluated Candidate Set** is the ETF set remaining after economic evaluation, positioning adjustment, and instrument-quality assessment.
+**ETF Evaluation Results** are the authoritative downstream results of the ETF Evaluation Module. They preserve the ETF-specific analytical outputs required for comparison across ETFs, including the relevant constituent evaluation results and subsequent evaluation stages.
 
-It is the authoritative downstream result of the ETF Evaluation Module.
+ETF ranking and final-choice logic are downstream from ETF Evaluation Results:
 
-Final ETF choice may use ranking, weighting, thresholds, portfolio rules, or other decision logic appropriate to the consuming workflow.
+```text
+ETF Evaluation Results
+        ↓
+[Ranking / Final Decision Logic]
+        ↓
+Final ETF Choice
+```
 
-Such final choice logic does not need to become a separate Module unless it develops a stable and materially distinct system responsibility with its own meaningful Result Boundary.
-
-## 4.6 ETF Price-History Scope
-
-Detailed ETF traded-price-history analysis is outside the authoritative initial ETF Evaluation flow.
-
-Price-based diagnostics may be added later as optional downstream Capabilities when they answer a concrete diagnostic or decision question and have a clearly defined relationship to underlying bond exposure, benchmark behavior, liquidity, or valuation.
-
-Adding such a Capability should not change the authority of Canonical Components or the ETF Evaluation dependency direction.
+Final ETF choice may use ranking, weighting, thresholds, portfolio rules, or other decision logic appropriate to the consuming workflow. Such final-choice logic does not need to become a separate Module unless it develops a stable and materially distinct system responsibility with its own meaningful Result Boundary.
 
 ---
 
@@ -554,7 +508,7 @@ Adding such a Capability should not change the authority of Canonical Components
 
 ## 5.1 Bond Exposure Views
 
-A **Bond Exposure View** is a high-level human-readable interpretation of one Bond Exposure Dimension.
+A **Bond Exposure View** is a high-level human-facing interpretation of one Bond Exposure Dimension.
 
 The current Bond Exposure Dimensions are:
 
@@ -594,7 +548,7 @@ For a diagnostic target, Diagnostics may inspect:
 - Component-to-View or Component-to-Evaluation traceability;
 - sensitivity to model parameters and horizons.
 
-The default diagnostic boundary is the target's dependency lineage. Diagnostics should not introduce unrelated supplemental market or macro data merely because those data are available.
+The default diagnostic boundary is the target's dependency lineage. This limits which analytical variables and dependencies Diagnostics may introduce; it does not limit Diagnostics to the target date. Historical realizations of those same lineage entities may be inspected for context and sanity checking. Diagnostics should not introduce unrelated supplemental market or macro data merely because those data are available.
 
 For a selected date or period, Diagnostics should expose enough lineage and supporting information for an expert to determine whether the resulting interpretation or evaluation is economically plausible.
 
@@ -682,11 +636,7 @@ Resolved Model Specification
 
 Configuration defines model behavior but does not change the architectural ownership of Components, Evaluations, or Result Boundaries.
 
-For Components, the configuration model should be capable of representing or referencing the information needed to define identity, inputs, horizon, calculation behavior, State Classification where applicable, State semantics, and lineage relationships.
-
-The corresponding runtime result representation should be capable of preserving Component Values and States as required by the Component definition together with sufficient lineage references for reproducibility and Diagnostics.
-
-Concrete Configuration Schemas and serialization formats belong in more specific Component, model, or module contracts.
+Concrete Configuration Schemas and serialization formats belong in more specific model, Component, or module contracts.
 
 ---
 
@@ -707,7 +657,7 @@ The system architecture should be reviewed when a proposed change would:
 - create a separate macro-processing architecture rather than consuming macroeconomic Components through evaluator-specific logic;
 - make Diagnostics part of authoritative decision calculation or allow unrelated supplemental data to become an implicit diagnostic decision path;
 - introduce reusable infrastructure broader than justified by established semantics or demonstrated reuse requirements;
-- materially change the meaning of ETF Evaluation Results or the Evaluated Candidate Set;
+- materially change the meaning or Result Boundary of ETF Evaluation Results;
 - introduce a new downstream responsibility whose scope is stable and distinct enough to require its own Module or Result Boundary.
 
 Changes to individual Component formulas, evaluator rules, thresholds, mappings, score semantics, or configuration values may be significant model changes without necessarily requiring a system-architecture revision, provided they preserve the boundaries defined here.
