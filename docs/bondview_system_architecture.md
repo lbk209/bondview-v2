@@ -132,7 +132,7 @@ A Component does not need to be consumed by every responsibility.
 
 The meaning of a Component is independent of the consumer that uses it. ETF evaluators, Bond Exposure Views, and Diagnostics may interpret the same Component differently, but they must not redefine its authoritative economic meaning.
 
-Downstream consumers select and interpret the Components relevant to their own responsibilities without redefining the Components themselves.
+If multiple consumers require the same Component with equivalent semantics, they should reuse the same authoritative Component rather than create consumer-specific versions or alternative authoritative calculations. Downstream consumers may select, combine, and interpret the Components relevant to their own responsibilities without altering the Components themselves.
 
 ### 3.1.2 Component Value, State, and Preparation Flow
 
@@ -181,8 +181,6 @@ Curve Configuration
 are all Canonical Components from the perspective of system architecture.
 
 The relevance of a Component is determined by the consumer that uses it.
-
----
 
 ## 3.2 Calculation Mechanics
 
@@ -234,8 +232,6 @@ Rule Mapping is reusable as a calculation structure, but the economic meaning of
 
 System-wide principles for reusable mechanics are defined in Section 6.3.
 
----
-
 ## 3.3 Component Construction and Identity
 
 ### 3.3.1 Component Derivation
@@ -262,10 +258,10 @@ The architecture does not require separate structural Component types based on w
 
 Two analytical concepts should normally be treated as the same Component only when the following are equivalent:
 
-- economic meaning;
-- calculation;
-- relevant horizon;
-- classification semantics where State Classification applies.
+* economic meaning;
+* calculation;
+* relevant horizon;
+* classification semantics where State Classification applies.
 
 Shared Raw Observations, shared State labels, or shared downstream consumers do not by themselves imply shared Component identity.
 
@@ -273,9 +269,7 @@ Relevant horizon is part of Component identity when changing the horizon materia
 
 Component consolidation should occur only when semantic equivalence is established, not merely because data lineage overlaps.
 
----
-
-## 3.4 Component Definition, Lineage, and Reuse
+## 3.4 Component Definition and Lineage
 
 ### 3.4.1 Canonical Definition and Result Contract
 
@@ -289,16 +283,15 @@ A compact example of how the system-wide configuration principle applies to one 
 Long-End Yield Trend definition
 ├── economic meaning
 ├── input references
-├── calculation / transform
+├── calculation / transform specification
 ├── relevant horizon
-└── State Classification / semantics
+└── State Classification specification / semantics
         ↓
 [Configuration Validation]
         ↓
 Resolved Model Specification
-   (component entry)
         ↓
-[Component Calculation]
+[Component Calculation] <──────── Input Features
         ↓
 Long-End Yield Trend result
 ├── Value / State as defined
@@ -310,6 +303,8 @@ Concrete field names and serialization formats belong in the Component design an
 ### 3.4.2 Lineage and Traceability
 
 A Component result should preserve enough lineage or provenance information to identify the upstream inputs that materially contributed to that result.
+
+The arrows below represent **backward traceability from the Component result to its upstream analytical dependencies**, rather than the forward calculation direction used in most other diagrams.
 
 The intended traceability direction is:
 
@@ -325,13 +320,6 @@ When one Component is derived from other Components, the lineage should preserve
 
 Lineage exists to support explanation, reproducibility, and lineage-scoped Diagnostics. It does not require every result object to duplicate all upstream data values; stable references or other explicit provenance may satisfy the Result Contract when they allow the authoritative calculation path to be reconstructed or inspected.
 
-### 3.4.3 Consumer Reuse
-
-If multiple consumers require the same concept with equivalent semantics, the Component should be calculated once and reused.
-
-A downstream consumer may select the Components relevant to its purpose, combine multiple Components, map Component States to a consumer-specific result, and apply consumer-specific information.
-
-A downstream consumer should not independently redefine an existing Component, create a second authoritative calculation of the same concept, or alter the Component's meaning to fit a local decision rule.
 
 ---
 
