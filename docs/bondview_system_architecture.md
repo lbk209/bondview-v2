@@ -341,7 +341,7 @@ The ETF Exposure Profile answers:
 
 > What bond exposure is this ETF designed to provide?
 
-Determining whether the ETF's actual holdings, tracking behavior, or realized performance faithfully deliver that exposure is outside the current ETF Exposure Profile responsibility.
+Determining whether the ETF's actual holdings, tracking behavior, or realized performance faithfully deliver that exposure is outside the current ETF Exposure Profile responsibility. Such characteristics may instead be assessed under Instrument Quality where supported by defined data and rules.
 
 ETF Evaluation combines the ETF Exposure Profile with Canonical Components to determine how appropriate that exposure is under current conditions.
 
@@ -406,7 +406,7 @@ Core Evaluation Result
 Evaluation Result
 ```
 
-Macro Adjustment may modify how strongly an economically attractive exposure should be expressed when macroeconomic conditions materially affect that evaluator.
+Macro Adjustment may modify the economic assessment represented by the Core Evaluation Result when macroeconomic conditions materially affect that evaluator.
 
 The architecture does not prescribe the exact adjustment actions, thresholds, Rule Cases, or Rule Mappings. Those belong in evaluator-specific design.
 
@@ -482,7 +482,7 @@ Positioning-Adjusted Exposure Evaluation
 ETF Evaluation Results
 ```
 
-Instrument Quality may support both minimum-quality filtering and relative comparison among otherwise acceptable ETFs.
+Instrument Quality may identify failure of an explicit minimum-quality requirement and support relative comparison among ETFs while preserving the ETF Evaluation Result.
 
 It must remain separate from economic attractiveness. A high-quality ETF can represent an unattractive exposure, and an attractive exposure can be implemented through a poor-quality ETF.
 
@@ -534,7 +534,7 @@ Bond Exposure View calculation should preserve enough Component-level traceabili
 
 ## 5.2 Diagnostics
 
-Diagnostics inspects an authoritative result or interpretation together with the actual dependency lineage needed to explain it.
+Diagnostics inspects an authoritative result or a Bond Exposure View together with the actual dependency lineage needed to explain it.
 
 For a diagnostic target, Diagnostics may inspect:
 
@@ -572,7 +572,7 @@ Analytical context is determined by the underlying bond exposure rather than sol
 
 For example, an ETF listed in one country but holding another country's government bonds requires the rates, curve, policy, and macroeconomic context relevant to the underlying bond market.
 
-Currency and hedging characteristics belong to the ETF Exposure Profile when they materially affect realized investor exposure.
+Currency and hedging characteristics belong to the ETF Exposure Profile when they materially affect investor economic exposure.
 
 ## 6.3 Reusable Calculation Mechanics
 
