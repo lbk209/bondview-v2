@@ -27,9 +27,9 @@ Canonical Components ─────────────> [Bond Exposure Vie
         ↓                                  ↓
 [ETF Evaluation]                    Bond Exposure Views
         ↓                                  ↓
-ETF Evaluation Results ───────────────> [Diagnostics]
+ETF Evaluation Results ───────────> [Diagnostics]
                                            ↓
-                                  Diagnostic Results
+                                    Diagnostic Results
 ```
 
 The architecture distinguishes four kinds of system output:
@@ -76,36 +76,19 @@ The **Bond Analysis Module** produces Canonical Components from accepted Raw Obs
 
 Its responsibility includes:
 
-- applying the Resolved Model Specification to accepted Raw Observations;
-- Feature Calculation;
-- Component Calculation;
-- State Classification where a discrete Component State is useful;
-- preserving the lineage required by authoritative Component results;
-- exposing Canonical Components through its Result Boundary for downstream reuse.
+* applying the Resolved Model Specification to accepted Raw Observations;
+* Feature Calculation;
+* Component Calculation;
+* State Classification where a discrete Component State is useful;
+* preserving the lineage required by authoritative Component results;
+* exposing Canonical Components through its Result Boundary for downstream reuse.
 
-Its authoritative result boundary is the set of Canonical Components required by downstream consumers.
+Its authoritative Result Boundary is the set of Canonical Components required by downstream consumers.
 
 Data acquisition and source-specific retrieval are outside Bond Analysis once Raw Observations have been accepted. Bond Analysis also does not perform ETF-specific interpretation or evaluation.
 
-Conceptually:
+The internal preparation flow and Component result semantics are defined in Section 3.
 
-```text
-Raw Observations
-        ↓
-[Feature Calculation]
-        ↓
-Features
-        ↓
-[Component Calculation]
-        ↓
-Component Value
-        ↓
-[State Classification, where applicable]
-        ↓
-Component State
-```
-
-A Component may expose a Value, a State, or both according to its defined result representation.
 
 ## 2.2 ETF Evaluation Module
 
@@ -536,8 +519,6 @@ ETF Evaluation Results
         ↓
 Final ETF Choice
 ```
-
-A Candidate Set may be formed as an optional downstream collection when a consuming workflow needs an explicit eligibility subset, but it is not a required architectural stage or primary Result Boundary.
 
 Final ETF choice may use ranking, weighting, thresholds, portfolio rules, or other decision logic appropriate to the consuming workflow. Such final-choice logic does not need to become a separate Module unless it develops a stable and materially distinct system responsibility with its own meaningful Result Boundary.
 
