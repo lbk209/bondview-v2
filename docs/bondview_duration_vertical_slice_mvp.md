@@ -78,7 +78,9 @@ The MVP begins from **accepted Raw Observations**. Data downloading, source-spec
 
 ## ETF Comparison
 
-The ETF set should be small but intentionally span different duration exposures, for example:
+The initial test set should use a small number of **Korea-listed ETFs providing U.S. bond exposure**.
+
+The ETFs should intentionally span meaningfully different duration exposures, for example:
 
 ```text
 short duration
@@ -86,6 +88,8 @@ intermediate duration
 long duration
 very long duration
 ```
+
+The selected ETFs should also provide a sufficiently long **common historical window** to evaluate the model across materially different rate regimes.
 
 The MVP should make it possible to compare how the same market environment produces different Duration Evaluation Results across these ETFs.
 
@@ -149,6 +153,11 @@ Accepted Raw Observations
 → Macro Adjustment
 → Duration Evaluation Results
 ```
+
+Validation should exercise the model in two complementary directions:
+
+- **Cross-sectional validation** — at the same `as_of` date, compare ETFs with different duration exposures under the same market conditions.
+- **Longitudinal validation** — for the same ETF Exposure Profile, compare Duration Evaluation Results across materially different historical rate regimes.
 
 The primary questions are:
 
