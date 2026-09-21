@@ -367,7 +367,7 @@ Macro Adjustment therefore belongs within the applicable Constituent Evaluation 
 
 A **Constituent Evaluation** does not assess the ETF Exposure Profile as a whole. It assesses one economically distinct aspect of the Profile using the Components relevant to that economic question.
 
-Components represent the bond-market or macroeconomic conditions relevant to the assessment, while the applicable ETF Exposure Profile characteristics represent the economic exposure being assessed. The Constituent Evaluation interprets what those conditions imply for that exposure.
+Within a Constituent Evaluation, the relevant Components provide the market or macroeconomic conditions, while the applicable ETF Exposure Profile characteristics represent the economic exposure being assessed. The Constituent Evaluation interprets what those conditions imply for that exposure.
 
 The current Constituent Evaluations are:
 
