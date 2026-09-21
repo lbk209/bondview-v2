@@ -21,22 +21,22 @@ Features
         ↓
 [Component Calculation]
         ↓
-Duration-related Canonical Components
+Duration-related Components
         ↓
 [Duration Core Evaluation] <──────── ETF Exposure Profile
         ↓
 Core Duration Evaluation Result
         ↓
-[Macro Adjustment] <────────────── Relevant Macro Components
+[Macro Adjustment] <────────────── Relevant Macroeconomic Components for Macro Adjustment
         ↓
 Duration Evaluation Result
 ```
 
-The same market and macro Components are applied to several ETFs with meaningfully different duration exposures.
+The **Duration Evaluation** is the Constituent Evaluation exercised by this MVP. The same relevant Components are applied to several ETFs with meaningfully different duration exposures.
 
-The ETF Exposure Profiles may be manually configured. Declared benchmarks or reference exposures may be used as the simplest practical basis.
+The ETF Exposure Profiles may be manually configured and should contain only the information required by the Duration Evaluation. Declared benchmarks or reference exposures may be used as the simplest practical basis. A generalized ETF Exposure Profile schema is out of scope.
 
-The primary output is a comparable set of **Duration Evaluation Results across the selected ETFs**.
+The primary output is a comparable set of **Duration Evaluation Results across the selected ETFs**. The MVP intentionally stops at this Constituent Evaluation output and does not attempt to produce a complete ETF Evaluation Result.
 
 ---
 
@@ -44,17 +44,17 @@ The primary output is a comparable set of **Duration Evaluation Results across t
 
 The MVP should use the current Duration design as the starting point.
 
-### Market Components
+### Components for Core Evaluation
 
 ```text
 Long-End Yield Trend
         +
 Recent Long-End Yield Move
         ↓
-Duration Core Evaluation
+Core Evaluation
 ```
 
-### Macro Components
+### Macroeconomic Components for Macro Adjustment
 
 ```text
 Inflation Trend
@@ -65,6 +65,14 @@ Macro Adjustment
 ```
 
 The exact Raw Observations, Features, horizons, thresholds, State Classification rules, Rule Cases, and mappings should be implemented only to the degree required to produce and inspect the Duration results.
+
+The named Components above are provisional inputs for this MVP rather than system-architecture requirements. Their exact definitions may change during implementation if the resulting Duration Evaluation remains economically coherent.
+
+---
+
+## Input Boundary
+
+The MVP begins from **accepted Raw Observations**. Data downloading, source-specific retrieval, and production-grade ingestion are not part of what this MVP is intended to validate.
 
 ---
 
@@ -89,12 +97,12 @@ Final ETF selection is not required.
 
 Lineage-based Diagnostics are part of the MVP.
 
-For each ETF Duration Evaluation Result, the implementation should allow backward inspection through the relevant analytical lineage:
+For each Duration Evaluation Result, the implementation should allow backward inspection through the relevant analytical lineage:
 
 ```text
-ETF Duration Evaluation Result
+Duration Evaluation Result
         ↑
-Core Duration Evaluation / Macro Adjustment
+Core Evaluation / Macro Adjustment
         ↑
 Relevant Component Values / States
         ↑
@@ -134,12 +142,12 @@ Code may remain local and Duration-specific where that is simpler.
 The MVP should be executable for historical `as_of` dates and expose enough intermediate information to inspect:
 
 ```text
-Raw Observations
+Accepted Raw Observations
 → Features
 → Component Values / States
-→ Core Duration Evaluation
+→ Core Evaluation
 → Macro Adjustment
-→ ETF-specific Duration Evaluation Results
+→ Duration Evaluation Results
 ```
 
 The primary questions are:
