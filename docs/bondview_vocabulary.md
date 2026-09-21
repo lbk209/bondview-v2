@@ -4,9 +4,11 @@
 
 This document defines the canonical vocabulary for **Bondview**.
 
-Its purpose is to provide a consistent set of terms for describing how Bondview represents bond-market and macro conditions, interprets bond exposure, evaluates ETFs, and explains model behavior.
+Its purpose is to provide a consistent set of terms for describing how Bondview represents bond-market and macroeconomic conditions, interprets bond exposure, evaluates ETFs, and explains model behavior.
 
-The definitions describe conceptual meaning and relationships rather than prescribing a particular implementation structure.
+This document is the source of truth for **term meaning and naming**. `bondview_system_architecture.md` is the source of truth for **system structure, ownership, dependency direction, processing flow, and Result Boundaries**.
+
+The definitions below may include compact conceptual relationships where those relationships are necessary to distinguish terms, but they do not prescribe detailed implementation structure.
 
 ---
 
@@ -19,14 +21,14 @@ Bondview
 │
 ├── Component Model
 │   ├── Core Concepts
-│   ├── Component Structure
+│   ├── Component Relationships
 │   └── Bond Exposure Concepts
 │
 ├── Calculation Mechanics
 │
 ├── ETF Evaluation
 │   ├── Core Concepts
-│   ├── Exposure Evaluation
+│   ├── Constituent Evaluations
 │   ├── Positioning Overlay
 │   └── Instrument Quality
 │
@@ -46,13 +48,13 @@ Bondview
 | **Bondview** | The complete bond-ETF analytical and decision-support system. |
 | **Module** | A major system responsibility with a meaningful input/output boundary. |
 | **Capability** | Reusable implementation behavior with defined semantics. |
-| **Bond Analysis Module** | Produces canonical bond-relevant Components from accepted observations. |
-| **ETF Evaluation Module** | Produces ETF-specific evaluation results by applying Components to ETF Exposure Profiles and implementation characteristics. |
-| **Diagnostics Module** | Inspects and explains Components and evaluation results through historical analysis, interpretation, comparison, visualization, and sanity checking. |
+| **Bond Analysis Module** | Produces authoritative bond-relevant Components from accepted Raw Observations. |
+| **ETF Evaluation Module** | Produces ETF-specific evaluation results by applying Components to ETF Exposure Profiles and supported implementation characteristics. |
+| **Diagnostics Module** | Inspects and explains Components, Bond Exposure Views, and evaluation results through historical analysis, comparison, visualization, traceability, and sanity checking. |
 
 ```text
 Bond Analysis
-→ What bond-market and macro conditions exist?
+→ What bond-market and macroeconomic conditions exist?
 
 ETF Evaluation
 → How suitable are ETFs under those conditions?
@@ -69,11 +71,11 @@ Diagnostics
 
 | Term | Definition |
 |---|---|
-| **Raw Observation** | An accepted source observation used by Bondview, normally from historical time-series data. |
+| **Raw Observation** | An accepted source observation used by Bondview. |
 | **Feature** | A quantitative measure derived from Raw Observations for model use. |
 | **Component** | A canonical, economically meaningful analytical concept represented by a Component Value and, where useful, a discrete Component State. |
 | **Component Value** | The calculated quantitative or structured representation of a Component before discrete classification. |
-| **Component State** | A discrete economic condition assigned to a Component. |
+| **Component State** | A discrete economic condition assigned to a Component when discrete classification is useful. |
 | **State Classification** | The process that converts a Component Value into a Component State. |
 
 A Feature is generally closer to calculation mechanics, while a Component represents an economically meaningful analytical concept.
@@ -91,7 +93,7 @@ Falling / Stable / Rising
 → Component State
 ```
 
-## 3.2 Component Structure
+## 3.2 Component Relationships
 
 Components carry Bondview's authoritative analytical information.
 
@@ -106,55 +108,33 @@ Typical Component examples include:
 - Inflation Trend;
 - Policy Direction.
 
-Conceptually:
+At a high level:
 
 ```text
-Raw Observations
+Raw Observation
         ↓
-[Feature Calculation]
-        ↓
-Features
-        ↓
-[Component Calculation]
+Feature
         ↓
 Component Value
         ↓
-[State Classification]
-        ↓
-Component State
+Component State, where applicable
 ```
 
-A Component may also be calculated from other Components or their Values when the relationship is economically meaningful.
+A Component may be derived from Features or from other Components or Component Values when economically meaningful.
 
-Example:
-
-```text
-Short-End Yield Move
-        +
-Long-End Yield Move
-        ↓
-[Curve Movement Calculation]
-        ↓
-Curve Movement
-```
-
-Two analytical concepts should normally be treated as the same Component only when their economic meaning, calculation, relevant horizon, and classification semantics are equivalent.
-
-Some Components may partially overlap because they provide different economically meaningful views of the same underlying observations. This is acceptable when the distinction is analytically useful.
+Detailed Component construction, identity, consolidation, lineage, and Result Contract rules belong to the system architecture and more specific Component design documents.
 
 ## 3.3 Bond Exposure Concepts
 
 | Term | Definition |
 |---|---|
 | **Bond Exposure Dimension** | A principal bond-exposure dimension represented in Bondview. The current dimensions are Duration, Curve, and Credit. |
-| **Bond Exposure View** | A high-level human-readable interpretation of one Bond Exposure Dimension, derived from selected Components. |
+| **Bond Exposure View** | A high-level human-facing interpretation of one Bond Exposure Dimension, derived from selected Components. |
 | **Duration View** | Interpretation of the Duration Dimension and current rate-sensitivity conditions. |
 | **Curve View** | Interpretation of the Curve Dimension and current relative-maturity / term-structure conditions. |
 | **Credit View** | Interpretation of the Credit Dimension and current credit-risk conditions. |
 
-Bond Exposure Views are not authoritative ETF Evaluation inputs. ETF Evaluation consumes the underlying Components directly.
-
-Views are primarily useful for explanation, historical inspection, expert sanity checking, and parameter validation.
+Bond Exposure Views are explanatory interpretations rather than authoritative ETF Evaluation inputs.
 
 ---
 
@@ -212,35 +192,32 @@ Rule Mapping
 
 | Term | Definition |
 |---|---|
-| **ETF Exposure Profile** | The economically relevant identity of an ETF's bond exposure, including properties such as maturity, duration, credit exposure, underlying market, portfolio construction, currency, and hedging where relevant. |
+| **ETF Exposure Profile** | The economic identity of the bond exposure that an ETF is designed to provide. |
 | **Exposure Evaluation** | The combined economic assessment of whether an ETF's Exposure Profile is appropriate under current bond-market and macroeconomic conditions. |
-| **Positioning Overlay** | A post-Exposure-Evaluation adjustment reflecting crowding, sentiment, positioning, or similar implementation context. |
-| **Instrument Quality** | The degree to which an ETF provides its intended Exposure Profile reliably, efficiently, and with acceptable implementation friction. |
-| **Candidate Set** | The set of ETFs remaining eligible at a defined point in the evaluation flow. |
+| **Constituent Evaluation** | An ETF-specific evaluation of one economically distinct aspect of an ETF's Exposure Profile within Exposure Evaluation. |
+| **Core Evaluation** | The economic assessment within a Constituent Evaluation before any applicable Macro Adjustment. |
+| **Macro Adjustment** | An evaluator-specific modification of a Core Evaluation using relevant macroeconomic Components when those conditions materially affect the evaluator's economic assessment. |
+| **Positioning Overlay** | A post-Exposure-Evaluation adjustment to implementation willingness or intensity based on positioning context, without redefining the underlying economic assessment. |
+| **Instrument Quality** | Evaluation of whether an ETF is a sufficiently good implementation vehicle for its exposure using instrument-specific characteristics supported by defined data and rules. |
+| **ETF Evaluation Result** | The authoritative ETF-specific result exposed by the ETF Evaluation Module for downstream comparison or decision logic. |
 
-High-level flow:
+A compact relationship among the major ETF Evaluation concepts is:
 
 ```text
-Canonical Components
-        +
-ETF Exposure Profile
+Components + ETF Exposure Profile
         ↓
-[Exposure Evaluation]
+Exposure Evaluation
         ↓
-Exposure Evaluation Result
+Positioning Overlay
         ↓
-[Positioning Overlay]
+Instrument Quality
         ↓
-Positioning-Adjusted Exposure Evaluation
-        ↓
-[Instrument Quality]
-        ↓
-Evaluated Candidate Set
+ETF Evaluation Result
 ```
 
-## 5.2 Exposure Evaluation
+The detailed ordering, internal stages, inputs, and Result Boundary semantics are defined by the system architecture.
 
-Exposure Evaluation combines several ETF-specific evaluations and related adjustment logic.
+## 5.2 Constituent Evaluations
 
 | Term | Definition |
 |---|---|
@@ -248,75 +225,28 @@ Exposure Evaluation combines several ETF-specific evaluations and related adjust
 | **Curve Evaluation** | ETF-specific evaluation of whether the ETF's maturity / curve exposure is appropriate under current term-structure conditions. |
 | **Credit Evaluation** | ETF-specific evaluation of whether the ETF's credit-risk exposure is appropriate under current credit conditions. |
 | **Rates Valuation Evaluation** | ETF-specific evaluation of whether compensation for accepting the ETF's rates exposure is sufficiently attractive. |
-| **Macro Adjustment** | A dimension-specific modification applied within an Evaluation when macroeconomic Components materially affect how strongly the exposure should be expressed. |
 
-The four Evaluations—Duration, Curve, Credit, and Rates Valuation—operate in parallel and do not need to share identical output semantics or weighting.
+The current Constituent Evaluations operate as economically distinct assessments. They do not need to share identical output semantics, scales, weighting, State semantics, or Rule Mapping structures.
 
-**Macro Adjustment** is applied within the relevant Evaluation rather than as a separate peer Evaluation.
-
-```text
-Core Duration Evaluation Result
-        +
-Relevant Macro Components
-        ↓
-[Duration Macro Adjustment]
-        ↓
-Final Duration Evaluation Result
-```
-
-Possible adjustment semantics include pass-through, weaken, cap, or directional restriction.
-
-The resulting dimension-level Evaluation results are then combined through Exposure Evaluation.
-
-```text
-Duration Evaluation Result
-        +
-Curve Evaluation Result
-        +
-Credit Evaluation Result
-        +
-Rates Valuation Evaluation Result
-        ↓
-[Exposure Evaluation]
-        ↓
-Exposure Evaluation Result
-```
-
-Additional inputs may include ETF-level Yield / Carry and Underlying Rate Volatility where relevant to the applicable Evaluation.
+Macro Adjustment belongs within an applicable Constituent Evaluation rather than forming a separate peer Evaluation.
 
 ## 5.3 Positioning Overlay
 
-**Positioning Overlay** modifies implementation willingness after Exposure Evaluation without redefining the underlying economic assessment.
+Typical positioning context may include crowding, sentiment, speculative positioning, unusual directional consensus, or exposure-level extension after a large market move.
 
-Typical inputs may include crowding, sentiment, speculative positioning, unusual directional consensus, or exposure-level extension after a large market move. Possible effects include pass-through, weaker implementation preference, limits on aggressive expression, preference for less-extreme exposure, or reduced implementation intensity.
-
-```text
-Exposure Evaluation Result
-        +
-Positioning Inputs
-        ↓
-[Positioning Overlay]
-        ↓
-Positioning-Adjusted Exposure Evaluation
-```
+Positioning Overlay changes implementation willingness or intensity around an Exposure Evaluation Result; it does not redefine the underlying economic assessment.
 
 ## 5.4 Instrument Quality
 
-**Instrument Quality** evaluates whether an ETF is a sufficiently good vehicle after Exposure Evaluation and Positioning Overlay have been applied.
+Instrument Quality is distinct from economic attractiveness.
 
-Typical inputs include expense ratio or implementation cost, liquidity, bid-ask spread, and tracking quality. Instrument Quality may serve as both a minimum-quality filter and a relative ranking criterion among acceptable ETFs.
+Examples of instrument-specific characteristics that may be evaluated when supported by defined data and rules include:
 
-```text
-Positioning-Adjusted Exposure Evaluation
-        +
-Instrument Quality Inputs
-        ↓
-[Instrument Quality]
-        ↓
-Evaluated Candidate Set
-```
+- expense ratio or implementation cost;
+- tracking quality where tracking is an intended objective;
+- active-management effectiveness where applicable.
 
-Final ETF choice may be made from the Evaluated Candidate Set using simple ranking, weighting, thresholds, or other decision rules as appropriate.
+Execution-specific conditions that are not modeled by Bondview are not implied to be Instrument Quality inputs merely because they affect trading in practice.
 
 ---
 
@@ -325,14 +255,13 @@ Final ETF choice may be made from the Evaluated Candidate Set using simple ranki
 | Term | Definition |
 |---|---|
 | **Diagnostics** | Analysis that explains, validates, or inspects authoritative model behavior without changing the model's calculations or decisions. |
-| **Historical Context** | Historical observations of authoritative calculated outputs used to interpret current or past model behavior. |
+| **Diagnostic Result** | A non-authoritative explanatory, comparative, historical, sensitivity, traceability, visualization, or sanity-check output produced by Diagnostics. |
+| **Historical Context** | Historical realizations of authoritative calculated outputs or their supporting analytical inputs used to interpret current or past model behavior. |
 | **Diagnostic Comparison** | Comparison of Features, Components, Component States, Bond Exposure Views, Evaluation results, or related metadata for explanatory or validation purposes. |
 
 Historical Context is diagnostic, not a second hidden decision model.
 
-**Bond Exposure Views** can serve as sanity-check projections of Component behavior. Diagnostics may inspect their frequency, persistence, state transitions, historical episodes, Component-to-View traceability, and sensitivity to horizon or threshold choices.
-
-For a selected date or period, Diagnostics should expose enough Component and supporting Feature / Raw Observation information for an expert to assess whether the interpretation is economically plausible.
+The detailed diagnostic boundary, dependency-lineage requirements, and permissible historical inspection are defined by the system architecture.
 
 ---
 
@@ -344,7 +273,7 @@ For a selected date or period, Diagnostics should expose enough Component and su
 | **Configuration Schema** | The contract that validates whether Model Configuration is structurally and semantically acceptable. |
 | **Resolved Model Specification** | The validated, explicit runtime representation produced from Model Configuration before calculation. |
 
-**Model Definition** describes how model structure and parameters are declared, validated, and resolved for runtime use.
+The terms relate at a high level as:
 
 ```text
 Model Configuration
@@ -359,7 +288,7 @@ Resolved Model Specification
 | **Result Boundary** | A formal interface through which one responsibility exposes authoritative outputs to downstream consumers. |
 | **Result Contract** | The documented semantics and required contents of a particular Result Boundary. |
 
-**Result Interfaces** define how authoritative outputs are exposed across responsibility boundaries. Concrete result objects should be defined individually when their contracts are designed rather than forcing all Modules into one generic result class.
+Result Boundaries and Result Contracts define how authoritative outputs are exposed across responsibility boundaries. Concrete result objects are defined individually when their contracts are designed.
 
 ---
 
@@ -373,11 +302,13 @@ Resolved Model Specification
 6. Treat **Component** as the authoritative reusable analytical concept.
 7. A Component may be derived from Features or from other Components / Component Values when economically meaningful.
 8. Use **Bond Exposure Dimension** for Duration, Curve, and Credit.
-9. Use **Bond Exposure View** for their high-level human-readable interpretations.
-10. Use **Exposure Evaluation** for the combined economic assessment of an ETF's exposure.
-11. Use **Macro Adjustment** for evaluator-specific macro modification.
-12. Use **Positioning Overlay** for post-economic-evaluation crowding / sentiment / positioning adjustment.
-13. Use **Instrument Quality** only for implementation quality, not for economic attractiveness.
-14. Use **Candidate Set** as the general term for ETFs remaining eligible at a defined point in the evaluation flow.
-15. Use **Rule Case**, **Rule Mapping**, **Rule Table**, and **Coverage Strategy** as general Calculation Mechanics.
-16. Use **Result Boundary / Result Contract** as generic interface concepts while defining concrete results separately.
+9. Use **Bond Exposure View** for their high-level human-facing interpretations.
+10. Use **Constituent Evaluation** for one economically distinct ETF-specific evaluation within Exposure Evaluation.
+11. Use **Core Evaluation** for the pre-Macro-Adjustment economic assessment within a Constituent Evaluation.
+12. Use **Exposure Evaluation** for the combined economic assessment of an ETF's exposure.
+13. Use **Macro Adjustment** for evaluator-specific macro modification of a Core Evaluation.
+14. Use **Positioning Overlay** for post-economic-evaluation positioning adjustment to implementation willingness or intensity.
+15. Use **Instrument Quality** only for implementation quality, not for economic attractiveness.
+16. Use **ETF Evaluation Result** for the authoritative ETF-specific output exposed by ETF Evaluation.
+17. Use **Rule Case**, **Rule Mapping**, **Rule Table**, and **Coverage Strategy** as general Calculation Mechanics.
+18. Use **Result Boundary / Result Contract** as generic interface concepts while defining concrete results separately.
