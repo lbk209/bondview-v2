@@ -345,7 +345,7 @@ The ETF Exposure Profile answers:
 
 Determining whether the ETF's actual holdings, tracking behavior, or realized performance faithfully deliver that exposure is outside the current ETF Exposure Profile responsibility. Such characteristics may instead be assessed under Instrument Quality where supported by defined data and rules.
 
-ETF Evaluation combines the ETF Exposure Profile with Components to determine how appropriate that exposure is under current conditions.
+The relationship between Profile characteristics and Components is defined through Constituent Evaluations.
 
 ## 4.2 Exposure Evaluation
 
@@ -365,7 +365,9 @@ Macro Adjustment therefore belongs within the applicable Constituent Evaluation 
 
 ### 4.2.1 Constituent Evaluations
 
-A **Constituent Evaluation** assesses one economically distinct aspect of an ETF's Exposure Profile using the Components relevant to that question.
+A **Constituent Evaluation** does not assess the ETF Exposure Profile as a whole. It assesses one economically distinct aspect of the Profile using the Components relevant to that economic question.
+
+Within a Constituent Evaluation, the relevant Components provide the market or macroeconomic conditions, while the applicable ETF Exposure Profile characteristics represent the economic exposure being assessed. The Constituent Evaluation interprets what those conditions imply for that exposure.
 
 The current Constituent Evaluations are:
 
@@ -376,7 +378,7 @@ The current Constituent Evaluations are:
 
 These evaluations operate in parallel but do not need to share identical output semantics, scales, weighting, State semantics, or Rule Mapping structures.
 
-The general pattern is:
+For each Constituent Evaluation, the Core Evaluation follows this general pattern:
 
 ```text
 Relevant Components
