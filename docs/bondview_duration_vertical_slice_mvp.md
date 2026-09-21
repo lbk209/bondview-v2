@@ -80,18 +80,57 @@ The MVP begins from **accepted Raw Observations**. Data downloading, source-spec
 
 The initial test set should use a small number of **Korea-listed ETFs providing U.S. bond exposure**.
 
-The ETFs should intentionally span meaningfully different duration exposures, for example:
+The ETFs should intentionally span meaningfully different duration exposures:
 
 ```text
 short duration
-intermediate duration
+        ↓
+intermediate / 10-year exposure
+        ↓
 long duration
-very long duration
+        ↓
+very long / ultra-long duration
 ```
 
-The selected ETFs should also provide a sufficiently long **common historical window** to evaluate the model across materially different rate regimes.
+The selected ETFs are test fixtures for validating Duration Evaluation behavior. They are not a recommended investment universe or a permanent Bondview ETF universe.
 
-The MVP should make it possible to compare how the same market environment produces different Duration Evaluation Results across these ETFs.
+### Initial Test Set
+
+The following products are the initial MVP candidates:
+
+| Ticker | ETF | MVP duration role | Benchmark / reference exposure for MVP Profile | Inception |
+|---|---|---|---|---|
+| `329750` | TIGER 미국달러단기채권액티브 | Short | KIS U.S. Treasury Bond 0–1Y Index; benchmark duration is approximately six months | 2019-07-22 |
+| `305080` | TIGER 미국채10년선물 | Intermediate / 10-year | S&P 10-Year U.S. Treasury Note Futures (ER) Index | 2018-08-28 |
+| `267440` | RISE 미국장기국채선물(H) | Long | S&P U.S. Treasury Bond Futures Excess Return Index | 2017-04-20 |
+| `304660` | KODEX 미국30년국채울트라선물(H) | Very long / ultra-long | S&P Ultra T-Bond Futures Excess Return Index | 2018-09-12 |
+
+For the MVP, the declared benchmark or reference exposure should be the primary basis for the duration-relevant ETF Exposure Profile. Product implementation details beyond what Duration Evaluation requires should not be expanded into a generalized Profile model.
+
+Because `329750` is the latest-inception product in the initial set, the common ETF-history window cannot begin earlier than July 2019. The actual first usable `as_of` date should be the first common trading date for which the required ETF and analytical input data are available.
+
+No liquidity criterion is required for this test set because the MVP is validating Duration Evaluation behavior rather than selecting an ETF for execution.
+
+### Historical Test Matrix
+
+Validation should use the same ETF set across a small number of materially different historical rate environments.
+
+The following dates are initial **candidate `as_of` dates**, not fixed model parameters. If a date is not a valid Korean trading day or required inputs are unavailable, it may be shifted to the nearest suitable trading day while preserving the intended regime.
+
+| Candidate `as_of` | Intended regime coverage | Short `329750` | Intermediate `305080` | Long `267440` | Very long `304660` |
+|---|---|---:|---:|---:|---:|
+| 2019-08-30 | early common-window / easing environment | evaluate | evaluate | evaluate | evaluate |
+| 2020-03-31 | severe shock / aggressive easing environment | evaluate | evaluate | evaluate | evaluate |
+| 2021-12-30 | inflation and policy-transition environment | evaluate | evaluate | evaluate | evaluate |
+| 2022-10-31 | aggressive tightening environment | evaluate | evaluate | evaluate | evaluate |
+| 2023-10-31 | high-yield / restrictive environment | evaluate | evaluate | evaluate | evaluate |
+| 2024-09-30 | later easing-transition environment | evaluate | evaluate | evaluate | evaluate |
+
+Reading across a row provides the **cross-sectional test**: how the same market environment is interpreted for different duration exposures.
+
+Reading down a column provides the **longitudinal test**: how the same duration exposure is evaluated across different historical rate environments.
+
+The MVP should make it possible to inspect both directions using the same analytical lineage and evaluation logic.
 
 Final ETF selection is not required.
 
