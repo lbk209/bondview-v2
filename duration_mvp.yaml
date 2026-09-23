@@ -1,0 +1,84 @@
+# Provisional Stage 1 model, not a permanent Bondview API.
+as_of_dates: ['2019-08-30', '2020-03-31', '2021-12-30', '2022-10-31', '2023-10-31', '2024-09-30']
+history_start: '2017-01-01'
+series:
+  long_yield:
+    id: DGS10
+    frequency: business_daily
+    units: percent
+    source: Board of Governors, H.15
+    max_age_days: 7
+    assumption: '10Y Treasury is a liquid long-end proxy; DGS30 would emphasize ultra-long exposure.'
+  inflation:
+    id: CPIAUCSL
+    frequency: monthly
+    units: index_1982_84_100
+    source: Bureau of Labor Statistics, seasonally adjusted headline CPI
+    max_age_days: 75
+    assumption: 'Headline CPI captures broad inflation; core CPI or PCE may give a different trend. Use as-of vintages to avoid seasonal revisions.'
+  policy:
+    id: DFEDTARU
+    frequency: daily
+    units: percent
+    source: Board of Governors, FOMC target range upper limit
+    max_age_days: 7
+    assumption: 'Realized target changes proxy policy direction; futures or 2Y yields would include expectations and can detect transitions earlier.'
+features:
+  yield_trend_endpoints:
+    series: long_yield
+    transform: smoothed_level
+    smoothing: 5
+    lag: 63
+  yield_move_endpoints:
+    series: long_yield
+    transform: smoothed_level
+    smoothing: 5
+    lag: 21
+  inflation_trend_endpoints:
+    series: inflation
+    transform: year_over_year
+    year_periods: 12
+    smoothing: 1
+    lag: 3
+  policy_direction_endpoints:
+    series: policy
+    transform: smoothed_level
+    smoothing: 1
+    lag: 90
+# Lags count valid observations: yield business observations, CPI months,
+# policy calendar days. Components are scaled current-minus-base differences.
+components:
+  Long-End Yield Trend:
+    feature: yield_trend_endpoints
+    scale: 100
+    units: bp
+    threshold: 25
+    states: [falling, stable, rising]
+  Recent Long-End Yield Move:
+    feature: yield_move_endpoints
+    scale: 100
+    units: bp
+    threshold: 15
+    states: [falling, stable, rising]
+  Inflation Trend:
+    feature: inflation_trend_endpoints
+    scale: 1
+    units: percentage_points
+    threshold: 0.25
+    states: [cooling, stable, heating]
+  Policy Direction:
+    feature: policy_direction_endpoints
+    scale: 100
+    units: bp
+    threshold: 12.5
+    states: [easing, unchanged, tightening]
+# Total mapping of 3^4 state cases via explicit per-component contributions.
+# A positive tally describes supportive conditions, not predicted ETF returns.
+view:
+  contributions:
+    Long-End Yield Trend: {falling: 1, stable: 0, rising: -1}
+    Recent Long-End Yield Move: {falling: 1, stable: 0, rising: -1}
+    Inflation Trend: {cooling: 1, stable: 0, heating: -1}
+    Policy Direction: {easing: 1, unchanged: 0, tightening: -1}
+  threshold: 2
+  labels: [duration_headwind, mixed, duration_supportive]
