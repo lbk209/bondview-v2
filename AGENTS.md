@@ -2,33 +2,46 @@
 
 ## Purpose
 
-This file provides stable guidance for coding agents working on `bondview`.
+This file provides stable guidance for coding agents working on `bondview-v2`.
 
-The agent should treat this file as baseline project guidance. Task-specific user instructions still take priority when they are more specific.
+The agent should treat this file as baseline implementation guidance. Task-specific user instructions still take priority when they are more specific.
 
 ## Project and implementation guardrails
 
 ### Project context
 
-`bondview` is a bond ETF decision-support project.
+`bondview-v2` is a bond ETF analytical and decision-support project.
 
-The project uses macroeconomic data and ETF price data to evaluate bond market conditions, derive exposure views, and support systematic review of bond ETF opportunities.
+The codebase should preserve clear boundaries between data acquisition, data preparation, analytical calculation, ETF-specific evaluation, diagnostics, reporting, and downstream decision-support outputs.
 
-The purpose is not to predict short-term ETF prices directly. The purpose is to organize market judgment, identify macro-consistent exposure views, and review ETFs whose price behavior may be misaligned with the macro-based view.
+This file does not restate the project's analytical design or system architecture. Coding agents should implement within the documented design rather than infer or redefine it from the current code structure.
 
-In this document, “model” means any project logic that transforms input data into signals, scores, classifications, exposure views, rankings, diagnostics, or review outputs.
+In this document, “model” means any project logic that transforms input data into features, Components, classifications, views, evaluations, scores, diagnostics, rankings, or other decision-support outputs.
 
-The codebase should preserve clear boundaries between data acquisition, data preparation, model or signal calculation, decision logic, diagnostics, reporting, and review outputs.
+### Design authority
 
-The current codebase is still centered heavily on Module 1, but future modules may cover separate responsibilities such as data preparation, ETF review, portfolio or ranking logic, reporting, or other decision-support layers.
+The standing design references for `bondview-v2` are limited to:
 
-Individual modules may use more specific internal layers. For example, Module 1 currently uses a raw input → feature → component → stance hierarchy.
+* `docs/bondview_system_architecture.md` — source of truth for system structure, ownership, dependency direction, processing flow, and Result Boundaries.
+* `docs/bondview_vocabulary.md` — source of truth for canonical terminology and term meaning.
+
+Do not treat other documents under `docs/` as standing design authority unless the user or task-specific instructions explicitly identify a document as applicable to the current task.
+
+When a task explicitly identifies a more specific design or implementation document, follow that document for the task while preserving the system-level boundaries defined by `docs/bondview_system_architecture.md` and the terminology defined by `docs/bondview_vocabulary.md`, unless the user explicitly requests a design change.
+
+If code, comments, existing file structure, or historical implementation conflict with these authoritative documents, do not treat the existing implementation as design authority.
 
 ### Agent role
 
 The coding agent should implement narrowly scoped changes according to the user’s instructions.
 
-Do not make independent design decisions beyond the requested task. If a change appears to require a design decision, mention it in the task result instead of expanding the scope.
+Do not make independent project-level or architectural design decisions beyond the requested task.
+
+Do not add, remove, merge, split, or move major responsibilities, Modules, Result Boundaries, authoritative analytical concepts, or documented dependency directions unless the user explicitly requests such a design change.
+
+If a requested implementation appears to require an architectural or ownership change, stop that part of the implementation and report the design issue instead of choosing a new architecture implicitly.
+
+For local implementation choices that do not alter documented architecture or behavior, prefer the simplest correct solution and proceed without expanding the task into a design exercise.
 
 The coding agent may create the GitHub-visible work artifacts required by the Git workflow below.
 
@@ -43,7 +56,7 @@ The coding agent must not complete or merge final session work into the project�
 * Do not delete files unless explicitly instructed.
 * Avoid broad refactors unless explicitly requested.
 * Do not change model outputs, scoring behavior, config interpretation, public APIs, or file formats unless explicitly requested.
-* Treat YAML configuration files, including `module*_config.yaml`, as behavior-sensitive files. If they are changed, report the intended behavior impact and whether model outputs changed.
+* Treat YAML configuration files as behavior-sensitive when they define model behavior. If they are changed, report the intended behavior impact and whether model outputs changed.
 
 ### General implementation design rules
 
@@ -63,24 +76,26 @@ The coding agent must not complete or merge final session work into the project�
 
 ### Bondview-specific implementation rules
 
-#### Module boundaries
+#### Architectural and Result Boundaries
 
-* Each module should preserve a clear internal processing hierarchy and expose formal outputs for downstream consumers.
-* Do not bypass a module’s formal intermediate or final outputs with raw or internal variables unless explicitly requested.
-* Do not collapse data preparation, model or signal calculation, decision logic, diagnostics, plotting, or reporting merely because a local implementation would be shorter.
+* Preserve the major responsibilities, ownership, dependency directions, and Result Boundaries defined by `docs/bondview_system_architecture.md`.
+* Preserve clear intermediate and final outputs for each implemented responsibility.
+* Do not bypass formal intermediate or final outputs with raw or internal variables unless explicitly requested.
+* Do not create a new dependency path that bypasses or reverses the documented architecture merely because it shortens a local implementation.
+* Do not duplicate an authoritative analytical concept in a downstream consumer when the documented owner already provides that concept.
+* Do not collapse data preparation, analytical calculation, ETF-specific evaluation, diagnostics, plotting, or reporting merely because a local implementation would be shorter.
 * Keep validation/schema logic separate from runtime logic where practical.
 * Treat config validation, scoring, labels, diagnostics, plotting, and decision outputs as behavior-sensitive areas when they affect downstream behavior.
 * When changing scoring, labels, diagnostics, validation, config interpretation, or decision outputs, explicitly report whether model outputs changed.
-* For Module 1, preserve the current raw input → feature → component → stance hierarchy.
-* Future modules may use different internal layer names, but the same principle applies: keep intermediate responsibilities explicit, reviewable, and behavior-sensitive where they affect downstream decisions.
+* Keep intermediate responsibilities explicit and reviewable where they affect downstream behavior.
 
 #### Model structure and implementation code
 
 * Separate model structure from implementation code wherever practical.
-* Configuration files should describe model structure where the module is configuration-driven: inputs, components or signals, scoring rules, thresholds, labels, outputs, and relationships between model parts.
-* Python code should implement the reusable mechanics that interpret, validate, calculate, diagnose, and report those structures.
-* Do not hard-code model-specific structure in Python when it belongs in configuration.
-* When a module needs new model logic, first determine whether it belongs in configuration, shared interpretation code, validation/schema logic, runtime calculation code, diagnostics, or reporting code.
+* Configuration files should describe model structure where the applicable design is configuration-driven: inputs, Components or other analytical concepts, rules, thresholds, labels, outputs, and relationships between model parts.
+* Python code should implement the mechanics that interpret, validate, calculate, diagnose, and report those structures.
+* Do not hard-code model-specific structure in Python when the applicable design places that structure in configuration.
+* When new model logic is required, determine whether it belongs in configuration, calculation code, validation/schema logic, diagnostics, reporting, or another responsibility already defined by the design.
 * Validation should protect the contract between configuration and code. Runtime code should not silently compensate for malformed or incomplete model structure unless that fallback is explicitly part of the design.
 
 #### Reuse, diagnostics, and consumer layers
@@ -90,8 +105,8 @@ The coding agent must not complete or merge final session work into the project�
 * Do not create duplicate data, configuration, diagnostics, reporting, or review paths when an existing path can be safely extended.
 * Shared data retrieval, data preparation, dependency resolution, and reusable calculation mechanics must remain consumer-neutral.
 * Plotting, display, reporting, and review-specific behavior must remain in consumer-specific layers.
-* Diagnostics should explain existing model behavior. Do not change scoring, labels, stance logic, decision logic, or model outputs merely to make diagnostics easier.
-* If a task appears to require moving responsibilities across module boundaries, stop and report the design issue instead of silently changing the architecture.
+* Diagnostics should explain existing model behavior. Do not change Component logic, Bond Exposure View logic, evaluation logic, decision logic, or model outputs merely to make diagnostics easier.
+* If a task appears to require moving responsibilities across documented boundaries, changing ownership, or introducing a new Result Boundary, stop and report the design issue instead of silently changing the architecture.
 * Do not bundle cleanup, formatting, import reorganization, or unrelated refactors into behavior-sensitive changes unless explicitly requested.
 
 ### Validation expectations
@@ -317,15 +332,15 @@ Filename rules:
 * Use the current date in `YYMMDD` format.
 * Use lowercase letters, numbers, and underscores only.
 * Keep names short but specific.
-* `<scope>` should identify the main area, such as `module1`, `schema`, `duration`, `plot`, `diagnostics`, or `data`.
+* `<scope>` should identify the main area, such as `bond_analysis`, `schema`, `duration`, `plot`, `diagnostics`, or `data`.
 * `<topic>` should identify the specific task or subject.
 * `<report_type>` should describe the document type, such as `audit`, `review`, `plan`, `summary`, or `followup`.
 
 Examples:
 
-* `reports/260622_module1_upload_audit.md`
-* `reports/260622_module1_schema_split_review.md`
-* `reports/260622_duration_stance_migration_audit.md`
+* `reports/260622_bond_analysis_upload_audit.md`
+* `reports/260622_schema_component_split_review.md`
+* `reports/260622_duration_component_migration_audit.md`
 * `reports/260622_plot_refactor_followup.md`
 
 If a report file is created, the PR description must:
