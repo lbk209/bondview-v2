@@ -87,7 +87,7 @@ Its responsibility includes:
 
 Its authoritative Result Boundary is the set of Components required by downstream consumers.
 
-Data acquisition and source-specific retrieval are outside Bond Analysis once Raw Observations have been accepted. In architecture diagrams, `Raw Observations` therefore means observations already accepted by Bondview. Bond Analysis also does not perform ETF-specific interpretation or evaluation.
+Data acquisition and source-specific retrieval are outside Bond Analysis once Raw Observations have been accepted. Bond Analysis also does not perform ETF-specific interpretation or evaluation.
 
 The internal preparation flow and Component result semantics are defined in Section 3.
 
