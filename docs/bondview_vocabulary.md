@@ -95,8 +95,7 @@ Calculation Mechanics are reusable conceptual structures used across Components 
 | Term | Definition |
 |---|---|
 | **State Classification** | The process that converts a Component Value into a Component State. |
-| **Rule Dimension** | A Component whose State participates in a particular Rule Case. |
-| **Rule Case** | One concrete combination of Rule Dimension States. |
+| **Rule Case** | One concrete combination of Component States used by a Rule Mapping. |
 | **Rule Mapping** | The defined relationship that maps a Rule Case to a model result. |
 | **Rule Table** | The configured set of Rule Mappings for one defined model purpose. |
 | **Coverage Strategy** | The convention for handling the valid Rule Case space, such as explicit mapping, fallback, or justified interpolation. |
@@ -153,8 +152,9 @@ Reusable mechanics do not erase model semantics. Where a model assigns different
 | **Core Evaluation** | The exposure-specific economic assessment within a Constituent Evaluation before any applicable Macro Adjustment. It combines Components for Core Evaluation with the applicable ETF Exposure Profile. |
 | **Core Evaluation Result** | The exposure-specific result of Core Evaluation before any applicable Macro Adjustment. |
 | **Macro Adjustment** | An evaluator-specific modification of an already exposure-specific Core Evaluation Result using Macroeconomic Components when those conditions materially affect the evaluator's economic assessment. |
-| **Constituent Evaluation Result** | The completed result of one Constituent Evaluation after any applicable Macro Adjustment. |
-| **Exposure Evaluation Result** | The combined economic result produced from Constituent Evaluation Results before Positioning Overlay. |
+| **Constituent Evaluation Result** | The completed output of one Constituent Evaluation, supplied to Evaluation Combination. |
+| **Evaluation Combination** | The process that combines Constituent Evaluation Results into the overall Exposure Evaluation Result using the applicable combination logic. |
+| **Exposure Evaluation Result** | The combined economic output of Exposure Evaluation, supplied to Positioning Overlay. |
 
 The terms inside each Constituent Evaluation relate as follows:
 
@@ -172,7 +172,25 @@ Constituent Evaluation Result
 
 Core Evaluation first interprets the ETF exposure under the Components used for that evaluator. Macro Adjustment then modifies that already exposure-specific result using applicable Macroeconomic Components.
 
-For example, a Duration Evaluation may use `Long-End Yield Trend` and `Recent Long-End Yield Move` as Components for Core Evaluation together with duration characteristics from the ETF Exposure Profile. `Inflation Trend` and `Policy Direction` may then serve as Macroeconomic Components for Macro Adjustment. This example illustrates term roles rather than prescribing the Duration model's final rule mapping.
+A Duration example is:
+
+```text
+Long-End Yield Trend
+        +
+Recent Long-End Yield Move
+        ↓
+[Core Evaluation] <──────────── Duration characteristics
+                                  from ETF Exposure Profile
+        ↓
+Core Evaluation Result
+        ↓
+[Macro Adjustment] <─────────── Inflation Trend
+                                  + Policy Direction
+        ↓
+Duration Evaluation Result
+```
+
+`Duration Evaluation Result` is the Constituent Evaluation Result for Duration Evaluation.
 
 The current Constituent Evaluations are:
 
@@ -195,7 +213,7 @@ Constituent Evaluation Results
 Exposure Evaluation Result
 ```
 
-`Evaluation Combination` is an action in the evaluation flow rather than a separate canonical vocabulary term.
+Evaluation Combination may use weighting, rules, conditional mappings, or other evaluator-specific methods.
 
 ## 3.2 Positioning and Instrument Quality
 
@@ -252,15 +270,7 @@ The detailed diagnostic boundary, dependency-lineage requirements, and permissib
 | **Result Boundary** | A formal interface through which one responsibility exposes authoritative outputs to downstream consumers. |
 | **Result Contract** | The documented semantics and required contents of a particular Result Boundary or model-significant intermediate result. |
 
-The configuration terms relate at a high level as:
-
-```text
-Model Configuration
-        ↓
-[Configuration Validation]
-        ↓
-Resolved Model Specification
-```
+A Resolved Model Specification is produced by validating Model Configuration against its Configuration Schema.
 
 Result Boundaries and Result Contracts define how authoritative outputs are exposed across responsibility boundaries and how model-significant intermediate results remain interpretable and traceable. Concrete result objects are defined individually when their contracts are designed.
 
@@ -287,4 +297,5 @@ Result Boundaries and Result Contracts define how authoritative outputs are expo
 17. Use **Instrument Quality** only for implementation quality, not for economic attractiveness.
 18. Use **ETF Evaluation Result** for the authoritative ETF-specific output exposed by ETF Evaluation.
 19. Use **Rule Case**, **Rule Mapping**, **Rule Table**, and **Coverage Strategy** as general Calculation Mechanics.
-20. Use **Result Boundary / Result Contract** as generic interface concepts while defining concrete results separately.
+20. Use **Evaluation Combination** for the model logic that combines Constituent Evaluation Results into the Exposure Evaluation Result.
+21. Use **Result Boundary / Result Contract** as generic interface concepts while defining concrete results separately.
