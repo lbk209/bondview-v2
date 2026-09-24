@@ -84,7 +84,7 @@ A Duration example illustrates the distinction among the terms:
 | Falling / Stable / Rising | Component State |
 | Duration | Bond Exposure Dimension |
 
-A Bond Exposure Dimension is descriptive vocabulary. It is not a separate calculated result and does not imply an ETF-independent Bond Exposure View.
+A Bond Exposure Dimension is descriptive vocabulary. It is not a separate calculated result and does not imply an ETF-independent market-level bond exposure view.
 
 Detailed Component construction, identity, consolidation, lineage, and Result Contract rules belong to the system architecture and more specific Component design documents.
 
@@ -222,7 +222,6 @@ Evaluation Combination may use weighting, rules, conditional mappings, or other 
 | **Instrument Quality** | Assesses whether an ETF is a suitable implementation vehicle for its exposure. |
 | **ETF Evaluation Result** | The authoritative ETF-specific result exposed for downstream comparison or decision logic. |
 
-The terms relate as follows:
 
 ```text
 Exposure Evaluation Result
@@ -253,7 +252,7 @@ The intermediate result after Positioning Overlay is intentionally unnamed becau
 
 Historical Context is diagnostic, not a second hidden decision model.
 
-Human-readable summaries produced by Diagnostics explain authoritative Components or evaluation results. They do not constitute a separate Bond Exposure View or other authoritative market-level assessment.
+Human-readable summaries produced by Diagnostics explain authoritative Components or evaluation results. They do not constitute a separate ETF-independent market-level bond exposure view or other authoritative market-level assessment.
 
 The detailed diagnostic boundary, dependency-lineage requirements, and permissible historical inspection are defined by the system architecture.
 
@@ -263,7 +262,7 @@ The detailed diagnostic boundary, dependency-lineage requirements, and permissib
 
 | Term | Definition |
 |---|---|
-| **Model Configuration** | The declarative definition of model-specific structure and parameters used by Bondview calculations. |
+| **Model Configuration** | The declarative definition of model-specific structure and parameters used by Bondview calculations, represented in a format such as YAML. |
 | **Configuration Schema** | The contract that validates whether Model Configuration is structurally and semantically acceptable. |
 | **Resolved Model Specification** | The validated, explicit runtime representation produced from Model Configuration before calculation. |
 | **Result Boundary** | A formal interface through which one responsibility exposes authoritative outputs to downstream consumers. |
@@ -283,9 +282,9 @@ Result Boundaries and Result Contracts define how authoritative outputs are expo
 4. Keep **Raw Observation**, **Feature**, and **Component** distinct.
 5. Keep **Component Value** and **Component State** distinct where a discrete State exists.
 6. Treat **Component** as the authoritative reusable analytical concept.
-7. A Component may be derived from Features or from other Components / Component Values when economically meaningful.
+7. A **Component** may be derived from Features or from other Components / Component Values when economically meaningful.
 8. Use **Bond Exposure Dimension** only as descriptive vocabulary for economically distinct exposure dimensions such as Duration, Curve, and Credit.
-9. Do not use **Bond Exposure View**, **Duration View**, **Curve View**, or **Credit View** as model-result terms.
+9. Keep **Core Evaluation** exposure-specific by combining market Components with the ETF Exposure Profile; do not introduce an ETF-independent market-level bond exposure view as a model result.
 10. Use **Constituent Evaluation** for one economically distinct ETF-specific evaluation within Exposure Evaluation.
 11. Use **Core Evaluation** for the exposure-specific pre-Macro-Adjustment assessment within a Constituent Evaluation.
 12. Use **Core Evaluation Result** for the exposure-specific result before any applicable Macro Adjustment.
