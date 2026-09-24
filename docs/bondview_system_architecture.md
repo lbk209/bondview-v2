@@ -134,10 +134,10 @@ For example:
 
 ```text
 Component: Long-End Yield Trend = rising
-               ├──> Duration Evaluation 
-               │         └──> contributes to shorter-duration preference
-               └──> Curve Evaluation 
-                         └──> helps identify a long-end-led curve move
+           ├──> Duration Evaluation 
+           │    └──> contributes to shorter-duration preference
+           └──> Curve Evaluation 
+                └──> helps identify a long-end-led curve move
 ```
 
 The Component retains one authoritative meaning, while downstream consumers may assign it different roles within their own economic models.
@@ -181,51 +181,64 @@ For example, `Long-End Yield Trend`, `Inflation Trend`, `Policy Direction`, `Cre
 
 ## 3.2 Calculation Mechanics
 
-Calculation Mechanics are reusable conceptual structures used to transform values and states without owning domain-specific economic meaning.
+Calculation Mechanics are reusable conceptual structures used to transform Component Values and States without owning domain-specific economic meaning.
+
+Their structure is reusable across the architecture, while concrete calculation methods, mappings, and economic interpretation belong to the relevant Component, Evaluation, or other model-specific design.
 
 ### 3.2.1 State Classification
 
-**State Classification** converts a Component Value into a Component State.
+State Classification operates on one Component Value and, where discrete classification is useful, produces a Component State.
 
 ```text
-Component Value
+Component Value → [State Classification] → Component State
+```
+
+For example:
+
+```text
+Long-End Yield Trend Value = -45 bp
         ↓
 [State Classification]
         ↓
-Component State
+Long-End Yield Trend State = Falling
 ```
 
 The classification method may use thresholds, buckets, smoothing, hysteresis, historical percentiles, or other justified mechanics.
 
-The exact method belongs to the relevant Component design.
+The exact method and State semantics belong to the relevant Component design.
 
 ### 3.2.2 Rule Mapping and Coverage
 
-**Rule Mapping** converts a combination of Component States into a model-specific result.
+Rule Mapping operates on combinations of Component States. The participating States form a Rule Case, which is then mapped to a model-specific result.
 
 ```text
-Component States
+Component States → Rule Case → [Rule Mapping] → Mapped Result
+```
+
+For example:
+
+```text
+Long-End Yield Trend State = Falling
+        +
+Recent Long-End Yield Move State = Falling
         ↓
-Rule Case
+Rule Case = Falling × Falling
         ↓
 [Rule Mapping]
         ↓
-Mapped Result
+Mapped Result = Very favorable for long-duration exposure
 ```
 
-A **Rule Case** is one concrete combination of Component States used by a Rule Mapping.
+This is an illustrative mapping for a long-duration exposure, not an ETF-independent Duration judgment. The same Component States may map differently for materially different ETF Exposure Profiles.
 
-A **Rule Mapping** defines the relationship between a Rule Case and the model result produced from that case.
-
-A **Rule Table** is the configured set of Rule Mappings for one defined model purpose.
-
-A **Coverage Strategy** defines how the valid Rule Case space is handled, such as explicit mapping, fallback, justified interpolation, or other model-specific handling of valid uncovered cases.
+A Rule Table groups the mappings required for one defined model purpose, while its Coverage Strategy determines how the valid Rule Case space is handled, including explicit mappings, fallback behavior, justified interpolation, or other model-specific treatment of valid uncovered cases.
 
 Rule Mapping is reusable as a calculation structure, but the economic meaning of a mapping remains owned by the Component, Evaluation, or other model-specific responsibility that uses it.
 
-When an applicable model design assigns different semantic roles to Component groups, such as core assessment and macro adjustment, those roles must remain distinct in the calculation structure. Components assigned different roles must not be flattened into interchangeable peer contributions unless the applicable model design explicitly defines them as peers.
+Where a model assigns different semantic roles to Component groups, such as Core Evaluation and Macro Adjustment, those roles must remain distinct even when similar calculation mechanics are used. Components assigned different roles must not be flattened into interchangeable peer contributions unless the applicable model design explicitly defines them as peers.
 
 System-wide principles for reusable mechanics are defined in Section 6.3.
+
 
 ## 3.3 Component Construction and Identity
 
@@ -348,10 +361,10 @@ Its internal hierarchy is:
 
 ```text
 [Exposure Evaluation]
-     ├── [Constituent Evaluations]
-     │        ├── [Core Evaluation]
-     │        └── [Macro Adjustment, where applicable; after Core Evaluation]
-     └── [Evaluation Combination]
+├── [Constituent Evaluations]
+│   ├── [Core Evaluation]
+│   └── [Macro Adjustment, where applicable; after Core Evaluation]
+└── [Evaluation Combination]
 ```
 
 Macro Adjustment therefore belongs within the applicable Constituent Evaluation rather than operating as a peer analytical layer.
