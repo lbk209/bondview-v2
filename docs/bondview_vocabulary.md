@@ -144,19 +144,19 @@ Reusable mechanics do not erase model semantics. Where a model assigns different
 
 ## 3.1 Exposure Evaluation
 
-| Term | Definition |
-|---|---|
-| **ETF Exposure Profile** | The economic identity of the bond exposure that an ETF is designed to provide. |
-| **Exposure Evaluation** | The economic assessment process that determines whether an ETF's Exposure Profile is appropriate under current bond-market and macroeconomic conditions. |
-| **Constituent Evaluation** | An ETF-specific evaluation of one economically distinct aspect of an ETF's Exposure Profile within Exposure Evaluation. |
-| **Core Evaluation** | The exposure-specific economic assessment within a Constituent Evaluation before any applicable Macro Adjustment. It combines Components for Core Evaluation with the applicable ETF Exposure Profile. |
-| **Core Evaluation Result** | The exposure-specific result of Core Evaluation before any applicable Macro Adjustment. |
-| **Macro Adjustment** | An evaluator-specific modification of an already exposure-specific Core Evaluation Result using Macroeconomic Components when those conditions materially affect the evaluator's economic assessment. |
-| **Constituent Evaluation Result** | The completed output of one Constituent Evaluation, supplied to Evaluation Combination. |
-| **Evaluation Combination** | The process that combines Constituent Evaluation Results into the overall Exposure Evaluation Result using the applicable combination logic. |
-| **Exposure Evaluation Result** | The combined economic output of Exposure Evaluation, supplied to Positioning Overlay. |
+| Term                              | Definition                                                                                                                                                                                             |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **ETF Exposure Profile**          | The economic identity of the bond exposure that an ETF is designed to provide.                                                                                                                         |
+| **Exposure Evaluation**           | The economic assessment process that determines whether an ETF's Exposure Profile is appropriate under current bond-market and macroeconomic conditions.                                               |
+| **Constituent Evaluation**        | An ETF-specific evaluation of one economically distinct aspect of an ETF's Exposure Profile within Exposure Evaluation.                                                                                |
+| **Core Evaluation**               | The exposure-specific economic assessment within a Constituent Evaluation before any applicable Macro Adjustment. It combines Components for Core Evaluation with the applicable ETF Exposure Profile. |
+| **Core Evaluation Result**        | The exposure-specific result of Core Evaluation before any applicable Macro Adjustment.                                                                                                                |
+| **Macro Adjustment**              | An evaluator-specific modification of an already exposure-specific Core Evaluation Result using Macroeconomic Components when those conditions materially affect the evaluator's economic assessment.  |
+| **Constituent Evaluation Result** | The completed output of one Constituent Evaluation, supplied to Evaluation Combination.                                                                                                                |
+| **Evaluation Combination**        | The process that combines Constituent Evaluation Results into the overall Exposure Evaluation Result using the applicable combination logic.                                                           |
+| **Exposure Evaluation Result**    | The combined economic output of Exposure Evaluation, supplied to Positioning Overlay.                                                                                                                  |
 
-The terms inside each Constituent Evaluation relate as follows:
+Within each Constituent Evaluation:
 
 ```text
 Components for Core Evaluation
@@ -172,7 +172,18 @@ Constituent Evaluation Result
 
 Core Evaluation first interprets the ETF exposure under the Components used for that evaluator. Macro Adjustment then modifies that already exposure-specific result using applicable Macroeconomic Components.
 
-A Duration example is:
+The current Constituent Evaluations are:
+
+| Term                           | Definition                                                                                                                     |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
+| **Duration Evaluation**        | ETF-specific evaluation of whether the ETF's interest-rate sensitivity is appropriate under current conditions.                |
+| **Curve Evaluation**           | ETF-specific evaluation of whether the ETF's maturity / curve exposure is appropriate under current term-structure conditions. |
+| **Credit Evaluation**          | ETF-specific evaluation of whether the ETF's credit-risk exposure is appropriate under current credit conditions.              |
+| **Rates Valuation Evaluation** | ETF-specific evaluation of whether compensation for accepting the ETF's rates exposure is sufficiently attractive.             |
+
+The Constituent Evaluations are economically distinct assessments. They do not need to share identical output semantics, scales, weighting, State semantics, or Rule Mapping structures.
+
+A Duration Evaluation example is:
 
 ```text
 Long-End Yield Trend
@@ -192,17 +203,6 @@ Duration Evaluation Result
 
 `Duration Evaluation Result` is the Constituent Evaluation Result for Duration Evaluation.
 
-The current Constituent Evaluations are:
-
-| Term | Definition |
-|---|---|
-| **Duration Evaluation** | ETF-specific evaluation of whether the ETF's interest-rate sensitivity is appropriate under current conditions. |
-| **Curve Evaluation** | ETF-specific evaluation of whether the ETF's maturity / curve exposure is appropriate under current term-structure conditions. |
-| **Credit Evaluation** | ETF-specific evaluation of whether the ETF's credit-risk exposure is appropriate under current credit conditions. |
-| **Rates Valuation Evaluation** | ETF-specific evaluation of whether compensation for accepting the ETF's rates exposure is sufficiently attractive. |
-
-The Constituent Evaluations are economically distinct assessments. They do not need to share identical output semantics, scales, weighting, State semantics, or Rule Mapping structures.
-
 After the Constituent Evaluations are complete:
 
 ```text
@@ -214,6 +214,7 @@ Exposure Evaluation Result
 ```
 
 Evaluation Combination may use weighting, rules, conditional mappings, or other evaluator-specific methods.
+
 
 ## 3.2 Positioning and Instrument Quality
 
