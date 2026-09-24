@@ -38,7 +38,7 @@ Diagnostic Results
 The architecture distinguishes three principal kinds of system output:
 
 - **Components** as authoritative analytical information about bond-market and macroeconomic conditions;
-- **ETF Evaluation Results** as authoritative ETF-specific decision-support outputs;
+- **ETF Evaluation Result** as the authoritative ETF-specific decision-support output;
 - **Diagnostic Results** as non-authoritative explanation and validation outputs.
 
 The linear overview represents the primary analytical flow. It does not prevent Diagnostics from inspecting an upstream authoritative result such as a Component or an intermediate ETF Evaluation result when that result is the diagnostic target or lies within the target's dependency lineage.
@@ -133,10 +133,11 @@ The meaning of a Component is independent of the consumer that uses it. Consumer
 For example:
 
 ```text
-Component: Long-End Yield Trend = rising
-           ├──> Duration Evaluation 
+Component: Long-End Yield Trend
+State: Rising
+           ├──> Duration Evaluation
            │    └──> contributes to shorter-duration preference
-           └──> Curve Evaluation 
+           └──> Curve Evaluation
                 └──> helps identify a long-end-led curve move
 ```
 
@@ -384,7 +385,7 @@ The current Constituent Evaluations are:
 
 These evaluations operate in parallel but do not need to share identical output semantics, scales, weighting, State semantics, or Rule Mapping structures.
 
-The general Core Evaluation pattern is:
+The general Constituent Evaluation pattern is:
 
 ```text
 Components for Core Evaluation
@@ -392,9 +393,15 @@ Components for Core Evaluation
 [Core Evaluation] <──────────────── ETF Exposure Profile
         ↓
 Core Evaluation Result
+        ↓
+[Macro Adjustment, where applicable] <── Macroeconomic Components
+        ↓
+Constituent Evaluation Result
 ```
 
-The Core Evaluation Result is already exposure-specific. It must preserve enough semantics or lineage to identify the exposure characteristics and Component conditions that materially produced the result.
+Core Evaluation first interprets the ETF exposure under the Components used for that evaluator. Macro Adjustment then modifies that already exposure-specific result using applicable Macroeconomic Components.
+
+The Core Evaluation Result must preserve enough semantics or lineage to identify the exposure characteristics and Component conditions that materially produced the result.
 
 A Constituent Evaluation may additionally consume ETF-level economic inputs when its economic question specifically requires them. In the current design, the clearest example is a defined ETF Yield / Carry measure used by Rates Valuation Evaluation.
 
@@ -405,16 +412,6 @@ The specific Component set, economic mapping, Profile information, and any addit
 Macroeconomic conditions are represented upstream as Components and are used selectively by the Constituent Evaluation whose economic question they affect.
 
 Macro logic is integrated through evaluator-specific **Macro Adjustment**.
-
-The general pattern is:
-
-```text
-Core Evaluation Result
-        ↓
-[Macro Adjustment] <────────────── Macroeconomic Components
-        ↓
-Constituent Evaluation Result
-```
 
 Macro Adjustment modifies an already exposure-specific Core Evaluation Result. It does not create a separate ETF-independent market-level bond exposure view and then apply that view to ETFs.
 
@@ -428,7 +425,9 @@ Macro Adjustment should normally consume the Core Evaluation Result and relevant
 
 Macro Adjustment may consume any macroeconomic Components relevant to the evaluator, and the same Component may be used by more than one evaluator where justified. Such use must not redefine the meaning of the upstream Components.
 
-The completed Constituent Evaluation results are combined into the overall Exposure Evaluation Result:
+### 4.2.3 Evaluation Combination
+
+The completed Constituent Evaluation Results are combined into the overall Exposure Evaluation Result:
 
 ```text
 Duration Evaluation Result
@@ -456,6 +455,8 @@ It answers:
 
 Typical positioning information may include crowding, sentiment, speculative positioning, unusual directional consensus, or exposure-level extension after a large market move.
 
+For example, an economically favorable very-long-duration exposure could still be implemented less aggressively when bullish duration positioning is unusually crowded.
+
 Architecturally:
 
 ```text
@@ -465,6 +466,8 @@ Exposure Evaluation Result
         ↓
 [Instrument Quality]
 ```
+
+The intermediate result after Positioning Overlay is intentionally unnamed because Bondview does not currently need to refer to it independently.
 
 Positioning Inputs are not assumed to be Components merely because they are used by Bondview.
 
@@ -483,6 +486,8 @@ Potential implementation characteristics may include:
 - active-management effectiveness, where applicable and supported by defined data and rules;
 - other instrument-specific implementation characteristics supported by defined data and rules.
 
+For example, two ETFs with similar duration exposure may have similar economic evaluation but differ in Instrument Quality because of cost or tracking behavior.
+
 Execution-specific conditions that Bondview does not currently model, such as live liquidity, bid-ask spread, order size, or market conditions at the time of trading, remain outside the current authoritative ETF Evaluation logic and are considered by the user or consuming workflow at execution time.
 
 Architecturally:
@@ -492,16 +497,16 @@ Architecturally:
         ↓
 [Instrument Quality] <───────────── Instrument Quality Inputs
         ↓
-ETF Evaluation Results
+ETF Evaluation Result
 ```
 
 Instrument Quality may identify failure of an explicit minimum-quality requirement and support relative comparison among ETFs while preserving the ETF Evaluation Result.
 
 It must remain separate from economic attractiveness. A high-quality ETF can represent an unattractive exposure, and an attractive exposure can be implemented through a poor-quality ETF.
 
-## 4.5 ETF Evaluation Results and Downstream Choice
+## 4.5 ETF Evaluation Result and Downstream Choice
 
-**ETF Evaluation Results** are the authoritative downstream results of the ETF Evaluation Module. They preserve the ETF-specific analytical outputs required for comparison across ETFs, including the relevant Core Evaluation Results, Constituent Evaluation Results, and subsequent evaluation stages needed for traceability.
+An **ETF Evaluation Result** is the authoritative downstream result of the ETF Evaluation Module. It preserves the ETF-specific analytical outputs required for comparison across ETFs, including the relevant Core Evaluation Results, Constituent Evaluation Results, and subsequent evaluation stages needed for traceability.
 
 ETF ranking and final-choice logic are downstream from ETF Evaluation Results:
 
@@ -660,7 +665,7 @@ The system architecture should be reviewed when a proposed change would:
 - make Diagnostics part of authoritative decision calculation or allow Diagnostics to create a parallel market or exposure-evaluation model;
 - allow unrelated supplemental data to become an implicit diagnostic decision path;
 - introduce reusable infrastructure broader than justified by established semantics or demonstrated reuse requirements;
-- materially change the meaning or Result Boundary of ETF Evaluation Results;
+- materially change the meaning or Result Boundary of ETF Evaluation Result;
 - introduce a new downstream responsibility whose scope is stable and distinct enough to require its own Module or Result Boundary.
 
 Changes to individual Component formulas, evaluator rules, thresholds, mappings, score semantics, or configuration values may be significant model changes without necessarily requiring a system-architecture revision, provided they preserve the boundaries defined here.
