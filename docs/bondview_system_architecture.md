@@ -206,8 +206,6 @@ The exact method belongs to the relevant Component design.
 ```text
 Component States
         ↓
-[Rule Case Construction]
-        ↓
 Rule Case
         ↓
 [Rule Mapping]
@@ -215,9 +213,7 @@ Rule Case
 Mapped Result
 ```
 
-A **Rule Dimension** is a Component whose State participates in a particular Rule Case.
-
-A **Rule Case** is one concrete combination of Rule Dimension States.
+A **Rule Case** is one concrete combination of Component States used by a Rule Mapping.
 
 A **Rule Mapping** defines the relationship between a Rule Case and the model result produced from that case.
 
@@ -407,7 +403,7 @@ Core Evaluation Result
 Constituent Evaluation Result
 ```
 
-Macro Adjustment modifies an already exposure-specific Core Evaluation Result. It does not create a separate ETF-independent market view and then apply that view to ETFs.
+Macro Adjustment modifies an already exposure-specific Core Evaluation Result. It does not create a separate ETF-independent market-level bond exposure view and then apply that view to ETFs.
 
 Because ETF exposure has already entered the Core Evaluation, different ETF Exposure Profiles may produce different Core Evaluation Results and therefore may be affected differently by the same macroeconomic conditions.
 
@@ -574,7 +570,6 @@ Potential reusable mechanics include:
 - smoothing;
 - State Classification;
 - stabilization or hysteresis;
-- Rule Case Construction;
 - Rule Mapping;
 - clipping or bounded transformation;
 - generic result combination where semantics are equivalent.
