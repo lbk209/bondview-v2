@@ -2,13 +2,12 @@
 
 ## Document Purpose
 
-This document defines the system-level architecture of **Bondview**: its major responsibilities, authoritative analytical boundaries, dependency direction, result boundaries, and system-wide design principles.
+This document defines the system-level architecture of **Bondview**, including its major responsibilities, authoritative analytical boundaries, and system-wide design principles.
 
-Bondview transforms accepted bond-market and macroeconomic observations into reusable Components, applies those Components to ETF-specific evaluation, and provides Diagnostics for explanation and validation.
+`bondview_vocabulary.md` is the source of truth for **term meaning and naming**. This document is the source of truth for **system structure, ownership, dependency direction, processing flow, and Result Boundaries**.
 
-`bondview_vocabulary.md` is the source of truth for canonical term meaning and naming. This document is the source of truth for system structure, ownership, dependency direction, processing flow, and Result Boundaries.
+Detailed economic rules, Component catalogs, calculation formulas, thresholds, evaluator-specific mappings and scoring logic, and concrete Configuration Schemas belong in more specific design documents and contracts.
 
-Detailed economic rules, Component catalogs, calculation formulas, thresholds, evaluator-specific scoring logic, and concrete configuration schemas belong in more specific design documents and contracts.
 
 ---
 
@@ -44,7 +43,7 @@ The architecture distinguishes three principal kinds of system output:
 
 The linear overview represents the primary analytical flow. It does not prevent Diagnostics from inspecting an upstream authoritative result such as a Component or an intermediate ETF Evaluation result when that result is the diagnostic target or lies within the target's dependency lineage.
 
-The internal ETF Evaluation path is:
+The internal **ETF Evaluation** path is:
 
 ```text
 Components
@@ -59,7 +58,7 @@ Exposure Evaluation Result
         ↓
 [Positioning Overlay] <──────────── Positioning Inputs
         ↓
-the result after Positioning Overlay
+positioning-adjusted result
         ↓
 [Instrument Quality] <───────────── Instrument Quality Inputs
         ↓
@@ -125,19 +124,23 @@ This section defines the system-level Component invariants that more detailed Co
 
 ### 3.1.1 Component Authority and Role
 
-A **Component** is a canonical, economically meaningful analytical concept represented by a Component Value and, where useful, a discrete Component State.
+A **Component** is a canonical, economically meaningful analytical concept represented by a Component Value and, where useful, a discrete Component State. Components carry Bondview's authoritative analytical information about bond-market and macroeconomic conditions.
 
-Components carry Bondview's authoritative analytical information about bond-market and macroeconomic conditions.
+A Component may be consumed by one or more downstream responsibilities, including ETF Evaluation and Diagnostics, but it does not need to be used by every consumer.
 
-A Component may be consumed by one or more downstream responsibilities, including ETF Evaluation, Diagnostics, and future analytical capabilities.
+The meaning of a Component is independent of the consumer that uses it. Consumers may use the same Component for different purposes, but they must not redefine its authoritative economic meaning or create alternative authoritative versions with equivalent semantics.
 
-A Component does not need to be consumed by every responsibility.
+For example:
 
-The meaning of a Component is independent of the consumer that uses it. ETF evaluators and Diagnostics may consume the same Component for different responsibilities, but neither may redefine its authoritative economic meaning.
+```text
+Component: Long-End Yield Trend = rising
+           ├──> Duration Evaluation 
+           │    └──> contributes to shorter-duration preference
+           └──> Curve Evaluation 
+                └──> helps identify a long-end-led curve move
+```
 
-If multiple consumers require the same Component with equivalent semantics, they should reuse the same authoritative Component rather than create consumer-specific versions or alternative authoritative calculations.
-
-Uniform Component representation upstream does not imply uniform economic roles downstream. A consumer may assign different Components distinct roles within its model, and those role distinctions are part of that consumer's model semantics.
+The Component retains one authoritative meaning, while downstream consumers may assign it different roles within their own economic models.
 
 ### 3.1.2 Component Value, State, and Preparation Flow
 
@@ -173,63 +176,69 @@ Components may describe different economic domains, including rates, curve, cred
 
 These domain labels are descriptive. They do not create separate architectural Component types, separate upstream Modules, or separate Component interfaces.
 
-For example, `Long-End Yield Trend`, `Inflation Trend`, `Policy Direction`,
-`Credit Spread Level`, and `Curve Configuration` are all Components from the
-perspective of system architecture.
+For example, `Long-End Yield Trend`, `Inflation Trend`, `Policy Direction`, `Credit Spread Level`, and `Curve Configuration` are all Components from the perspective of system architecture.
 
-The relevance and role of a Component are determined by the downstream consumer that uses it.
 
 ## 3.2 Calculation Mechanics
 
-Calculation Mechanics are reusable conceptual structures used to transform values and states without owning domain-specific economic meaning.
+Calculation Mechanics are reusable conceptual structures used to transform Component Values and States without owning domain-specific economic meaning.
+
+Their structure is reusable across the architecture, while concrete calculation methods, mappings, and economic interpretation belong to the relevant Component, Evaluation, or other model-specific design.
 
 ### 3.2.1 State Classification
 
-**State Classification** converts a Component Value into a Component State.
+State Classification operates on one Component Value and, where discrete classification is useful, produces a Component State.
 
 ```text
-Component Value
+Component Value → [State Classification] → Component State
+```
+
+For example:
+
+```text
+Long-End Yield Trend Value = -45 bp
         ↓
 [State Classification]
         ↓
-Component State
+Long-End Yield Trend State = Falling
 ```
 
 The classification method may use thresholds, buckets, smoothing, hysteresis, historical percentiles, or other justified mechanics.
 
-The exact method belongs to the relevant Component design.
+The exact method and State semantics belong to the relevant Component design.
 
 ### 3.2.2 Rule Mapping and Coverage
 
-**Rule Mapping** converts a combination of Component States into a model-specific result.
+Rule Mapping operates on combinations of Component States. The participating States form a Rule Case, which is then mapped to a model-specific result.
 
 ```text
-Component States
+Component States → Rule Case → [Rule Mapping] → Mapped Result
+```
+
+For example:
+
+```text
+Long-End Yield Trend State = Falling
+        +
+Recent Long-End Yield Move State = Falling
         ↓
-[Rule Case Construction]
-        ↓
-Rule Case
+Rule Case = Falling × Falling
         ↓
 [Rule Mapping]
         ↓
-Mapped Result
+Mapped Result = Very favorable for long-duration exposure
 ```
 
-A **Rule Dimension** is a Component whose State participates in a particular Rule Case.
+This is an illustrative mapping for a long-duration exposure, not an ETF-independent Duration judgment. The same Component States may map differently for materially different ETF Exposure Profiles.
 
-A **Rule Case** is one concrete combination of Rule Dimension States.
-
-A **Rule Mapping** defines the relationship between a Rule Case and the model result produced from that case.
-
-A **Rule Table** is the configured set of Rule Mappings for one defined model purpose.
-
-A **Coverage Strategy** defines how the valid Rule Case space is handled, such as explicit mapping, fallback, justified interpolation, or other model-specific handling of valid uncovered cases.
+A Rule Table groups the mappings required for one defined model purpose, while its Coverage Strategy determines how the valid Rule Case space is handled, including explicit mappings, fallback behavior, justified interpolation, or other model-specific treatment of valid uncovered cases.
 
 Rule Mapping is reusable as a calculation structure, but the economic meaning of a mapping remains owned by the Component, Evaluation, or other model-specific responsibility that uses it.
 
-When an applicable model design assigns different semantic roles to Component groups, such as core assessment and macro adjustment, those roles must remain distinct in the calculation structure. Components assigned different roles must not be flattened into interchangeable peer contributions unless the applicable model design explicitly defines them as peers.
+Where a model assigns different semantic roles to Component groups, such as Core Evaluation and Macro Adjustment, those roles must remain distinct even when similar calculation mechanics are used. Components assigned different roles must not be flattened into interchangeable peer contributions unless the applicable model design explicitly defines them as peers.
 
 System-wide principles for reusable mechanics are defined in Section 6.3.
+
 
 ## 3.3 Component Construction and Identity
 
@@ -352,10 +361,10 @@ Its internal hierarchy is:
 
 ```text
 [Exposure Evaluation]
-     ├── [Constituent Evaluations]
-     │        ├── [Core Evaluation]
-     │        └── [Macro Adjustment, where applicable; after Core Evaluation]
-     └── [Evaluation Combination]
+├── [Constituent Evaluations]
+│   ├── [Core Evaluation]
+│   └── [Macro Adjustment, where applicable; after Core Evaluation]
+└── [Evaluation Combination]
 ```
 
 Macro Adjustment therefore belongs within the applicable Constituent Evaluation rather than operating as a peer analytical layer.
@@ -407,7 +416,7 @@ Core Evaluation Result
 Constituent Evaluation Result
 ```
 
-Macro Adjustment modifies an already exposure-specific Core Evaluation Result. It does not create a separate ETF-independent market view and then apply that view to ETFs.
+Macro Adjustment modifies an already exposure-specific Core Evaluation Result. It does not create a separate ETF-independent market-level bond exposure view and then apply that view to ETFs.
 
 Because ETF exposure has already entered the Core Evaluation, different ETF Exposure Profiles may produce different Core Evaluation Results and therefore may be affected differently by the same macroeconomic conditions.
 
@@ -574,7 +583,6 @@ Potential reusable mechanics include:
 - smoothing;
 - State Classification;
 - stabilization or hysteresis;
-- Rule Case Construction;
 - Rule Mapping;
 - clipping or bounded transformation;
 - generic result combination where semantics are equivalent.
