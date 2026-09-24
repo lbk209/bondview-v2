@@ -2,13 +2,12 @@
 
 ## Document Purpose
 
-This document defines the system-level architecture of **Bondview**: its major responsibilities, authoritative analytical boundaries, dependency direction, result boundaries, and system-wide design principles.
+This document defines the system-level architecture of **Bondview**, including its major responsibilities, authoritative analytical boundaries, and system-wide design principles.
 
-Bondview transforms accepted bond-market and macroeconomic observations into reusable Components, applies those Components to ETF-specific evaluation, and provides Diagnostics for explanation and validation.
+`bondview_vocabulary.md` is the source of truth for **term meaning and naming**. This document is the source of truth for **system structure, ownership, dependency direction, processing flow, and Result Boundaries**.
 
-`bondview_vocabulary.md` is the source of truth for canonical term meaning and naming. This document is the source of truth for system structure, ownership, dependency direction, processing flow, and Result Boundaries.
+Detailed economic rules, Component catalogs, calculation formulas, thresholds, evaluator-specific mappings and scoring logic, and concrete Configuration Schemas belong in more specific design documents and contracts.
 
-Detailed economic rules, Component catalogs, calculation formulas, thresholds, evaluator-specific scoring logic, and concrete configuration schemas belong in more specific design documents and contracts.
 
 ---
 
@@ -44,7 +43,7 @@ The architecture distinguishes three principal kinds of system output:
 
 The linear overview represents the primary analytical flow. It does not prevent Diagnostics from inspecting an upstream authoritative result such as a Component or an intermediate ETF Evaluation result when that result is the diagnostic target or lies within the target's dependency lineage.
 
-The internal ETF Evaluation path is:
+The internal **ETF Evaluation** path is:
 
 ```text
 Components
@@ -59,7 +58,7 @@ Exposure Evaluation Result
         ↓
 [Positioning Overlay] <──────────── Positioning Inputs
         ↓
-the result after Positioning Overlay
+positioning-adjusted result
         ↓
 [Instrument Quality] <───────────── Instrument Quality Inputs
         ↓
@@ -125,19 +124,23 @@ This section defines the system-level Component invariants that more detailed Co
 
 ### 3.1.1 Component Authority and Role
 
-A **Component** is a canonical, economically meaningful analytical concept represented by a Component Value and, where useful, a discrete Component State.
+A **Component** is a canonical, economically meaningful analytical concept represented by a Component Value and, where useful, a discrete Component State. Components carry Bondview's authoritative analytical information about bond-market and macroeconomic conditions.
 
-Components carry Bondview's authoritative analytical information about bond-market and macroeconomic conditions.
+A Component may be consumed by one or more downstream responsibilities, including ETF Evaluation and Diagnostics, but it does not need to be used by every consumer.
 
-A Component may be consumed by one or more downstream responsibilities, including ETF Evaluation, Diagnostics, and future analytical capabilities.
+The meaning of a Component is independent of the consumer that uses it. Consumers may use the same Component for different purposes, but they must not redefine its authoritative economic meaning or create alternative authoritative versions with equivalent semantics.
 
-A Component does not need to be consumed by every responsibility.
+For example:
 
-The meaning of a Component is independent of the consumer that uses it. ETF evaluators and Diagnostics may consume the same Component for different responsibilities, but neither may redefine its authoritative economic meaning.
+```text
+Component: Long-End Yield Trend = rising
+               ├──> Duration Evaluation 
+               │         └──> contributes to shorter-duration preference
+               └──> Curve Evaluation 
+                         └──> helps identify a long-end-led curve move
+```
 
-If multiple consumers require the same Component with equivalent semantics, they should reuse the same authoritative Component rather than create consumer-specific versions or alternative authoritative calculations.
-
-Uniform Component representation upstream does not imply uniform economic roles downstream. A consumer may assign different Components distinct roles within its model, and those role distinctions are part of that consumer's model semantics.
+The Component retains one authoritative meaning, while downstream consumers may assign it different roles within their own economic models.
 
 ### 3.1.2 Component Value, State, and Preparation Flow
 
@@ -173,11 +176,8 @@ Components may describe different economic domains, including rates, curve, cred
 
 These domain labels are descriptive. They do not create separate architectural Component types, separate upstream Modules, or separate Component interfaces.
 
-For example, `Long-End Yield Trend`, `Inflation Trend`, `Policy Direction`,
-`Credit Spread Level`, and `Curve Configuration` are all Components from the
-perspective of system architecture.
+For example, `Long-End Yield Trend`, `Inflation Trend`, `Policy Direction`, `Credit Spread Level`, and `Curve Configuration` are all Components from the perspective of system architecture.
 
-The relevance and role of a Component are determined by the downstream consumer that uses it.
 
 ## 3.2 Calculation Mechanics
 

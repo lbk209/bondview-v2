@@ -1,6 +1,6 @@
 # Bondview Vocabulary
 
-## Purpose
+## Document Purpose
 
 This document defines the canonical vocabulary for **Bondview**.
 
