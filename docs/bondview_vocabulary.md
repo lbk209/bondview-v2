@@ -12,31 +12,7 @@ The definitions below may include compact conceptual relationships where those r
 
 ---
 
-# 1. Vocabulary Map
-
-```text
-Bondview
-│
-├── System Responsibilities
-│
-├── Analytical Concepts
-│   ├── Component Model
-│   └── Calculation Mechanics
-│
-├── ETF Evaluation
-│   ├── Exposure Evaluation
-│   └── Post-Exposure Evaluation
-│
-├── Diagnostics
-│
-├── Model Definition and Interfaces
-│
-└── Naming Principles
-```
-
----
-
-# 2. System Responsibilities
+# 1. System Responsibilities
 
 | Term | Definition |
 |---|---|
@@ -60,9 +36,9 @@ Diagnostics
 
 ---
 
-# 3. Analytical Concepts
+# 2. Analytical Concepts
 
-## 3.1 Component Model
+## 2.1 Component Model
 
 | Term | Definition |
 |---|---|
@@ -112,7 +88,7 @@ A Bond Exposure Dimension is descriptive vocabulary. It is not a separate calcul
 
 Detailed Component construction, identity, consolidation, lineage, and Result Contract rules belong to the system architecture and more specific Component design documents.
 
-## 3.2 Calculation Mechanics
+## 2.2 Calculation Mechanics
 
 Calculation Mechanics are reusable conceptual structures used across Components and ETF Evaluation and may also be inspected by Diagnostics.
 
@@ -142,16 +118,14 @@ Long-End Yield Trend State = Falling
         +
 Recent Long-End Yield Move State = Falling
         ↓
-[Rule Case Construction]
-        ↓
 Rule Case = Falling × Falling
         ↓
 [Rule Mapping]
         ↓
-Mapped Result
+Mapped Result = Very favorable for long-duration exposure
 ```
 
-The exact mapped result in this example is intentionally unspecified because the economic mapping belongs to the applicable evaluator design rather than the vocabulary.
+This is an illustrative mapping for a long-duration exposure, not an ETF-independent Duration judgment; the same Component States may map differently for materially different ETF duration profiles.
 
 The distinction is:
 
@@ -167,9 +141,9 @@ Reusable mechanics do not erase model semantics. Where a model assigns different
 
 ---
 
-# 4. ETF Evaluation
+# 3. ETF Evaluation
 
-## 4.1 Exposure Evaluation
+## 3.1 Exposure Evaluation
 
 | Term | Definition |
 |---|---|
@@ -223,13 +197,13 @@ Exposure Evaluation Result
 
 `Evaluation Combination` is an action in the evaluation flow rather than a separate canonical vocabulary term.
 
-## 4.2 Post-Exposure Evaluation
+## 3.2 Positioning and Instrument Quality
 
 | Term | Definition |
 |---|---|
-| **Positioning Overlay** | An adjustment to implementation willingness or intensity after Exposure Evaluation, based on positioning context and without redefining the underlying economic assessment. |
-| **Instrument Quality** | Evaluation of whether an ETF is a sufficiently good implementation vehicle for its exposure using instrument-specific characteristics supported by defined data and rules. |
-| **ETF Evaluation Result** | The authoritative ETF-specific result exposed by the ETF Evaluation Module for downstream comparison or decision logic. |
+| **Positioning Overlay** | Adjusts implementation willingness or intensity based on positioning context after Exposure Evaluation. |
+| **Instrument Quality** | Assesses whether an ETF is a suitable implementation vehicle for its exposure. |
+| **ETF Evaluation Result** | The authoritative ETF-specific result exposed for downstream comparison or decision logic. |
 
 The terms relate as follows:
 
@@ -251,7 +225,7 @@ The intermediate result after Positioning Overlay is intentionally unnamed becau
 
 ---
 
-# 5. Diagnostics
+# 4. Diagnostics
 
 | Term | Definition |
 |---|---|
@@ -268,15 +242,17 @@ The detailed diagnostic boundary, dependency-lineage requirements, and permissib
 
 ---
 
-# 6. Model Definition and Interfaces
+# 5. Model Definition and Interfaces
 
 | Term | Definition |
 |---|---|
 | **Model Configuration** | The declarative definition of model-specific structure and parameters used by Bondview calculations. |
 | **Configuration Schema** | The contract that validates whether Model Configuration is structurally and semantically acceptable. |
 | **Resolved Model Specification** | The validated, explicit runtime representation produced from Model Configuration before calculation. |
+| **Result Boundary** | A formal interface through which one responsibility exposes authoritative outputs to downstream consumers. |
+| **Result Contract** | The documented semantics and required contents of a particular Result Boundary or model-significant intermediate result. |
 
-The terms relate at a high level as:
+The configuration terms relate at a high level as:
 
 ```text
 Model Configuration
@@ -286,16 +262,11 @@ Model Configuration
 Resolved Model Specification
 ```
 
-| Term | Definition |
-|---|---|
-| **Result Boundary** | A formal interface through which one responsibility exposes authoritative outputs to downstream consumers. |
-| **Result Contract** | The documented semantics and required contents of a particular Result Boundary or model-significant intermediate result. |
-
 Result Boundaries and Result Contracts define how authoritative outputs are exposed across responsibility boundaries and how model-significant intermediate results remain interpretable and traceable. Concrete result objects are defined individually when their contracts are designed.
 
 ---
 
-# 7. Naming Principles
+# 6. Naming Principles
 
 1. Prefer semantic names over numbered names.
 2. Use **Module** only for major system responsibilities with meaningful boundaries.
