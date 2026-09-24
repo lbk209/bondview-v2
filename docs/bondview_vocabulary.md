@@ -78,7 +78,7 @@ Diagnostics
 | **Component State** | A discrete economic condition assigned to a Component when discrete classification is useful. |
 | **State Classification** | The process that converts a Component Value into a Component State. |
 
-A Feature is generally closer to calculation mechanics, while a Component represents an economically meaningful analytical concept.
+A Feature is generally closer to calculation mechanics, while a Component represents an economically meaningful analytical concept. In diagrams, `Raw Observations` means source observations already accepted by Bondview.
 
 Example:
 
@@ -111,13 +111,19 @@ Typical Component examples include:
 At a high level:
 
 ```text
-Raw Observation
+Raw Observations
         ↓
-Feature
+[Feature Calculation]
+        ↓
+Features
+        ↓
+[Component Calculation]
         ↓
 Component Value
         ↓
-Component State, where applicable
+[State Classification, where applicable]
+        ↓
+Component State
 ```
 
 A Component may be derived from Features or from other Components or Component Values when economically meaningful.
@@ -203,32 +209,39 @@ Reusable mechanics do not erase model semantics. Where a model assigns different
 | **Instrument Quality** | Evaluation of whether an ETF is a sufficiently good implementation vehicle for its exposure using instrument-specific characteristics supported by defined data and rules. |
 | **ETF Evaluation Result** | The authoritative ETF-specific result exposed by the ETF Evaluation Module for downstream comparison or decision logic. |
 
-A compact relationship among the major ETF Evaluation concepts is:
+The terms inside each Constituent Evaluation relate as follows:
 
 ```text
-Relevant Components
-+ ETF Exposure Profile
+Components for Core Evaluation
         ↓
-Core Evaluation
+[Core Evaluation] <──────────────── ETF Exposure Profile
         ↓
 Core Evaluation Result
         ↓
-Macro Adjustment, where applicable
+[Macro Adjustment, where applicable] <── Macroeconomic Components
         ↓
 Constituent Evaluation Result
+```
+
+Core Evaluation first interprets the ETF exposure under the Components used for that evaluator. Macro Adjustment then modifies that already exposure-specific result using applicable macroeconomic Components.
+
+After the Constituent Evaluations are complete:
+
+```text
+Constituent Evaluation Results
         ↓
-Evaluation Combination
+[Evaluation Combination]
         ↓
 Exposure Evaluation Result
         ↓
-Positioning Overlay
+[Positioning Overlay] <──────────── Positioning Inputs
         ↓
-Instrument Quality
+[Instrument Quality] <───────────── Instrument Quality Inputs
         ↓
 ETF Evaluation Result
 ```
 
-Macro Adjustment acts on an exposure-specific Core Evaluation Result. It is not an ETF-independent market assessment performed before exposure is known.
+`Evaluation Combination` is shown as an action in the relationship diagram rather than introduced as a separate canonical vocabulary term. The intermediate result after Positioning Overlay is left unnamed because Bondview does not currently need to refer to it independently.
 
 The detailed Component sets, mappings, scales, inputs, and Result Contract semantics are defined by the relevant evaluator design and the system architecture.
 

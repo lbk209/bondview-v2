@@ -21,7 +21,7 @@ Components are the authoritative analytical representation of bond-market and ma
 The primary system flow is:
 
 ```text
-Accepted Raw Observations
+Raw Observations
         ↓
 [Bond Analysis]
         ↓
@@ -59,8 +59,7 @@ Exposure Evaluation Result
         ↓
 [Positioning Overlay] <──────────── Positioning Inputs
         ↓
-Positioning-Adjusted
-Exposure Evaluation
+the result after Positioning Overlay
         ↓
 [Instrument Quality] <───────────── Instrument Quality Inputs
         ↓
@@ -88,7 +87,7 @@ Its responsibility includes:
 
 Its authoritative Result Boundary is the set of Components required by downstream consumers.
 
-Data acquisition and source-specific retrieval are outside Bond Analysis once Raw Observations have been accepted. Bond Analysis also does not perform ETF-specific interpretation or evaluation.
+Data acquisition and source-specific retrieval are outside Bond Analysis once Raw Observations have been accepted. In architecture diagrams, `Raw Observations` therefore means observations already accepted by Bondview. Bond Analysis also does not perform ETF-specific interpretation or evaluation.
 
 The internal preparation flow and Component result semantics are defined in Section 3.
 
@@ -174,17 +173,9 @@ Components may describe different economic domains, including rates, curve, cred
 
 These domain labels are descriptive. They do not create separate architectural Component types, separate upstream Modules, or separate Component interfaces.
 
-For example:
-
-```text
-Long-End Yield Trend
-Inflation Trend
-Policy Direction
-Credit Spread Level
-Curve Configuration
-```
-
-are all Components from the perspective of system architecture.
+For example, `Long-End Yield Trend`, `Inflation Trend`, `Policy Direction`,
+`Credit Spread Level`, and `Curve Configuration` are all Components from the
+perspective of system architecture.
 
 The relevance and role of a Component are determined by the downstream consumer that uses it.
 
@@ -285,15 +276,16 @@ Each authoritative Component should have one canonical definition and one author
 
 The Component definition captures the Component's economic identity and configured calculation semantics. Its Result Contract defines the authoritative runtime representation exposed to downstream consumers, including the required Value or State representation and sufficient lineage references for traceability.
 
-A compact example is:
+A compact example of one Component definition inside Model Configuration is:
 
 ```text
-Long-End Yield Trend definition
-├── economic meaning
-├── input references
-├── calculation / transform specification
-├── relevant horizon
-└── State Classification specification / semantics
+Model Configuration
+└── Long-End Yield Trend definition
+    ├── economic meaning
+    ├── input references
+    ├── calculation / transform specification
+    ├── relevant horizon
+    └── State Classification specification / semantics
         ↓
 [Configuration Validation]
         ↓
@@ -301,7 +293,7 @@ Resolved Model Specification
         ↓
 [Component Calculation] <──────── Input Features
         ↓
-Long-End Yield Trend result
+Long-End Yield Trend Result
 ├── Value / State as defined
 └── lineage references
 ```
@@ -362,7 +354,7 @@ Its internal hierarchy is:
 [Exposure Evaluation]
      ├── [Constituent Evaluations]
      │        ├── [Core Evaluation]
-     │        └── [Macro Adjustment, where applicable]
+     │        └── [Macro Adjustment, where applicable; after Core Evaluation]
      └── [Evaluation Combination]
 ```
 
@@ -372,7 +364,7 @@ Macro Adjustment therefore belongs within the applicable Constituent Evaluation 
 
 A **Constituent Evaluation** does not assess the ETF Exposure Profile as a whole. It assesses one economically distinct aspect of the Profile using the Components relevant to that economic question.
 
-Within a Constituent Evaluation, the relevant non-macro Components provide the primary market conditions and the applicable ETF Exposure Profile characteristics represent the exposure being assessed. Their joint interpretation produces an exposure-specific **Core Evaluation Result**.
+Within a Constituent Evaluation, the Components used by Core Evaluation provide the primary market conditions and the applicable ETF Exposure Profile characteristics represent the exposure being assessed. Their joint interpretation produces an exposure-specific **Core Evaluation Result**.
 
 The current Constituent Evaluations are:
 
@@ -386,9 +378,9 @@ These evaluations operate in parallel but do not need to share identical output 
 The general Core Evaluation pattern is:
 
 ```text
-Relevant non-macro Components
+Components for Core Evaluation
         ↓
-[Core Evaluation] <──────────────── Relevant ETF Exposure Profile
+[Core Evaluation] <──────────────── ETF Exposure Profile
         ↓
 Core Evaluation Result
 ```
@@ -410,9 +402,9 @@ The general pattern is:
 ```text
 Core Evaluation Result
         ↓
-[Macro Adjustment] <────────────── Relevant macroeconomic Components
+[Macro Adjustment] <────────────── Macroeconomic Components
         ↓
-Evaluation Result
+Constituent Evaluation Result
 ```
 
 Macro Adjustment modifies an already exposure-specific Core Evaluation Result. It does not create a separate ETF-independent market view and then apply that view to ETFs.
@@ -462,7 +454,7 @@ Exposure Evaluation Result
         ↓
 [Positioning Overlay] <──────────── Positioning Inputs
         ↓
-Positioning-Adjusted Exposure Evaluation
+[Instrument Quality]
 ```
 
 Positioning Inputs are not assumed to be Components merely because they are used by Bondview.
@@ -487,7 +479,7 @@ Execution-specific conditions that Bondview does not currently model, such as li
 Architecturally:
 
 ```text
-Positioning-Adjusted Exposure Evaluation
+[Positioning Overlay]
         ↓
 [Instrument Quality] <───────────── Instrument Quality Inputs
         ↓
