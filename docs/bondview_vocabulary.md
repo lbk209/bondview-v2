@@ -190,18 +190,16 @@ Long-End Yield Trend
         +
 Recent Long-End Yield Move
         ↓
-[Core Evaluation] <──────────── Duration characteristics
-                                  from ETF Exposure Profile
+[Core Evaluation] <──────────── ETF Duration Exposure
         ↓
 Core Evaluation Result
         ↓
-[Macro Adjustment] <─────────── Inflation Trend
-                                  + Policy Direction
+[Macro Adjustment] <─────────── Inflation Trend + Policy Direction
         ↓
 Duration Evaluation Result
 ```
 
-`Duration Evaluation Result` is the Constituent Evaluation Result for Duration Evaluation.
+**Duration Evaluation Result** is the Constituent Evaluation Result for Duration Evaluation.
 
 After the Constituent Evaluations are complete:
 
