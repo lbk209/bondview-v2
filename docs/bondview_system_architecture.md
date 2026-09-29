@@ -372,7 +372,9 @@ Macro Adjustment therefore belongs within the applicable Constituent Evaluation 
 
 ### 4.2.1 Constituent Evaluations
 
-A **Constituent Evaluation** does not assess the ETF Exposure Profile as a whole. It assesses one economically distinct aspect of the Profile using the Components relevant to that economic question.
+A **Constituent Evaluation** does not assess the ETF Exposure Profile as a whole. It assesses one distinguishable economic aspect of the Profile using the Components relevant to that question. 
+
+Constituent Evaluations need not use disjoint Components or represent orthogonal factors; overlapping inputs or mechanisms are acceptable where the evaluations answer different economic questions. Materially duplicative effects should be avoided in evaluator design and Evaluation Combination.
 
 Within a Constituent Evaluation, the Components used by Core Evaluation provide the primary market conditions and the applicable ETF Exposure Profile characteristics represent the exposure being assessed. Their joint interpretation produces an exposure-specific **Core Evaluation Result**.
 
