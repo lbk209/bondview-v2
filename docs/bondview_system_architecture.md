@@ -136,7 +136,7 @@ For example:
 Component: Long-End Yield Trend
 State: Rising
            ├──> Duration Evaluation
-           │    └──> contributes to shorter-duration preference
+           │    └──> contributes to evaluation of the applicable duration exposure
            └──> Curve Evaluation
                 └──> helps identify a long-end-led curve move
 ```
@@ -357,6 +357,8 @@ The relationship between Profile characteristics and Components is defined throu
 ## 4.2 Exposure Evaluation
 
 **Exposure Evaluation** is the broader economic assessment process that determines whether an ETF's Exposure Profile is appropriate under current bond-market and macroeconomic conditions.
+
+Bondview deliberately decomposes Exposure Evaluation into a small number of interpretable Constituent Evaluations rather than treating ETF evaluation as a single monolithic bond-price or return-forecasting model. This decomposition prioritizes economically interpretable, traceable, and reviewable decision support over predictive-model complexity or statistical fit. It does not imply that the Constituent Evaluations are independent or orthogonal.
 
 Its internal hierarchy is:
 
@@ -660,6 +662,7 @@ The system architecture should be reviewed when a proposed change would:
 - make Bond Analysis depend on ETF-specific evaluation logic;
 - introduce a structural Component subtype that changes upstream processing or interfaces;
 - materially change the Component lineage or traceability contract;
+- collapse distinguishable Constituent Evaluations into a monolithic exposure, price, or return model that removes their separate economic responsibilities or traceable results;
 - collapse model-significant semantic stages such as Core Evaluation and Macro Adjustment into an undifferentiated aggregation;
 - move Positioning Overlay or Instrument Quality outside ETF Evaluation responsibility;
 - introduce cross-evaluator dependencies that bypass neutral reusable Capabilities;
