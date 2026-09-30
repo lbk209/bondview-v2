@@ -2,34 +2,34 @@
 
 ## 1. Purpose
 
-This document defines a temporary Codex work plan for validating the current Bondview **Duration Evaluation** design and resolving the remaining lower-level Duration decisions.
+This document defines a temporary Codex work plan for validating the current Bondview **Duration Evaluation** design.
 
-This is:
+It is intentionally narrower than a general Duration design document. The system architecture and vocabulary are already authoritative; this plan exists only to test lower-level Duration choices that benefit from historical calculation and structured diagnostics.
 
-- **not** a system-architecture review;
-- **not** a replacement for `bondview_system_architecture.md` or `bondview_vocabulary.md`;
-- **not** a production implementation contract;
-- **not** a request for Codex to invent a new Duration model.
+This plan does **not** ask Codex to redesign Bondview or optimize a predictive model.
 
-The authoritative architecture and vocabulary are already established.
+The work is organized into three tasks:
 
-The purpose of this work is to:
+```text
+Task 1
+Historical validation of the proposed Core Duration mapping
+        ↓
+Task 2
+Robustness of Trend definition
+        ↓
+Human review / acceptance
+        ↓
+Task 3
+Macro Adjustment validation
+```
 
-1. validate the current Duration design against historical rate environments;
-2. establish a simple but economically defensible Duration Exposure taxonomy from the actual ETF universe;
-3. assign a representative Treasury tenor to each exposure from the economic center of that exposure;
-4. validate whether the chosen Trend and Recent Move calculations actually express their intended Component semantics;
-5. treat **Trend-horizon robustness** as a major review item;
-6. review unresolved mixed Trend / Recent Move Rule Cases;
-7. validate the ordinal Core Duration mapping across materially different Duration Exposures;
-8. test Macro Adjustment as a modifier of the already exposure-specific Core result;
-9. identify contradictions or unresolved economic choices that still require human review.
+The order is deliberate.
 
-Historical data are diagnostic evidence, not optimization targets.
+The Core mapping is the more important economic question, so it is reviewed first using a simple provisional Trend definition. Trend length and the possible separation of Trend and Recent Move windows are then tested as robustness questions. Macro Adjustment is evaluated only after the Core design has been reviewed.
 
 ---
 
-# 2. Reference Basis
+# 2. Reference Basis and Fixed Constraints
 
 Use the `update_duration` branch of:
 
@@ -37,44 +37,16 @@ Use the `update_duration` branch of:
 lbk209/bondview-v2
 ```
 
-as the repository basis.
-
 Authoritative references:
 
 - `docs/bondview_system_architecture.md`
 - `docs/bondview_vocabulary.md`
 
-The previous:
+Older Duration documents, notebooks, and previous Codex outputs may be reused only when they provide calculations or historical information compatible with the current design.
 
-```text
-docs/bondview_duration_core_macro_codex_review_plan_draft.md
-```
+Do not treat earlier Duration design documents as authoritative.
 
-is superseded by this plan.
-
-Older Duration notebooks, previous Codex outputs, and retired review documents may be inspected only where they contain useful calculations, historical examples, or diagnostics that remain compatible with the current design.
-
-Do not preserve old model logic merely because code or output already exists.
-
-In particular, do not reintroduce:
-
-- ETF-independent Duration preference as an authoritative intermediate result;
-- distance-to-preferred-duration scoring;
-- cardinal interpretation of `-3 ... +3`;
-- Macro Adjustment applied to an ETF-independent directional score before exposure;
-- Stance terminology as part of the current Duration Evaluation path;
-- a universal 10Y rates input merely because it was used by an earlier prototype;
-- a fixed four-bucket Duration taxonomy merely because it appeared in earlier review work.
-
----
-
-# 3. Fixed Architectural Premises
-
-Codex should treat the following as fixed unless a direct contradiction with the authoritative architecture is found.
-
-## 3.1 Exposure enters Core Evaluation
-
-Duration follows:
+The following are fixed for this work:
 
 ```text
 Duration-relevant Components
@@ -84,46 +56,15 @@ ETF Duration Exposure
 Core Duration Evaluation
         ↓
 Core Duration Evaluation Result
-```
-
-The Core result is already exposure-specific.
-
-Do not calculate a complete ETF-independent Duration judgment and attach ETF exposure afterward.
-
-## 3.2 Macro Adjustment follows Core Evaluation
-
-The authoritative order is:
-
-```text
-Core Duration Evaluation Result
-+
-relevant Macroeconomic Components
         ↓
 Macro Adjustment
         ↓
 Duration Evaluation Result
 ```
 
-Do not apply Macro Adjustment to a separate market-level Duration preference and then reapply exposure.
+The Core result is already exposure-specific.
 
-## 3.3 Constituent Evaluations are distinguishable, not orthogonal
-
-Duration, Curve, Credit, and Rates Valuation answer distinguishable economic questions, but they do not need:
-
-- disjoint Components;
-- disjoint source observations;
-- statistically orthogonal factors;
-- completely non-overlapping mechanisms.
-
-Overlapping inputs are acceptable where the evaluations answer different economic questions.
-
-Materially duplicative economic effects should be avoided, especially when Constituent Evaluation Results are later combined.
-
-This work must not impose artificial Duration / Curve separation merely to obtain orthogonality.
-
-## 3.4 Core score is ordinal
-
-Use the compact ordered scale:
+The `-3 ... +3` result scale is ordinal:
 
 ```text
 +3  strongly favorable
@@ -135,44 +76,58 @@ Use the compact ordered scale:
 -3  strongly unfavorable
 ```
 
-The numbers are **ordinal category codes**, not cardinal economic quantities.
+The codes express ordering, not cardinal distance.
 
-Therefore:
+Do not reintroduce:
 
-```text
-+2 > +1
-```
-
-is meaningful, while:
-
-```text
-+2 = twice as favorable as +1
-```
-
-is not.
-
-Do not infer utility ratios, equal spacing, or arithmetic economic magnitude from the codes.
+- an ETF-independent Duration preference as the authoritative Core result;
+- distance-to-preferred-duration scoring;
+- cardinal arithmetic on the ordinal scale;
+- Macro Adjustment before exposure enters Core Evaluation;
+- Stance terminology as part of the current Duration path;
+- artificial orthogonality between Duration and Curve.
 
 ---
 
-# 4. Current Duration Economic Interpretation
+# 3. Fixed Starting Exposure Design
 
-Core Duration Evaluation asks:
+For this validation run, use three synthetic Duration Exposure categories:
 
-> **How favorable or unfavorable are the current Duration-relevant rates conditions for this ETF's interest-rate sensitivity?**
+```text
+Short
+Intermediate
+Long
+```
 
-The result is specific to the Duration constituent.
+The initial representative exposures are:
 
-It is not:
+```text
+Short
+→ economic anchor: U.S. Treasury 0–1Y exposure
+→ representative Treasury tenor: approximately 6M
 
-- an overall ETF recommendation;
-- a comparison against cash;
-- a forecast of future Treasury yields;
-- a relative rank only among Duration Exposure categories.
+Intermediate
+→ economic anchor: approximately 10Y Treasury exposure
+→ representative Treasury tenor: 10Y
 
-## 4.1 Trend and Recent Move roles
+Long
+→ economic anchor: approximately 30Y Treasury exposure
+→ representative Treasury tenor: 30Y
+```
 
-The intended roles are:
+The Short anchor is intended to represent a Korean-listed U.S. short-Treasury ETF with approximately 0–1Y exposure. Additional short-end categories such as ultra-short or 1–3Y should be considered later only if the intended ETF universe requires a materially distinct Duration Exposure.
+
+The general rule remains:
+
+> The representative tenor should follow the economic center of the Duration Exposure.
+
+The exposure taxonomy may later expand if a materially important ETF cluster cannot be represented cleanly by `Short / Intermediate / Long`. That universe-design question is outside the current Codex run.
+
+---
+
+# 4. Trend and Recent Move Semantics
+
+The intended economic roles are:
 
 ```text
 Yield Trend
@@ -183,341 +138,92 @@ Recent Yield Move
    or challenges that broader condition
 ```
 
-`Recent Yield Move` is not intended to predict a future Trend State.
+Recent Move is not a forecast of a future Trend State.
 
-For example:
+The important design issue is that there are two plausible ways to construct Trend.
 
-```text
-Trend = Rising
-Recent Move = Falling
-```
+## 4.1 Conventional overlapping construction
 
-means:
-
-> the established rising-yield condition is currently being challenged by observed shorter-horizon behavior.
-
-It does not mean:
-
-> Bondview predicts that the broader Trend will become Falling.
-
-If the counter-move persists, the Trend State may later change when the Trend calculation itself changes.
-
-## 4.2 Design order
-
-The economic roles above come first.
-
-The correct design sequence is:
+A conventional trailing Trend includes the latest observations:
 
 ```text
-economic role
-        ↓
-required time distinction
-        ↓
-horizon / calculation
-        ↓
-State Classification
+6M Trend
+→ t-6m → t
+
+Recent Move
+→ t-1m → t
 ```
 
-not:
+This is familiar and simple, but the latest month is mechanically embedded inside Trend.
+
+## 4.2 Semantically separated construction
+
+A Bondview-specific alternative is to exclude the latest Recent-Move window from Trend:
 
 ```text
-choose convenient horizons
-        ↓
-infer Component meaning afterward
+6M established Trend
+→ t-7m → t-1m
+
+Recent Move
+→ t-1m → t
 ```
 
-Codex should therefore validate whether candidate calculations express the intended Component semantics rather than search for horizons that maximize forecast performance.
+This is **not** presented as a universal bond-market convention.
 
----
-
-# 5. Duration Exposure Taxonomy
-
-The exposure taxonomy should be derived from the **actual ETF universe and the economic center of each ETF's designed exposure**, not from a pre-imposed requirement to have a particular number of buckets.
-
-## 5.1 Initial working taxonomy
-
-Start with:
-
-```text
-Short
-Intermediate
-Long
-```
-
-This is the preferred initial resolution because it is simple and corresponds naturally to common Treasury ETF exposure families.
-
-Do not create a separate `Very Long` category unless the ETF universe shows that a material group of products has an economically distinct Duration Exposure that cannot be represented adequately by `Long`.
-
-Likewise, do not assume that `Short` must remain one bucket if the actual universe contains multiple large, economically distinct short-end clusters that matter to Duration Evaluation.
-
-## 5.2 Universe-driven assignment rule
-
-For every ETF in the intended universe, inspect at least:
-
-```text
-declared benchmark / reference exposure
-maturity segment
-effective duration, if available
-other duration-relevant benchmark characteristics
-```
-
-Assign the ETF to the existing exposure category whose economic meaning best matches the ETF's exposure center.
-
-The intended process is:
-
-```text
-ETF universe
-        ↓
-benchmark / exposure characteristics
-        ↓
-economic center of each ETF exposure
-        ↓
-assign to existing Duration Exposure category
-        ↓
-check whether any material cluster is poorly represented
-        ↓
-expand exposure taxonomy only if justified
-```
-
-Therefore:
-
-> **The taxonomy may expand when the ETF universe contains a sufficiently numerous or economically material exposure cluster that the existing categories cannot represent cleanly.**
-
-Expansion should be justified by decision relevance, not by the mere existence of a product with a slightly different stated maturity.
-
-## 5.3 Do not force one-to-one bucket / tenor correspondence
-
-The number of exposure categories and the number of representative Treasury tenors do not have to be identical.
-
-An exposure category exists because Bondview needs to distinguish that economic exposure.
-
-A representative tenor exists because Bondview needs a market-rate condition that reasonably represents the economic center of that exposure.
-
-Do not invent an extra Treasury tenor merely to match the number of buckets.
-
----
-
-# 6. Representative Treasury Tenor
-
-The design principle is:
-
-> **The representative tenor should follow the economic center of the Duration Exposure.**
-
-The representative tenor is not chosen because it is prominent in financial news and is not optimized by forward ETF return.
-
-## 6.1 Initial working assignments
-
-Use the ETF-universe review to establish the exact assignments.
-
-A reasonable starting structure is:
-
-```text
-Short
-→ short-end Treasury tenor appropriate to the actual Short exposure cluster
-
-Intermediate
-→ approximately 10Y Treasury
-
-Long
-→ approximately 30Y Treasury
-```
-
-For `Short`, do not assume 2Y automatically.
-
-Examples:
-
-```text
-0–1Y exposure
-→ 1Y is a more natural initial representative tenor than 2Y
-
-1–3Y exposure
-→ 2Y is a natural representative tenor
-```
-
-If the actual Short universe includes both and Bondview needs to distinguish them economically, consider expanding the Short taxonomy rather than forcing one tenor to represent materially different exposures.
-
-If the difference is not material to Bondview decisions, retain one Short category and choose the tenor that best represents the dominant / intended exposure center.
-
-## 6.2 What Codex should validate
-
-Codex should not decide representative tenor by return optimization.
-
-It should:
-
-1. inventory the intended ETF universe;
-2. show benchmark / maturity / duration characteristics;
-3. assign ETFs to the current exposure taxonomy;
-4. document the economic center of each resulting cluster;
-5. check that the proposed representative tenor is consistent with that center;
-6. flag any ETF or cluster that is poorly represented;
-7. recommend taxonomy expansion only when the mismatch is economically material.
-
-The main question is:
-
-> Does the representative tenor plausibly represent the rate segment that drives the intended Duration Exposure category?
-
----
-
-# 7. Signal Horizon Starting Point
-
-Bondview is intended to ignore day-to-day noise and focus on medium-horizon bond-market changes.
-
-The practical use assumption is that an ETF position is normally held for at least roughly one month.
-
-That holding-period assumption does **not** mechanically determine the Component horizon, but it provides useful scale.
-
-Use the following starting point:
-
-```text
-Recent Yield Move
-→ approximately 1 month
-
-Yield Trend
-→ approximately 3 months
-```
-
-Treat:
-
-```text
-Trend ≈ 6 months
-```
-
-as an important robustness alternative.
-
-Do not begin from an annual Trend unless the 3–6 month definitions prove unable to represent the intended broader market condition.
-
-The reason is model role, not a claim that institutional bond investors operate only on these horizons.
-
----
-
-# 8. Trend-Horizon Robustness — Major Validation Task
-
-**Trend-horizon robustness is a first-class review item.**
-
-The goal is not to find the horizon with the best subsequent return.
-
-The goal is to determine whether the economic meaning of `Yield Trend` is robust to reasonable horizon variation.
-
-At minimum compare:
-
-```text
-Trend ≈ 3 months
-vs.
-Trend ≈ 6 months
-```
-
-while holding the Recent Move definition approximately fixed around one month.
-
-## 8.1 Semantic robustness questions
-
-For each representative tenor, ask:
-
-1. Do 3m and 6m Trend usually describe the same broad rates regime?
-2. When they differ, are the disagreements economically understandable?
-3. Does 3m become too responsive and start duplicating Recent Move?
-4. Does 6m become too stale for Bondview's intended medium-horizon decisions?
-5. Does either horizon produce excessive state-flipping?
-6. Are important historical regimes classified implausibly under either horizon?
-7. Does the interpretation of mixed Rule Cases materially depend on Trend horizon?
-
-## 8.2 Required robustness diagnostics
-
-For both Trend horizons, report:
-
-- State frequency;
-- average and median State persistence;
-- transition frequency;
-- percentage agreement between 3m and 6m Trend States;
-- disagreement-window frequency and duration;
-- historical examples of meaningful disagreement;
-- interaction with the 1m Recent Move State;
-- number of Core Duration results that change because of the Trend-horizon choice.
-
-The review should conclude whether:
-
-```text
-3m Trend is preferable
-6m Trend is preferable
-or
-both are semantically acceptable but one is chosen for simplicity / responsiveness
-```
-
-The conclusion must be based on Component meaning and historical plausibility, not forecast fit.
-
----
-
-# 9. Recent Move Validation
-
-Recent Move should be materially shorter-horizon than Trend and responsive enough to:
-
-```text
-confirm
-pause
-challenge
-```
-
-the established Trend.
-
-The initial working horizon is approximately one month.
-
-Report:
-
-- State frequencies;
-- average persistence;
-- agreement rate with Trend;
-- disagreement rate with Trend;
-- duration of disagreement windows;
-- representative `Falling × Rising` windows;
-- representative `Rising × Falling` windows.
-
-## 9.1 Disagreement-window diagnostics
-
-Use historical windows where Trend and Recent Move disagree to verify role separation.
-
-For each window, display:
-
-```text
-date
-yield level
-Trend Value
-Trend State
-Recent Move Value
-Recent Move State
-```
-
-The purpose is **not** to test whether Recent Move predicts a future Trend reversal.
-
-The purpose is to test whether:
+Its purpose is semantic separation:
 
 ```text
 Trend
-→ remains the slower / broader condition
+→ condition established before the most recent move
 
 Recent Move
-→ can meaningfully disagree with Trend over shorter periods
+→ what happened most recently relative to that condition
 ```
 
-Both outcomes are valid after a disagreement window:
+This may make a Rule Case such as:
 
 ```text
-counter-move disappears
-→ Trend remains intact
+Trend = Falling
+Recent Move = Rising
 ```
 
-or:
+more interpretable as:
 
-```text
-counter-move persists
-→ Trend eventually changes through its own calculation
-```
+> a previously established falling-yield condition is currently being challenged by the latest month's rise.
 
-No forecast success criterion is implied.
+However, this construction should not be adopted solely because it is conceptually elegant. It will be tested in **Task 2** together with the Trend-horizon choice.
 
 ---
 
-# 10. Core Duration Rule Representation
+# 5. Provisional Signal Definition for Task 1
 
-With the initial three exposure categories, the abstract Rule Case space is:
+Task 1 needs one fixed baseline so that the Core mapping can be reviewed before secondary signal-definition choices are introduced.
+
+Use:
+
+```text
+Recent Move
+→ latest 1 month
+
+Trend
+→ conventional trailing 6 months including the latest month
+```
+
+This is a **provisional reference definition**, not the final approved Trend design.
+
+The reason for using it in Task 1 is practical:
+
+- it is conventional and easy to interpret;
+- it minimizes new assumptions before the Core mapping is reviewed;
+- Task 2 explicitly tests whether a shorter Trend or a non-overlapping construction improves the intended Component semantics.
+
+Any Task-1 conclusion involving the mixed Rule Cases remains provisional until Task 2 confirms that it is robust to the Trend definition.
+
+---
+
+# 6. Core Duration Rule Mapping
+
+The abstract mapping is:
 
 ```text
 Trend State
@@ -528,7 +234,7 @@ Duration Exposure
 → Core Duration Evaluation Result
 ```
 
-where:
+with:
 
 ```text
 Trend State       ∈ {Falling, Stable, Rising}
@@ -536,19 +242,46 @@ Recent Move State ∈ {Falling, Stable, Rising}
 Duration Exposure ∈ {Short, Intermediate, Long}
 ```
 
-This gives a conceptual `9 × 3` representation.
+## 6.1 Important interpretation of the table
 
-Important:
+Each row below is a **reusable semantic Rule Case**, not one common Treasury observation applied to every exposure column.
 
-> The exposure columns do not imply that all three exposure categories use the same Treasury Rule Case on a historical date.
+For example:
 
-Each exposure uses the States of its own representative tenor.
+```text
+Falling × Rising / Short
+→ uses the 6M Treasury Trend and Recent Move States
 
----
+Falling × Rising / Intermediate
+→ uses the 10Y Treasury Trend and Recent Move States
 
-# 11. Starting Core Mapping for Review
+Falling × Rising / Long
+→ uses the 30Y Treasury Trend and Recent Move States
+```
 
-Use the following as the current **starting ordinal mapping**, not as a formula-derived truth.
+At a real `as_of`, the three exposures may therefore occupy different rows.
+
+Example:
+
+```text
+same as_of:
+
+6M Treasury
+→ Rising × Stable
+→ Short uses Rising × Stable row
+
+10Y Treasury
+→ Stable × Falling
+→ Intermediate uses Stable × Falling row
+
+30Y Treasury
+→ Falling × Falling
+→ Long uses Falling × Falling row
+```
+
+The table defines how each exposure is evaluated **when its own representative tenor is in a given Rule Case**.
+
+## 6.2 Starting mapping
 
 | Trend | Recent Move | Short | Intermediate | Long | Status |
 |---|---|---:|---:|---:|---|
@@ -562,27 +295,9 @@ Use the following as the current **starting ordinal mapping**, not as a formula-
 | Rising | Stable | -1 | -1 | -2 | sign/order strong; exact spacing reviewable |
 | Rising | Rising | -1 | -2 | -3 | sign/order strong; exact spacing reviewable |
 
-Do not replace the ranges with invented values.
+Do not fill the ranged cells mechanically.
 
-Codex should help determine whether ambiguous cells can be narrowed using:
-
-- the established Trend / Recent Move roles;
-- exposure sensitivity;
-- historical disagreement-window behavior;
-- row and column consistency;
-- comparison across materially different rate regimes.
-
-Human review remains required for economic mappings that are not justified by the fixed principles or clear evidence.
-
----
-
-# 12. Core Mapping Constraints Already Established
-
-The following should be treated as design constraints rather than rediscovered through optimization.
-
-## 12.1 Confirmation / challenge ordering
-
-For a fixed positive-duration exposure:
+Established constraints are:
 
 ```text
 Falling × Falling
@@ -592,9 +307,7 @@ Falling × Stable
 Falling × Rising
 ```
 
-where `>` means more favorable for that exposure.
-
-Likewise:
+and:
 
 ```text
 Rising × Falling
@@ -604,204 +317,316 @@ Rising × Stable
 Rising × Rising
 ```
 
-## 12.2 Exposure sensitivity
+for a fixed positive-duration exposure.
 
 For otherwise comparable relevant-tenor conditions:
 
 ```text
-falling-yield conditions
-→ greater Duration Exposure should normally receive a larger favorable effect
+falling yields
+→ greater Duration Exposure should normally receive a stronger favorable effect
 
-rising-yield conditions
-→ greater Duration Exposure should normally receive a larger unfavorable effect
+rising yields
+→ greater Duration Exposure should normally receive a stronger unfavorable effect
 ```
 
-A Short exposure may therefore be least unfavorable in a strongly rising-rate environment without becoming positively attractive.
+`Stable × Stable` starts at `0` for all exposures.
 
-## 12.3 Neutral condition
-
-The starting interpretation of:
-
-```text
-Stable × Stable
-```
-
-is:
-
-```text
-0 for all Duration Exposures
-```
-
-because the Duration constituent has no directional rates reason to favor or penalize positive-duration exposure under this Rule Case.
-
-Do not reintroduce a hidden "middle duration is best" assumption.
-
-## 12.4 Mixed cases are not automatically equivalent
-
-Do not assume:
-
-```text
-Falling × Rising
-=
-Stable × Falling
-```
-
-or:
-
-```text
-Stable × Rising
-=
-Rising × Falling
-```
-
-merely because an older rule table compressed each pair to the same directional score.
-
-Their economic meanings differ.
-
-A coarse ordinal scale may still classify some exposure-specific outcomes identically.
-
-Codex should distinguish:
-
-```text
-underlying economic ordering
-```
-
-from:
-
-```text
-final ordinal category
-```
+Do not reintroduce a hidden assumption that a middle-duration exposure is automatically preferred under neutral rates conditions.
 
 ---
 
-# 13. Historical Validation Design
+# 7. Task 1 — Historical Validation of the Core Mapping
 
-Historical work should combine:
+## 7.1 Question
 
-1. **regime snapshots**;
-2. **Trend / Recent-Move disagreement windows**;
-3. **full-sample diagnostics**.
+> Does the proposed `9 × 3` Core Duration mapping produce economically plausible and internally coherent results when applied to actual historical Treasury conditions?
 
-No historical case is a training label.
+Task 1 is the primary validation task.
 
-## 13.1 Regime snapshots
+Use the provisional Task-1 signal definition from Section 5:
 
-Select a compact set of materially different U.S. Treasury environments, including examples of:
+```text
+Recent Move
+→ latest 1M
+
+Trend
+→ trailing 6M including latest 1M
+```
+
+Representative tenors remain:
+
+```text
+Short        → 6M
+Intermediate → 10Y
+Long         → 30Y
+```
+
+## 7.2 Analysis A — full-sample structural diagnostics
+
+Over the common historical sample, calculate:
+
+- frequency of each `Trend × Recent Move` Rule Case by representative tenor;
+- frequency of each Core score by exposure;
+- average and median State persistence;
+- Core-result persistence;
+- transition counts;
+- frequency with which Short / Intermediate / Long receive different Core results at the same `as_of`;
+- frequency of the four mixed Rule Cases.
+
+Purpose:
+
+- identify unreachable or extremely rare Rule Cases;
+- detect excessive flipping;
+- detect pathological concentration in a narrow score range;
+- determine whether the mixed cases occur often enough to deserve separate treatment.
+
+These statistics are diagnostics, not optimization targets.
+
+## 7.3 Analysis B — historical-regime review
+
+Select a compact set of materially different U.S. Treasury environments from the actual data.
+
+Include examples of:
 
 - sustained falling-yield conditions;
 - sustained rising-yield conditions;
-- abrupt risk-off / easing shock;
+- abrupt risk-off / yield-collapse episode;
 - inflation / tightening transition;
-- restrictive high-yield environment;
+- restrictive high-rate environment;
 - easing or normalization transition.
 
-Use exact `as_of` dates only after inspecting the underlying rate paths so the dates actually represent the intended environments.
-
-For each selected `as_of`, report by exposure:
+For every selected `as_of`, show:
 
 ```text
-exposure_class
-representative_tenor
-yield_level
-trend_horizon
-trend_value
-trend_state
-recent_move_horizon
-recent_move_value
-recent_move_state
-core_duration_result
+Short:
+6M yield
+Trend Value / State
+Recent Move Value / State
+Rule Case
+Core score
+
+Intermediate:
+10Y yield
+Trend Value / State
+Recent Move Value / State
+Rule Case
+Core score
+
+Long:
+30Y yield
+Trend Value / State
+Recent Move Value / State
+Rule Case
+Core score
 ```
 
-If Macro Adjustment is included in that run, also report:
+Codex should then evaluate:
 
-```text
-inflation_state
-policy_state
-macro_rule_case
-macro_action
-duration_evaluation_result
-```
+1. Does the sign of each result make economic sense?
+2. Does exposure sensitivity behave sensibly?
+3. Are cross-exposure differences explainable by differences in the corresponding Treasury segments?
+4. Are there historical cases that clearly contradict the proposed mapping?
 
-## 13.2 Cross-sectional comparison
+Do not evaluate success by subsequent ETF returns.
 
-At the same `as_of`, compare:
+## 7.4 Analysis C — mixed Rule Cases
 
-```text
-Short
-Intermediate
-Long
-```
-
-using each exposure's own representative-tenor States.
-
-Ask:
-
-- Are differences economically interpretable?
-- Does any exposure receive a sign obviously inconsistent with its relevant rate segment?
-- Does the exposure taxonomy appear too coarse for the ETF universe?
-- Does the representative-tenor assignment produce obvious mismatches?
-
-## 13.3 Longitudinal comparison
-
-For each exposure separately, compare results across materially different historical environments.
-
-Ask:
-
-- Does the same exposure move sensibly from favorable to unfavorable conditions?
-- Are transitions excessively noisy?
-- Do Trend and Recent Move play their intended roles?
-- Do mixed Rule Cases behave plausibly?
-- Are conclusions stable enough across 3m vs 6m Trend to support one default?
-
----
-
-# 14. Mixed-Case Investigation
-
-The highest-priority unresolved Core cases are:
+Focus on:
 
 ```text
 Falling × Rising
 Stable  × Falling
-
 Stable  × Rising
 Rising  × Falling
 ```
 
-For each representative tenor, identify multiple historical examples of each mixed Rule Case where available.
+Collect several historical occurrences where available.
 
-For each example, display:
+For each occurrence, show the surrounding yield path and the contemporaneous market interpretation.
+
+Codex should recommend:
+
+- a specific ordinal category for each currently ranged cell; or
+- that the evidence does not justify narrowing the range.
+
+The recommendation must be economic and interpretive, not based on which choice would have produced the best future return.
+
+## 7.5 Required Task-1 conclusion
+
+Codex must finish Task 1 with a concise review containing:
 
 ```text
-preceding states
-current Rule Case
-yield path around the window
-3m Trend State
-6m Trend State
-Recent Move State
+Confirmed without change
+Recommended Core-mapping changes
+Mixed cells that can be provisionally resolved
+Still unresolved
+Historical cases that contradict the proposed mapping
 ```
 
-The purpose is not to ask:
-
-> Which Rule Case predicted the best future return?
-
-The purpose is to ask:
-
-> Does the proposed ordinal interpretation fit what the Components mean at that time, and is that interpretation robust to a reasonable Trend-horizon choice?
-
-Codex should summarize whether the evidence supports:
-
-- the same ordinal category for paired mixed cases;
-- a systematic ordering between them;
-- exposure-dependent differences in classification;
-- continued ambiguity requiring human judgment.
+Any resolution of mixed cells is **provisional pending Task 2**.
 
 ---
 
-# 15. Macro Adjustment Validation
+# 8. Task 2 — Trend Definition Robustness
 
-Macro Adjustment operates on the already exposure-specific Core Duration Evaluation Result.
+Task 2 begins only after Task 1 has produced a provisional Core mapping.
 
-The input form is:
+Its purpose is broader than a simple `6m vs 3m` parameter test.
+
+It tests two separate design dimensions:
+
+```text
+A. Trend horizon
+   6M vs 3M
+
+B. Window construction
+   overlapping vs excluding the latest 1M
+```
+
+Recent Move remains fixed at the latest 1 month.
+
+## 8.1 Four Trend variants
+
+Compare:
+
+```text
+A. 6M overlapping Trend
+   t-6m → t
+
+B. 3M overlapping Trend
+   t-3m → t
+
+C. 6M established Trend excluding Recent Move
+   t-7m → t-1m
+
+D. 3M established Trend excluding Recent Move
+   t-4m → t-1m
+```
+
+Use the same State Classification mechanics for all four variants.
+
+Do **not** change thresholds, representative tenors, Recent Move definition, or the provisional Core mapping during this comparison.
+
+The purpose is to isolate the effect of Trend definition.
+
+## 8.2 Why test non-overlapping Trend here
+
+The non-overlapping construction is a deliberate Bondview semantic candidate, not a generic market convention.
+
+It may improve the conceptual relationship:
+
+```text
+established Trend
++
+latest Recent Move
+```
+
+but it may also:
+
+- become too stale;
+- create unnecessary discontinuity between the two windows;
+- change mixed-case frequency in an undesirable way;
+- add complexity without materially improving interpretation.
+
+Therefore it should be judged empirically for **semantic robustness**, not adopted only because it sounds cleaner.
+
+## 8.3 Required diagnostics
+
+For each representative tenor and each of the four Trend variants, report:
+
+- Trend State frequency;
+- average and median State persistence;
+- transition frequency;
+- agreement among the four Trend definitions;
+- disagreement-window frequency and duration;
+- interaction with Recent Move;
+- frequency of each `Trend × Recent Move` Rule Case;
+- number and percentage of Core results that differ from the Task-1 baseline;
+- historical episodes where the choice materially changes interpretation.
+
+## 8.4 Required analysis
+
+Codex should explicitly answer:
+
+1. Does the 3M Trend become too responsive and begin to duplicate Recent Move?
+2. Does the 6M Trend become too stale for Bondview's medium-horizon use?
+3. Does excluding the latest 1M materially improve the semantic distinction between Trend and Recent Move?
+4. Does the separated construction merely shift or delay Trend without adding interpretive value?
+5. Are Task-1 conclusions about strong and mixed Rule Cases robust across reasonable Trend definitions?
+6. Which Rule Cases, if any, need to be reopened because their interpretation depends materially on Trend construction?
+
+## 8.5 Required Task-2 conclusion
+
+Codex must recommend one of:
+
+```text
+6M overlapping Trend
+3M overlapping Trend
+6M excluding latest 1M
+3M excluding latest 1M
+Current Trend concept requires reconsideration
+```
+
+The recommendation should be based on:
+
+```text
+semantic clarity
++
+persistence
++
+responsiveness
++
+historical plausibility
++
+robustness of Task-1 conclusions
+```
+
+not predictive performance.
+
+Task 2 should also state:
+
+```text
+Task-1 mapping remains robust
+```
+
+or identify the exact cells that require another review.
+
+---
+
+# 9. Review Gate
+
+After Tasks 1 and 2, stop and produce a consolidated conclusion.
+
+Do not automatically continue to Macro Adjustment using an unreviewed Codex recommendation.
+
+Required consolidated output:
+
+```text
+Recommended representative model definition
+Recommended Trend construction / horizon
+Recommended completed Core Rule Table
+Remaining unresolved Core cells
+Material historical contradictions, if any
+```
+
+Human review should accept or modify these conclusions before Task 3.
+
+---
+
+# 10. Task 3 — Macro Adjustment Validation
+
+Task 3 is defined now but should be executed only after the Review Gate.
+
+Its fixed inputs are the accepted:
+
+```text
+representative tenors
+Recent Move definition
+Trend definition
+Core Rule Mapping
+```
+
+Macro Adjustment then follows:
 
 ```text
 Core Duration Evaluation Result
@@ -815,419 +640,157 @@ Macro Adjustment
 Duration Evaluation Result
 ```
 
-## 15.1 Existing macro rules are candidate fixtures only
+Older Inflation × Policy mappings may be reused only as candidate fixtures.
 
-If an older Inflation Trend × Policy Direction table is available, Codex may reproduce it as a **candidate fixture**.
+## 10.1 Question
 
-Do not assume old cap rules remain valid under the current exposure-specific Core semantics.
+> Does Macro Adjustment add economically useful information to the accepted exposure-specific Core result without materially duplicating rate information already captured by Core?
 
-Reuse them only where their economic intent still makes sense.
+## 10.2 Ordinal actions
 
-## 15.2 Ordinal action semantics
-
-The `-3 ... +3` scale is ordinal, but ordered caps remain meaningful.
-
-Examples:
+Ordered caps remain permissible:
 
 ```text
+pass-through
 cap positive at +2
 cap positive at +1
 cap negative at -1
 cap negative at -2
-pass-through
 ```
 
-A cap uses only ordering.
+because they use ordering only.
 
-For example:
+Do not use operations that assume metric spacing, such as:
 
 ```text
-Core = +3
-cap positive at +1
-Final = +1
+score × 0.5
+score - 1.5
 ```
 
-means that the macro condition prevents the Duration result from remaining above the `+1` category.
-
-It does **not** imply that two equal cardinal units were subtracted.
-
-Avoid operations that assume metric spacing, such as:
-
-```text
-multiply score by 0.5
-subtract 1.5
-average ordinal scores arithmetically without justification
-```
-
-If a `weaken one category` action is used, define it explicitly as an ordered category transition rather than as an economic cardinal subtraction.
-
-## 15.3 Macro diagnostics
-
-For each candidate Macro Adjustment mapping, report:
-
-- frequency of each action;
-- Core-to-final transition counts;
-- cases where Macro changes sign;
-- cases where Macro compresses strong Core results;
-- cases where different exposures converge to the same final result;
-- historical examples of each non-pass-through action;
-- potential overlap with the realized rate signal already captured in Core.
-
-Macro rules should not be optimized for historical ETF returns.
-
----
-
-# 16. Macro Double-Counting Review
-
-The main risk is not repeated use of the same variable name.
-
-The risk is counting substantially the same economic mechanism twice.
-
-Example:
-
-```text
-Policy tightening
-        ↓
-Treasury yields rise
-        ↓
-Core Duration becomes unfavorable
-```
-
-followed by:
-
-```text
-Policy tightening
-        ↓
-Macro Adjustment imposes another strong penalty
-```
-
-may partly double-count policy transmission.
-
-This does not imply that Policy Direction or Inflation Trend must be removed.
-
-Realized Treasury yields also reflect:
-
-- inflation expectations;
-- term premium;
-- Treasury supply;
-- growth expectations;
-- risk demand;
-- other market forces.
-
-Codex should identify candidate Macro cases where the adjustment appears:
-
-```text
-clearly incremental
-possibly overlapping
-apparently duplicative
-```
-
-but should not redesign the macro model automatically.
-
----
-
-# 17. Duration / Curve Boundary Check
-
-This work should confirm only one limited issue:
-
-> Using exposure-relevant Treasury tenors inside Duration Evaluation does not by itself make Curve Evaluation redundant.
-
-Duration asks:
-
-> **How favorable are the relevant rates conditions for this ETF's interest-rate sensitivity?**
-
-Curve separately evaluates the ETF's maturity / curve exposure under relative term-structure conditions.
-
-Codex should not design Curve Evaluation in this work.
-
-Only flag a concern if the proposed Duration logic clearly begins to encode an explicitly relative curve judgment rather than exposure-specific rate sensitivity.
-
----
-
-# 18. Full-Sample Diagnostics
-
-At minimum produce:
-
-## 18.1 Universe / exposure diagnostics
-
-- ETF universe inventory;
-- benchmark / reference exposure;
-- effective duration where available;
-- assigned Duration Exposure category;
-- representative tenor;
-- ETFs that fit poorly into the current taxonomy;
-- candidate additional exposure cluster, if any.
-
-## 18.2 Component diagnostics
-
-By representative tenor and Trend horizon:
-
-- Trend State distribution;
-- Recent Move State distribution;
-- full 3 × 3 Rule Case frequency table;
-- State persistence;
-- Rule Case persistence;
-- Trend / Recent Move disagreement frequency;
-- 3m / 6m Trend State agreement rate.
-
-## 18.3 Core-result diagnostics
-
-By exposure:
-
-- Core score distribution;
-- transition matrix;
-- average persistence;
-- frequency of each mixed Rule Case;
-- frequency of neutral;
-- frequency of extreme `±3`;
-- cross-exposure divergence at the same `as_of`;
-- sensitivity of Core results to 3m vs 6m Trend.
-
-## 18.4 Mapping diagnostics
+## 10.3 Required diagnostics
 
 Report:
 
-- monotonicity violations relative to established constraints;
-- cells that remain unresolved;
-- historical examples that challenge the starting mapping;
-- cells where different economic situations collapse into one ordinal category;
-- cases where the same ordinal score remains defensible despite different underlying economic ordering.
+- frequency of each Macro action;
+- Core-to-final transition counts;
+- sign changes;
+- compression of strong Core results;
+- historical examples of each non-pass-through action;
+- cases where Macro appears clearly incremental;
+- cases where Macro appears to overlap substantially with rate information already captured in Core;
+- cases that appear materially duplicative.
 
-## 18.5 Macro diagnostics
+## 10.4 Required Task-3 conclusion
 
-When Macro Adjustment is enabled:
+Codex must recommend:
 
-- Core vs final distribution;
-- action frequency;
-- compression frequency;
-- sign-change frequency;
-- potential double-counting examples.
+```text
+Retain candidate Macro mapping
+Retain with specified changes
+Simplify Macro mapping
+Reject specific duplicative actions
+Macro design remains unresolved
+```
 
-These diagnostics are review aids, not objectives to optimize.
+with concise economic reasoning.
 
 ---
 
-# 19. Explicit Non-Goals
+# 11. Required Deliverables
+
+Keep outputs small and review-oriented.
+
+## Task 1
+
+```text
+duration_task1_core_validation.md
+duration_task1_core_results.csv
+```
+
+The Markdown file should contain Codex's analysis and conclusion, not merely raw tables.
+
+## Task 2
+
+```text
+duration_task2_trend_robustness.md
+duration_task2_trend_comparison.csv
+```
+
+Include only plots that materially help compare Trend definitions or important disagreement periods.
+
+## Review Gate
+
+```text
+duration_core_validation_conclusion.md
+```
+
+This should summarize the recommended model after Tasks 1 and 2.
+
+## Task 3
+
+```text
+duration_task3_macro_validation.md
+duration_task3_macro_results.csv
+```
+
+---
+
+# 12. Explicit Non-Goals
 
 Codex must not:
 
-- redesign the Bondview system architecture;
-- treat retired Stance structures as authoritative;
-- optimize exposure buckets by forward ETF returns;
-- optimize representative tenors by forward ETF returns;
-- optimize Trend / Recent Move horizons by predictive performance;
-- fit the Core rule table to historical winners;
+- redesign Bondview system architecture;
+- optimize scores, tenors, or horizons by forward ETF returns;
+- fit the Core mapping to historical winners;
+- treat historical events as target labels;
 - infer cardinal utility from ordinal scores;
-- reintroduce the old distance-to-preferred-duration formula;
-- reintroduce an ETF-independent Duration preference as the authoritative Core result;
-- apply Macro Adjustment before ETF exposure enters Core Evaluation;
-- force Duration and Curve to use disjoint inputs;
-- design Curve Evaluation as part of this task;
-- treat historical snapshots as labels that the model must reproduce;
-- preserve `Short / Intermediate / Long` if the actual ETF universe demonstrates a materially important missing exposure cluster;
-- expand the exposure taxonomy merely because minor product differences exist.
+- reintroduce the old preferred-duration / distance formula;
+- reintroduce an ETF-independent authoritative Duration preference;
+- redesign the ETF exposure taxonomy during Tasks 1 or 2;
+- design Curve Evaluation;
+- force Duration and Curve to use disjoint data;
+- automatically proceed to Task 3 before the Task-1 / Task-2 Review Gate is accepted.
 
 ---
 
-# 20. Codex Work Sequence
+# 13. Current Working Model
 
-Execute in this order.
-
-## Phase A — Inventory the ETF universe
-
-1. Identify the intended Korea-listed U.S. Treasury ETF universe.
-2. Record benchmark / reference exposure, maturity segment, and effective duration where available.
-3. Assign each ETF to `Short`, `Intermediate`, or `Long`.
-4. Flag economically material clusters that do not fit.
-5. Recommend taxonomy expansion only if justified by the universe.
-
-## Phase B — Set representative tenors
-
-1. Determine the economic center of each exposure category.
-2. Assign the representative Treasury tenor from that center.
-3. For Short, distinguish whether the dominant exposure is closer to `0–1Y`, `1–3Y`, or another short-end segment.
-4. Make the rationale explicit.
-5. Do not optimize against forward returns.
-
-## Phase C — Build tenor-aware Components
-
-1. Calculate Recent Move at approximately 1 month.
-2. Calculate Trend at approximately 3 months.
-3. Also calculate a 6-month Trend robustness alternative.
-4. Produce Component diagnostics.
-5. Identify Trend / Recent-Move disagreement windows.
-
-## Phase D — Trend-horizon robustness review
-
-1. Compare 3m vs 6m Trend across each representative tenor.
-2. Quantify State agreement and persistence.
-3. Examine historically important disagreement windows.
-4. Compare resulting Core Duration classifications.
-5. Recommend a default Trend horizon based on semantic robustness, responsiveness, and interpretability.
-
-## Phase E — Evaluate the starting `9 × 3` Core mapping
-
-1. Apply the starting ordinal table.
-2. Produce row / column consistency checks.
-3. Inspect the four mixed Rule Cases in detail.
-4. Leave unresolved cells explicitly unresolved where evidence is insufficient.
-
-## Phase F — Historical regime review
-
-1. Select representative historical regimes from actual data.
-2. Produce cross-sectional exposure tables.
-3. Produce longitudinal exposure tables.
-4. Produce disagreement-window tables / plots.
-5. Include 3m vs 6m Trend comparison where it materially affects interpretation.
-
-## Phase G — Macro Adjustment review
-
-1. Reproduce any reusable old macro mapping only as a candidate fixture.
-2. Translate candidate actions into current ordinal Core semantics.
-3. Apply Macro directly to the exposure-specific Core result.
-4. Produce Core-to-final diagnostics.
-5. Flag possible double counting.
-
-## Phase H — Findings
-
-For every reviewed question, classify the result as:
+The current provisional model used to begin Task 1 is:
 
 ```text
-Confirmed
-Refine
-Unresolved
-Rejected
-```
+Short
+→ 6M Treasury
 
-with a short economic explanation and supporting diagnostic evidence.
+Intermediate
+→ 10Y Treasury
 
-Do not convert an unresolved economic choice into implementation merely for completeness.
+Long
+→ 30Y Treasury
 
----
+Recent Move
+→ latest 1M
 
-# 21. Required Deliverables
+Trend
+→ trailing 6M including latest 1M
+   [provisional Task-1 baseline]
 
-At minimum:
-
-```text
-1. duration_validation_summary.md
-2. duration_etf_exposure_inventory.csv
-3. duration_exposure_tenor_mapping.csv
-4. duration_trend_horizon_robustness.csv
-5. duration_component_diagnostics.csv
-6. duration_core_rulecase_review.csv
-7. duration_historical_regime_review.csv
-8. duration_disagreement_window_review.csv
-9. duration_macro_review.csv
-```
-
-Plots may be generated where useful, especially for:
-
-- 3m vs 6m Trend comparisons;
-- Trend / Recent Move disagreement windows;
-- historical regime comparisons.
-
-The summary should contain:
-
-## A. Confirmed findings
-
-Only conclusions supported by the fixed design plus the diagnostics.
-
-## B. Recommended refinements
-
-Changes economically justified by the review.
-
-## C. Unresolved decisions
-
-Questions still requiring human judgment.
-
-## D. Rejected prior assumptions
-
-Old logic found incompatible with the current design.
-
-## E. Suggested model-contract updates
-
-Only after validation findings are complete, identify which stable conclusions should move into a dedicated Duration design / model contract.
-
-Codex should not update the authoritative architecture or vocabulary unless explicitly instructed separately.
-
----
-
-# 22. Questions This Work Must Answer
-
-The review should end with direct answers to these questions:
-
-1. Does the initial `Short / Intermediate / Long` taxonomy adequately represent the intended ETF universe?
-2. Does the ETF universe contain a materially distinct exposure cluster that justifies expanding that taxonomy?
-3. What representative Treasury tenor best matches the economic center of each exposure category?
-4. For Short exposure, is the universe economically centered closer to `0–1Y`, `1–3Y`, or another short-end segment?
-5. Does approximately 1 month work as a meaningful Recent Move horizon?
-6. Does approximately 3 months or 6 months better express the intended broader Yield Trend?
-7. Are the semantics of Yield Trend robust to the 3m / 6m horizon choice?
-8. Does Recent Move behave as a contemporaneous confirmation / challenge signal rather than an implicit reversal forecast?
-9. Are the strong directional Core cases economically coherent across Short, Intermediate, and Long?
-10. How should the four mixed Rule Cases be ordered and classified on the ordinal scale?
-11. Is `Stable × Stable → 0` for all Duration Exposures consistent with the intended Duration meaning?
-12. Can Macro Adjustment be expressed cleanly as an ordered-category modification of the exposure-specific Core result?
-13. Which Macro cases appear incremental versus potentially duplicative of realized rate conditions?
-14. Which current Duration choices are sufficiently validated to move into a stable lower-level model contract?
-15. Which choices should remain explicitly unresolved?
-
----
-
-# 23. Current Working Starting Point
-
-The current working model to validate is:
-
-```text
-ETF universe
-        ↓
-benchmark / duration characteristics
-        ↓
-Duration Exposure taxonomy
-        ↓
-Short / Intermediate / Long
-        ↓
-representative Treasury tenor from exposure economic center
-
-representative-tenor Yield Trend
+representative-tenor Trend
 +
-representative-tenor Recent Yield Move
+representative-tenor Recent Move
 +
 Duration Exposure
         ↓
 Core Duration Evaluation
         ↓
 ordinal Core Duration Evaluation Result
-
-Core Duration Evaluation Result
-+
-Inflation Trend
-+
-Policy Direction
-        ↓
-Macro Adjustment
-        ↓
-Duration Evaluation Result
 ```
 
-The initial signal timing is:
+Task 2 then tests whether Trend should instead be:
 
 ```text
-Recent Move ≈ 1 month
-
-Trend ≈ 3 months
-with 6 months as a major semantic-robustness comparison
+3M overlapping
+6M excluding latest 1M
+3M excluding latest 1M
 ```
 
-The main unresolved lower-level areas are:
-
-```text
-ETF-universe-based exposure taxonomy
-representative tenor by exposure
-default Trend horizon: approximately 3m vs 6m
-mixed Rule Case scores
-exact Macro Adjustment mapping
-```
-
-The work should validate these directly without reopening system architecture that is already settled.
+The purpose is to finish the important Core economic design first and then determine whether a different Trend definition materially improves or destabilizes that design.
