@@ -16,3 +16,9 @@ Organize validation efforts into dated work-package directories named `YYMMDD_<s
 - [`analysis.py`](261002_duration/task1_core/analysis.py): reproducible analysis script.
 - [`results.csv`](261002_duration/task1_core/results.csv): committed observation-level results and source snapshot.
 - [`report.md`](261002_duration/task1_core/report.md): analysis, conclusions, limitations, and offline replay commands.
+
+[`261002_duration/task2_trend/`](261002_duration/task2_trend/) contains the completed Task-2 Trend Definition validation using the frozen Task-1 snapshot:
+
+- [`analysis.py`](261002_duration/task2_trend/analysis.py): offline four-variant comparison and baseline reproduction checks.
+- [`comparison.csv`](261002_duration/task2_trend/comparison.csv): common-sample Trend and Core candidate comparisons.
+- [`report.md`](261002_duration/task2_trend/report.md): evidence, recommendations pending human review, and reproduction commands.
