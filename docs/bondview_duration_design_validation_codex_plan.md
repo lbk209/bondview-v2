@@ -337,6 +337,82 @@ Do not reintroduce a hidden assumption that a middle-duration exposure is automa
 
 ---
 
+
+# 6A. Ex-Ante Historical Event Set for Task 1
+
+Task 1 should use a small set of **predefined historical event windows** chosen before inspecting Bondview's model outputs.
+
+The purpose is to reduce post-hoc episode selection and to ensure that the Core Duration mapping is tested against economically recognizable Treasury environments.
+
+The event set should contain both:
+
+```text
+Anchor events
+→ broad Duration interpretation is reasonably clear ex ante
+
+Challenge events
+→ economically important transitions where the exact Trend / Recent Move
+   configuration is intentionally not predetermined
+```
+
+Anchor events test whether the basic sign and exposure-sensitivity logic works.
+
+Challenge events test whether Bondview preserves the distinction between the broader Trend and shorter-horizon Recent Move rather than forcing every important episode into an obvious Rule Case.
+
+The expected behavior below is **qualitative**, not a target score. It should not be used to force a particular `-3 ... +3` category.
+
+| Event window | Historical environment | Type | Ex-ante Duration expectation |
+|---|---|---|---|
+| 1981-07 to 1981-10 | Volcker tightening / long-rate peak | Anchor | Broadly unfavorable for positive Duration; greater Duration should normally be more penalized under comparable rising-rate conditions. |
+| 1987-08 to 1987-10 | Pre-crash rate pressure followed by flight-to-quality rally | Challenge | The sharp recent yield decline should improve the Duration assessment, but the exact broader Trend State is intentionally not predetermined. |
+| 1994-02 to 1994-11 | Fed tightening / bond-market selloff | Anchor | Broadly unfavorable, especially for Intermediate and Long exposure. |
+| 1998-08 to 1998-10 | Russia / LTCM flight to quality | Anchor | Falling Treasury yields should make Duration favorable; longer exposure should normally benefit more under comparable falling-rate conditions. |
+| 2008-09 to 2008-12 | Global financial crisis / Treasury flight to quality | Anchor | Strongly favorable Duration environment, especially for longer exposure. |
+| 2013-05 to 2013-09 | Taper tantrum | Anchor | Rising yields should produce unfavorable Duration results, with stronger penalty for greater Duration under comparable conditions. |
+| 2020-02 to 2020-03 | COVID Treasury shock | Challenge | Broad yield declines should improve Duration assessment, but the speed and market dislocation make the exact Trend / Recent Move configuration a diagnostic question rather than a predetermined label. |
+| 2022-01 to 2022-10 | Inflation / aggressive tightening cycle | Anchor | Clearly unfavorable across positive-duration exposures, with greater Duration normally more penalized. |
+| 2023-07 to 2023-10 | Long-end Treasury selloff / term-premium repricing | Challenge | Long exposure should plausibly deteriorate more than Short where long-end conditions weaken materially; cross-tenor divergence is more important than forcing one common market verdict. |
+
+## 6A.1 Use of Event Windows
+
+Codex should evaluate the evolution of States and Core results **within the predefined windows** rather than selecting a single favorable `as_of` after seeing the model output.
+
+The purpose is not to require every day in an event window to match the qualitative expectation.
+
+Instead, the review should ask whether the model's behavior through the window is economically interpretable and whether major transitions are represented coherently.
+
+## 6A.2 Anchor vs Challenge Interpretation
+
+For Anchor events, a material contradiction with the qualitative expectation is evidence that the Core mapping, State Classification, or Component calculation deserves review.
+
+For Challenge events, disagreement is not automatically a failure.
+
+The main questions are:
+
+```text
+Does Recent Move respond before the broader Trend where appropriate?
+
+Can different representative tenors occupy different Rule Cases in the same event?
+
+Does the model preserve economically meaningful cross-tenor divergence?
+
+Are transitions interpretable without relying on subsequent returns as target labels?
+```
+
+## 6A.3 Supplemental Model-Derived Episodes
+
+In addition to the ex-ante event set, Codex may identify model-derived episodes for diagnostic purposes, especially:
+
+```text
+longest Falling × Falling episodes
+longest Rising × Rising episodes
+mixed Rule Case episodes
+long Stable periods
+```
+
+These should be labeled as **supplemental diagnostics**, not independent validation cases, because they are selected from the model's own State output.
+
+
 # 7. Task 1 — Historical Validation of the Core Mapping
 
 ## 7.1 Question
@@ -386,20 +462,17 @@ These statistics are diagnostics, not optimization targets.
 
 ## 7.3 Analysis B — historical-regime review
 
-Select a compact set of materially different U.S. Treasury environments from the actual data using **predefined regime categories rather than discretionary date picking**. Exact dates should be selected from the data as representative instances of those categories.
+Use the **ex-ante historical event set in Section 6A** as the primary historical-regime review.
 
-Include examples of:
+Do not replace those windows with post-hoc periods selected after inspecting Bondview outputs.
 
-- sustained falling-yield conditions;
-- sustained rising-yield conditions;
-- abrupt risk-off / yield-collapse episode;
-- inflation / tightening transition;
-- restrictive high-rate environment;
-- easing or normalization transition.
+For each predefined window, report the State and Core-result evolution for Short, Intermediate, and Long using each exposure's own representative Treasury tenor.
 
-Select these cases because they provide materially different **Duration-relevant Trend / Recent Move conditions**, not because another market or macro variable makes the episode historically unusual.
+The review should compare actual model behavior with the qualitative ex-ante expectation for Anchor events and should examine transition behavior without forcing a predetermined score for Challenge events.
 
-Broader stress cases whose significance depends on yield level, valuation, macro response, positioning, or interactions among multiple Constituents should be reserved for later integrated **Exposure Evaluation** diagnostics rather than required here as Duration-specific validation cases.
+Supplemental model-derived episodes may be added where useful, but they must be clearly distinguished from the predefined validation set.
+
+Broader stress cases whose significance depends mainly on yield level, valuation, macro response, positioning, or interactions among multiple Constituents should be reserved for later integrated **Exposure Evaluation** diagnostics rather than required here as Duration-specific validation cases.
 
 For every selected `as_of`, show:
 
