@@ -1,6 +1,6 @@
 # Duration Task 1 — Core Rule Mapping validation
 
-Prepared 2026-10-02 from `main` commit `70419d2` of `lbk209/bondview-v2`. This report follows the **revised Task-1 request**, including weak ordinal ordering and permitted category ties. The sole repository design authority consulted was [Bondview System Architecture](../docs/bondview_system_architecture.md). No other design document, previous model, or return series informed the findings.
+Prepared 2026-10-02 from `main` commit `70419d2` of `lbk209/bondview-v2`. This report follows the **revised Task-1 request**, including weak ordinal ordering and permitted category ties. The sole repository design authority consulted was [Bondview System Architecture](../../../docs/bondview_system_architecture.md). No other design document, previous model, or return series informed the findings.
 
 The fixed calculations are mechanically usable, and the nine predefined events broadly support the mapping's directional interpretation. They do **not** establish that any ordinal category is uniquely calibrated. Four candidate cells receive provisional recommendations below; four remain unresolved. No settled-cell change is recommended. The principal follow-up concerns are a moving historical reference during reversals, concentration of Short observations in Stable states, and the difference between an economic improvement and a change in a coarse ordinal category.
 
@@ -38,17 +38,17 @@ The starting mapping is reproduced here for review; these remain the candidates 
 | Rising | Stable | −1 | −1 | −2 |
 | Rising | Rising | −1 | −2 | −3 |
 
-The [observation CSV](duration_task1_core_results.csv) contains 50,676 rows, including 38,330 complete Core observations. Its full raw-date grid preserves every source date and tenor, including pre-inception, routine missing, warmup, and structural-gap rows. `availability` controls eligibility; never infer eligibility merely from a nonblank `yield_pct`. `segment` and `observation_index` document valid-observation indexing; reference start/end dates and smoothed values expose the calculation lineage. `rule_episode_id` identifies maximal full-sample case episodes. Filtering the four mixed cases and grouping this ID reproduces all Analysis-C episodes. `historical_event` applies the nine inclusive user-specified windows, including unavailable rows.
+The [observation CSV](results.csv) contains 50,676 rows, including 38,330 complete Core observations. Its full raw-date grid preserves every source date and tenor, including pre-inception, routine missing, warmup, and structural-gap rows. `availability` controls eligibility; never infer eligibility merely from a nonblank `yield_pct`. `segment` and `observation_index` document valid-observation indexing; reference start/end dates and smoothed values expose the calculation lineage. `rule_episode_id` identifies maximal full-sample case episodes. Filtering the four mixed cases and grouping this ID reproduces all Analysis-C episodes. `historical_event` applies the nine inclusive user-specified windows, including unavailable rows.
 
 Reproduce numerical results offline with Python 3.12 and the standard library:
 
 ```bash
-python reports/duration_task1_analysis.py \
-  --replay reports/duration_task1_core_results.csv \
+python validation/261002_duration/task1_core/analysis.py \
+  --replay validation/261002_duration/task1_core/results.csv \
   --output /tmp/duration_task1_replayed.csv \
   --diagnostics /tmp/duration_task1_diagnostics.md
-cmp reports/duration_task1_core_results.csv /tmp/duration_task1_replayed.csv
-python -m py_compile reports/duration_task1_analysis.py
+cmp validation/261002_duration/task1_core/results.csv /tmp/duration_task1_replayed.csv
+python -m py_compile validation/261002_duration/task1_core/analysis.py
 ```
 
 Alternatively pass the combined FRED CSV using `--input` instead of `--replay`. The script regenerates numerical evidence, not this report's economic judgments. Offline replay is preferred for an exact snapshot; live-source revisions can change a new download.
