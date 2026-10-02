@@ -80,7 +80,7 @@ The codes express ordering, not cardinal distance.
 
 Do not reintroduce:
 
-- an ETF-independent Duration preference as the authoritative Core result;
+- an ETF-independent market-derived Duration preference as the authoritative Core result;
 - distance-to-preferred-duration scoring;
 - cardinal arithmetic on the ordinal scale;
 - Macro Adjustment before exposure enters Core Evaluation;
@@ -281,9 +281,11 @@ same as_of:
 
 The table defines how each exposure is evaluated **when its own representative tenor is in a given Rule Case**.
 
+> **Trend and Recent Move are exposure-local inputs.** The `Short` column uses States calculated from the 6M Treasury series, `Intermediate` from the 10Y series, and `Long` from the 30Y series. A single `as_of` date may therefore select a different row for each exposure. The rows are reusable semantic mappings, not same-date cross-exposure market states.
+
 ## 6.2 Starting mapping
 
-| Trend | Recent Move | Short | Intermediate | Long | Status |
+| Trend | Recent Move | Short (6M states) | Intermediate (10Y states) | Long (30Y states) | Status |
 |---|---|---:|---:|---:|---|
 | Falling | Falling | +1 | +2 | +3 | sign/order strong; exact spacing reviewable |
 | Falling | Stable | +1 | +1 | +2 | sign/order strong; exact spacing reviewable |
@@ -384,7 +386,7 @@ These statistics are diagnostics, not optimization targets.
 
 ## 7.3 Analysis B — historical-regime review
 
-Select a compact set of materially different U.S. Treasury environments from the actual data.
+Select a compact set of materially different U.S. Treasury environments from the actual data using **predefined regime categories rather than discretionary date picking**. Exact dates should be selected from the data as representative instances of those categories.
 
 Include examples of:
 
@@ -394,6 +396,10 @@ Include examples of:
 - inflation / tightening transition;
 - restrictive high-rate environment;
 - easing or normalization transition.
+
+Select these cases because they provide materially different **Duration-relevant Trend / Recent Move conditions**, not because another market or macro variable makes the episode historically unusual.
+
+Broader stress cases whose significance depends on yield level, valuation, macro response, positioning, or interactions among multiple Constituents should be reserved for later integrated **Exposure Evaluation** diagnostics rather than required here as Duration-specific validation cases.
 
 For every selected `as_of`, show:
 
@@ -440,16 +446,25 @@ Stable  × Rising
 Rising  × Falling
 ```
 
-Collect several historical occurrences where available.
+Use historical **episodes**, rather than treating every consecutive daily observation as an independent example.
 
-For each occurrence, show the surrounding yield path and the contemporaneous market interpretation.
+For each mixed Rule Case, inspect representative episodes across the 6M, 10Y, and 30Y Treasury series and compare the economically related cases:
 
-Codex should recommend:
+```text
+Falling × Rising
+vs.
+Stable × Falling
 
-- a specific ordinal category for each currently ranged cell; or
-- that the evidence does not justify narrowing the range.
+Stable × Rising
+vs.
+Rising × Falling
+```
 
-The recommendation must be economic and interpretive, not based on which choice would have produced the best future return.
+The purpose is to determine whether the proposed ordinal interpretation is economically coherent at the time the mixed state occurs, not whether that state predicts the subsequent return.
+
+For each currently ranged cell, Codex should recommend the lower candidate, the higher candidate, or leave the cell unresolved, with a concise economic explanation and representative historical evidence.
+
+Any mixed-case conclusion remains **provisional pending Task 2**, because the frequency and interpretation of mixed states may change under a different Trend definition.
 
 ## 7.5 Required Task-1 conclusion
 
