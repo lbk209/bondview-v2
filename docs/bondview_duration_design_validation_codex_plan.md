@@ -22,30 +22,48 @@ This plan is intentionally narrower than a permanent Duration design contract. I
 
 - the fixed Duration design context used for validation;
 - the accepted conclusions from completed Task 1;
-- the accepted conclusions and remaining qualification from completed Task 2;
-- the required narrow State-Classification review triggered by Task 2;
+- the initial Task-2 Trend comparison and the later review that superseded its 3M preference;
+- the completed 6M / 9M / 12M Trend-horizon review;
+- the completed threshold review and the current common ±25 bp working threshold;
+- the corrected 6M State-stabilization review;
 - the human review gate required before Macro Adjustment validation begins.
 
-Detailed scripts, observation-level outputs, and exploratory diagnostics remain in `validation/` artifacts and do not become design authority merely because they are committed.
+Detailed scripts, observation-level outputs, notebooks, and exploratory diagnostics remain validation artifacts and do not become design authority merely because they are committed or generated.
 
-The work sequence is now:
+The current work sequence is:
 
 ```text
 Task 1 — Core mapping historical validation
         [COMPLETED]
         ↓
-Task 2 — Trend Definition Validation
-        [COMPLETED]
+Task 2 — Initial Trend Definition Validation
+        [COMPLETED; 3M PREFERENCE SUPERSEDED]
         ↓
-Task 2B — Trend State-Classification Validation
-        [REQUIRED BY TASK-2 RESULT]
+Trend Horizon Re-review — 6M / 9M / 12M
+        [COMPLETED; 6M PROVISIONALLY PREFERRED]
+        ↓
+Trend Threshold Review
+        [COMPLETED; COMMON ±25 BP RETAINED]
+        ↓
+Task 2B — Trend State-Classification / Stabilization Review
+        [COMPLETED; 5 BP HYSTERESIS PROVISIONALLY PREFERRED]
         ↓
 Human Trend / Core Review Gate
         ↓
 Task 3 — Macro Adjustment validation
 ```
 
-Task 2 resolved the main **Trend horizon / window-construction** question but exposed a material **State-Classification** question. Therefore the previously optional narrow classification review is now required before the Trend/Core package can be accepted for Macro work.
+The current unresolved question is no longer which Trend horizon to test next. The active human-review question is whether the provisionally preferred package:
+
+```text
+6M endpoint-change Trend
++
+common ±25 bp directional entry threshold
++
+5 bp hysteresis band
+```
+
+should be accepted as the Trend State definition used by Duration Core Evaluation.
 
 ---
 
@@ -135,7 +153,17 @@ broader falling-yield condition
 shorter-horizon countertrend rise
 ```
 
-Task 1 and Task 2 together support retaining both Components. The remaining question is not whether Trend should exist, but whether the selected Trend Value is classified into `Falling / Stable / Rising` in a sufficiently stable and economically meaningful way.
+The later horizon review reinforced this point. In particular, the 2022 midsummer relief period showed that a 6M Trend could remain broadly `Rising` while Recent Move became `Falling`, cleanly representing:
+
+```text
+broader tightening / rising-yield condition
++
+shorter-horizon relief
+```
+
+The goal is therefore **not** to minimize mixed-state frequency or opposing-state duration.
+
+The current design question is whether the broader Trend can retain this economic role while avoiding short boundary-driven State excursions that are too weak to deserve a full `Rising` or `Falling` interpretation.
 
 ---
 
@@ -175,7 +203,7 @@ Rising  > +25 bp
 
 Absolute yield level is not a separate Duration Core input.
 
-These definitions were research fixtures, not automatically final production definitions.
+These definitions began as research fixtures. Later review has provisionally retained the 6M Trend Value and common ±25 bp entry threshold, while adding a stabilization question around the threshold boundary.
 
 ## 4.2 Starting Core Rule Mapping
 
@@ -277,13 +305,15 @@ Task 1 found prolonged opposing-direction mixed episodes. In particular, `Fallin
 
 This did **not** invalidate mixed Rule Cases or the Trend concept. It raised the narrower question:
 
-> Was the approximately 6M Trend too slow for the intended role of a broader **current** directional rates condition?
+> Was the approximately 6M Trend too slow for the intended role of a broader current directional rates condition?
 
-That question became Task 2.
+That question triggered the initial Task 2 comparison and, later, the dedicated 6M / 9M / 12M horizon re-review.
 
 ## 5.4 Secondary Task-1 classification observation
 
-Short Duration showed materially higher Stable occupancy than the longer representative tenors, including long Stable runs in low-rate periods. This remained a diagnostic concern but thresholds and smoothing were deliberately held fixed during Task 2 so the Trend-horizon question could be isolated.
+Short Duration showed materially higher Stable occupancy than the longer representative tenors, including long Stable runs in low-rate periods.
+
+This observation motivated threshold review, but downstream ETF exposure behavior must not determine an upstream Component threshold. Threshold and stabilization choices must be justified as better representations of the Yield Trend Component itself.
 
 ---
 
@@ -303,10 +333,10 @@ The following predefined windows remain the general historical reference set:
 | 2022-01 to 2022-10 | Inflation / aggressive tightening cycle | Anchor |
 | 2023-07 to 2023-10 | Long-end Treasury selloff | Challenge |
 
-Task 2 additionally emphasized transition cases informative about Trend responsiveness:
+Later Trend reviews additionally emphasized transition cases informative about horizon inertia and State-boundary behavior:
 
 ```text
-1980 model-derived prolonged opposing-direction episodes
+1980 model-derived reversal episodes
 1987 reversal
 2008 GFC transition
 2020 COVID transition
@@ -316,9 +346,11 @@ Task 2 additionally emphasized transition cases informative about Trend responsi
 
 The 1980 episodes are model-derived diagnostics, not ex-ante validation events.
 
+Historical windows are challenge and interpretation cases. They are not supervised target labels.
+
 ---
 
-# 7. Task 2 — Completed Trend Definition Validation
+# 7. Task 2 — Initial Trend Definition Validation
 
 Task 2 compared four Trend constructions while keeping Recent Move, thresholds, smoothing, representative tenors, and the Task-1 Core mapping fixed.
 
@@ -330,7 +362,7 @@ validation/261002_duration/task2_trend/comparison.csv
 validation/261002_duration/task2_trend/report.md
 ```
 
-The result reviewed here was produced on session branch:
+The result reviewed there was produced on session branch:
 
 ```text
 codex/session/261002_1713
@@ -365,241 +397,349 @@ Trend: ±25 bp
 Recent Move: ±10 bp
 ```
 
-## 7.2 Mechanical validation accepted
+## 7.2 Mechanical findings retained
 
-Task 2 used only the frozen Task-1 source snapshot and verified its SHA-256 before analysis.
+The following Task-2 conclusions remain useful:
 
-The 6M-overlapping baseline reproduced all **38,330** complete Task-1 observations exactly for:
+- the overlapping endpoint-change construction is retained;
+- the excluding-latest-1M variants are not preferred;
+- non-overlapping variants mainly add an explicit one-month lag rather than a clearly superior economic interpretation;
+- five-observation endpoint smoothing did not emerge as the main problem;
+- mixed Trend × Recent Move cases remain economically legitimate;
+- a shorter Trend can remain statistically distinct from Recent Move, so distinction alone does not choose the preferred horizon.
 
-```text
-trend_bp
-trend_state
-recent_move_bp
-recent_move_state
-rule_case
-core_candidates
-```
+## 7.3 Initial 3M preference is superseded
 
-The analysis preserved:
-
-- valid-observation indexing;
-- no calendar interpolation;
-- the DGS30 structural-gap exclusion;
-- segment boundaries;
-- exact threshold handling;
-- no network refresh or return-series labels.
-
-No material implementation problem was identified in review.
-
-## 7.3 Main accepted Task-2 finding
-
-Task 2 provisionally prefers:
+Task 2 originally provisionally preferred:
 
 ```text
 3M overlapping Trend
 = M5(t) - M5(t-63)
 ```
 
-for the intended role:
+because it responded faster in sustained reversals such as 1980.
 
-> broader **current** directional rates condition relevant to Duration Evaluation.
+That preference is **no longer the current design conclusion**.
 
-The conclusion is specifically about **Trend horizon and window construction**. It is not yet acceptance of the full Trend definition including the current ±25 bp State Classification.
+Later review clarified that Trend is intended to represent the broader directional condition, while Recent Move already owns the shorter-horizon confirmation / opposition role. The 2022 midsummer relief period also showed that retaining a broader `Rising` Trend while Recent Move turned `Falling` was economically useful rather than a failure to react.
 
-### Why 3M overlapping is preferred
+The later 6M / 9M / 12M review therefore reopened the horizon question from the Component's intended economic role rather than from the goal of accelerating reversal recognition.
 
-The 6M baseline can remain tied to an old directional regime for too long during sustained reversals.
+The 3M result remains useful historical evidence, but it must not be used as the current accepted Trend definition.
 
-The strongest example is the 1980 reversal.
+## 7.4 Task-2 2022 boundary example is also superseded as the active classification case
+
+The original Task-2 State-classification concern centered on a 3M 10Y Trend that briefly crossed below -25 bp during the 2022 midsummer relief period.
+
+That example remains evidence that a hard threshold can create abrupt categorical changes near a boundary, but it is **not** the active Trend definition anymore.
+
+Under the current 6M Trend, 10Y and 30Y remain strongly `Rising` through that midsummer relief period. The episode now serves primarily as evidence that broad Trend and shorter Recent Move can legitimately disagree.
+
+---
+
+# 8. Completed Trend Horizon Re-review — 6M / 9M / 12M
+
+The later horizon review compared:
+
+```text
+6M Trend  = M5(t) - M5(t-126)
+9M Trend  = M5(t) - M5(t-189)
+12M Trend = M5(t) - M5(t-252)
+```
+
+while keeping:
+
+```text
+Recent Move = M5(t) - M5(t-21)
+Trend threshold = ±25 bp
+Recent Move threshold = ±10 bp
+5-observation endpoint smoothing
+```
+
+fixed as research controls.
+
+The review notebook is:
+
+```text
+bondview_duration_trend_horizon_6m_9m_12m_review.ipynb
+```
+
+## 8.1 Scale effect
+
+A fixed ±25 bp threshold is not scale-neutral across Trend horizons.
+
+For example, median absolute Trend magnitude for 10Y was approximately:
+
+```text
+6M   45.8 bp
+9M   55.2 bp
+12M  68.0 bp
+```
+
+and for the 6M Treasury tenor approximately:
+
+```text
+6M   42.2 bp
+9M   66.6 bp
+12M  83.8 bp
+```
+
+Therefore lower Stable occupancy at longer horizons is partly mechanical and must not be treated as evidence that a longer horizon is economically superior.
+
+## 8.2 Transition frequency
+
+All three tested Trend horizons are already materially slower than Recent Move.
 
 For 10Y:
 
 ```text
-Recent becomes Rising: 1980-07-09
-3M Trend → Stable:     1980-07-31
-3M Trend → Rising:     1980-08-05
-6M Trend → Stable:     1980-10-15
-6M Trend → Rising:     1980-10-20
+6M Trend   2.88%
+9M Trend   2.51%
+12M Trend  1.82%
+Recent     7.27%
 ```
 
 For 30Y:
 
 ```text
-Recent becomes Rising: 1980-07-10
-3M Trend → Stable:     1980-08-01
-3M Trend → Rising:     1980-08-06
-6M Trend → Stable:     1980-10-15
-6M Trend → Rising:     1980-10-21
+6M Trend   2.99%
+9M Trend   2.68%
+12M Trend  2.16%
+Recent     7.77%
 ```
 
-The 3M Trend does not merely copy the first opposing Recent Move. It allows several weeks of counter-movement before recognizing a new broader condition. The 6M Trend, by contrast, can retain the old regime into a point where the historical comparison is no longer a good representation of the broader **current** direction.
+A longer horizon is therefore **not needed merely to make Trend distinct from Recent Move**.
 
-Task-1 Short 2008 and Long 1984 reversal episodes provide additional evidence in other tenors and directions.
+## 8.3 Opposing-direction persistence
 
-## 7.4 3M Trend remains distinct from Recent Move
+Longer Trend horizons increase persistence of opposing Trend × Recent Move cases.
 
-The 3M Trend is more responsive than the 6M baseline but remains materially more persistent than Recent Move.
+This can sometimes be economically useful, but it is also where a stale broad condition can hide. The horizon decision therefore cannot be based on “more persistence” or “more disagreement with Recent” as optimization targets.
 
-Transition frequencies on the common sample were approximately:
+## 8.4 Historical challenge interpretation
+
+The main historical conclusion is:
+
+- 6M is already broad enough to remain distinct from Recent Move;
+- 9M does not show a sufficiently clear economic improvement over 6M to justify the added inertia;
+- 12M becomes materially more inert in important reversals;
+- 2022 demonstrates that 6M can preserve a broad rising-yield condition while Recent Move captures a shorter relief move.
+
+## 8.5 Current horizon conclusion
+
+The current provisional Trend horizon is therefore:
 
 ```text
-                6M Trend    3M Trend    Recent Move
-Short             1.64%       2.18%       4.42%
-Intermediate      2.87%       3.79%       7.25%
-Long              2.96%       3.91%       7.76%
+6M overlapping endpoint-change Trend
+= M5(t) - M5(t-126)
 ```
 
-Thus Task 2 does not support the concern that the 3M Trend simply becomes another copy of the 1M Recent Move.
+This supersedes the earlier Task-2 preference for 3M.
 
-Mixed Rule Cases also remain materially populated.
-
-## 7.5 Non-overlapping variants not preferred
-
-The non-overlapping variants satisfy:
-
-```text
-C(t) = A(t-21)
-D(t) = B(t-21)
-```
-
-within accepted segments.
-
-For a Component intended to represent the broader **current** directional condition, this explicit one-month shift generally adds age rather than useful interpretation. Historical transitions, including 2020 and 2022, do not show enough compensating benefit.
-
-Therefore the current validation path does not retain C or D as active Trend candidates.
-
-## 7.6 Important counterexample: 2022 midsummer relief
-
-Task 2 also established that prolonged opposing-direction states can be economically legitimate.
-
-During 2022 midsummer relief, the 6M Trend retained a broader Rising condition while 10Y and 30Y Recent Move became Falling. This cleanly represented:
-
-```text
-broader tightening / rising-yield condition
-+
-shorter-horizon relief
-```
-
-The 3M Trend responded sooner, which is useful in sustained reversals but also created short boundary-adjacent classifications that were stronger than the underlying continuous Values appeared to justify.
-
-This counterexample is important because Task 2 does **not** support minimizing mixed-state duration as an objective.
-
-## 7.7 Material State-Classification finding
-
-Changing the Trend horizon from 6M to 3M while holding the ±25 bp threshold fixed materially changed Trend State occupancy.
-
-Stable occupancy changed approximately as follows:
-
-```text
-                6M Trend    3M Trend
-Short             38.93%      53.45%
-Intermediate      31.05%      42.49%
-Long              28.57%      43.10%
-```
-
-These are material changes, not minor differences.
-
-The changed Trend States also changed Core candidate sets on approximately:
-
-```text
-Short             24.47%
-Intermediate      39.10%
-Long              40.47%
-```
-
-of common-sample observations.
-
-This does not invalidate the 3M horizon. It means the State boundary is now sufficiently consequential that the full Trend definition cannot be accepted without a narrow classification review.
-
-A central example is 2022 10Y. The 3M Trend briefly crossed below the fixed -25 bp threshold for three observations at approximately -26 bp, changing the Rule Case and mapped Core category sharply despite only a marginal movement around the boundary.
-
-Similar short boundary returns occurred in 1987, 2008, 2022, and 2023.
-
-Task 2 therefore **triggered the previously optional State-Classification review**.
-
-## 7.8 Endpoint smoothing status
-
-Task 2 did not identify a material reason to reopen five-observation endpoint smoothing.
-
-The main unresolved issue is State Classification, not smoothing. Do not vary smoothing in Task 2B unless a later human instruction explicitly expands its scope.
-
-## 7.9 Task-1 mixed-cell status after Task 2
-
-Task 2 leaves the following provisional recommendations unchanged:
-
-```text
-Short:
-Stable × Falling → +1 provisional
-Stable × Rising  → -1 provisional
-
-Long:
-Rising × Falling → -1 provisional
-```
-
-The Task-1 preference:
-
-```text
-Long:
-Falling × Rising → +1 provisional
-```
-
-is **weakened**. The prominent 1980 evidence that supported restraint within this cell largely changes Rule Case under the 3M Trend. Retain `+1` only as a cautious working candidate, not as independently validated calibration.
-
-The following remain unresolved:
-
-```text
-Short:
-Falling × Rising → 0 / +1
-Rising × Falling → -1 / 0
-
-Long:
-Stable × Falling → +1 / +2
-Stable × Rising  → -2 / -1
-```
-
-No settled Core cell requires reopening based on Task-2 evidence.
-
-## 7.10 Task-2 accepted status
-
-The current design-validation status is:
-
-```text
-Trend concept
-→ retained
-
-Trend construction
-→ overlapping retained
-→ excluding-latest-1M not preferred
-
-Trend horizon
-→ 3M preferred over 6M
-
-Provisional Trend Value
-→ M5(t) - M5(t-63)
-
-Trend State threshold
-→ NOT YET ACCEPTED
-→ requires Task 2B
-
-Trend smoothing
-→ retain 5D for now
-
-Recent Move
-→ unchanged for now
-
-Core mapping
-→ settled cells retained
-→ provisional / unresolved cells remain provisional / unresolved
-
-Macro
-→ blocked pending Task 2B and human review gate
-```
+The 6M choice does **not** imply that every long opposing-direction episode is correct. It means that residual instability should first be addressed at State Classification / stabilization rather than by shortening the underlying Trend horizon.
 
 ---
 
-# 8. Post-Task-2 Challenger Discussion — Current Minus Trailing Average
+# 9. Completed Trend Threshold Review
 
-After Task 2, an alternative family was considered conceptually:
+After the horizon re-review, Trend State thresholds were reviewed separately from the Trend Value definition.
+
+The review considered a small grid of absolute thresholds rather than using downstream Core scores or ETF outcomes as optimization targets.
+
+The important result was:
+
+```text
+6M Treasury tenor
+→ modest case for ±30 bp
+
+10Y Treasury tenor
+→ ±25 bp preferred / adequate
+
+30Y Treasury tenor
+→ ±25 bp preferred / adequate
+```
+
+For the 6M tenor, ±30 bp reduced short directional episodes relative to ±25 bp, but the improvement was not large enough to justify introducing separate tenor-specific thresholds at this stage.
+
+The working design therefore retains:
+
+```text
+Trend directional entry threshold
+→ ±25 bp for 6M, 10Y, and 30Y representative tenors
+```
+
+This is a deliberate simplification, not a claim that the threshold grid showed identical behavior at all tenors.
+
+## 9.1 Architectural constraint on threshold selection
+
+A threshold may differ by a canonical Component dimension such as representative market tenor if that distinction is justified by the Component's own economic behavior.
+
+However, threshold selection must remain **consumer-independent**.
+
+Do not select or calibrate a Trend threshold because a particular Short, Intermediate, or Long ETF Duration Exposure produces preferred Core scores under that threshold.
+
+Downstream evaluation or Diagnostics may reveal a classification problem and trigger review, but any change must be justified as a better definition of the Yield Trend Component itself.
+
+## 9.2 Current threshold status
+
+The common ±25 bp threshold is now the **working threshold for stabilization review**.
+
+It remains subject to the Human Trend / Core Review Gate together with the selected stabilization rule.
+
+Recent Move remains:
+
+```text
+M5(t) - M5(t-21)
+threshold = ±10 bp
+```
+
+and has not been reopened in the Trend threshold/stabilization work.
+
+---
+
+# 10. Task 2B — Completed 6M Trend State-Classification / Stabilization Review
+
+The State-stabilization review was rerun on the correct Trend definition:
+
+```text
+Trend Value
+→ M5(t) - M5(t-126)
+
+Trend directional entry threshold
+→ ±25 bp for all representative tenors
+```
+
+The earlier persistence/hysteresis run performed on the discarded 3M Trend is not valid evidence for the current design.
+
+The corrected review used the full frozen Task-1 6M baseline:
+
+```text
+38,330 classified observations
+```
+
+and reproduced the committed plain ±25 bp Trend State classification with zero mismatches before applying any stabilization rule.
+
+## 10.1 Tested stabilization mechanics
+
+The corrected review compared:
+
+```text
+plain ±25 bp classification
+
+persistence-2
+→ candidate State must persist for 2 consecutive valid observations
+   before replacing the active State
+
+persistence-3
+→ candidate State must persist for 3 consecutive valid observations
+   before replacing the active State
+
+5 bp hysteresis
+→ directional entry at ±25 bp
+→ Rising exits through +20 bp
+→ Falling exits through -20 bp
+
+10 bp hysteresis
+→ directional entry at ±25 bp
+→ Rising exits through +15 bp
+→ Falling exits through -15 bp
+```
+
+A direct move across the opposite ±25 bp boundary may move directly into the opposite directional State.
+
+Persistence and hysteresis answer different questions:
+
+- persistence requires time confirmation and therefore delays genuine transitions as well as suppressing noise;
+- hysteresis retains the directional State until the underlying Trend Value moves sufficiently back inside the original boundary.
+
+## 10.2 Corrected aggregate results
+
+| Tenor | Variant | Short directional episodes ≤5 (%) | Transition (%) | Median directional episode (obs) | Stable (%) | Changed vs plain (%) |
+|---|---|---:|---:|---:|---:|---:|
+| 6M | Plain | 29.35 | 1.63 | 15.0 | 38.86 | 0.00 |
+| 6M | Persistence-2 | 23.53 | 1.50 | 19.0 | 38.86 | 1.57 |
+| 6M | Persistence-3 | 17.57 | 1.28 | 29.5 | 38.81 | 2.87 |
+| 6M | Hysteresis-5 bp | 10.61 | 1.17 | 37.0 | 36.89 | 1.97 |
+| 6M | Hysteresis-10 bp | 8.77 | 1.01 | 44.0 | 34.92 | 3.94 |
+| 10Y | Plain | 23.48 | 2.86 | 20.0 | 31.14 | 0.00 |
+| 10Y | Persistence-2 | 16.83 | 2.59 | 23.5 | 31.21 | 2.72 |
+| 10Y | Persistence-3 | 14.65 | 2.44 | 26.5 | 31.19 | 5.20 |
+| 10Y | Hysteresis-5 bp | 11.79 | 2.43 | 29.0 | 28.63 | 2.51 |
+| 10Y | Hysteresis-10 bp | 5.39 | 2.08 | 37.0 | 25.51 | 5.64 |
+| 30Y | Plain | 24.10 | 2.96 | 15.0 | 28.72 | 0.00 |
+| 30Y | Persistence-2 | 19.21 | 2.69 | 19.0 | 28.75 | 2.83 |
+| 30Y | Persistence-3 | 11.03 | 2.42 | 32.0 | 28.78 | 5.26 |
+| 30Y | Hysteresis-5 bp | 10.85 | 2.30 | 34.0 | 25.72 | 3.01 |
+| 30Y | Hysteresis-10 bp | 4.59 | 1.94 | 47.0 | 22.43 | 6.29 |
+
+A **short directional episode** means a `Rising` or `Falling` State episode lasting five valid observations or fewer. It does not mean that the underlying 6M Trend Value has become a short-horizon measure.
+
+## 10.3 Main stabilization finding
+
+Plain ±25 bp classification still produces a material share of short directional episodes even with the correct 6M Trend.
+
+Persistence reduces this instability, but minimum persistence introduces a built-in recognition delay for every confirmed State transition.
+
+The 5 bp hysteresis rule is more targeted:
+
+- directional entry remains at the same ±25 bp boundary;
+- clear transitions can therefore be recognized on the same observation as under plain classification;
+- a directional State is prevented from disappearing merely because the Trend retreats slightly inside the original boundary;
+- it reduces short directional episodes to roughly 11% across all three tenors;
+- it changes fewer observations than persistence-3 at each tenor.
+
+The 10 bp hysteresis rule produces the smoothest State path, but it is materially more aggressive, lowers Stable occupancy more substantially, and changes roughly 4–6% of observations. The current evidence does not establish that the added stickiness is economically justified.
+
+## 10.4 Historical challenge findings
+
+The corrected historical review supports the aggregate result.
+
+### 1980 10Y reversal
+
+The 5 bp hysteresis rule leaves the important plain transition dates essentially unchanged, while persistence-3 delays them through its confirmation requirement.
+
+### 2008 GFC
+
+For 10Y, the decisive transition into the broad `Falling` condition begins on the same date under plain classification and 5 bp hysteresis, while persistence confirms it later.
+
+For 30Y, hysteresis suppresses several boundary-driven short episodes before the sustained `Falling` regime.
+
+### 2022 midsummer relief
+
+For both 10Y and 30Y, the correct 6M Trend remains strongly `Rising` through the relief period.
+
+The shorter Recent Move can therefore carry the countertrend information without requiring Trend to flip. Stabilization does not erase the intended broad-vs-recent separation.
+
+### 2023 30Y selloff
+
+The 5 bp hysteresis rule preserves the major directional entries while reducing boundary exits. Persistence-3 shifts the entries later.
+
+## 10.5 Provisional stabilization conclusion
+
+The strongest current candidate is:
+
+```text
+Trend Value
+→ M5(t) - M5(t-126)
+
+Directional entry
+→ Falling < -25 bp
+→ Rising  > +25 bp
+
+Hysteresis exit
+→ Falling remains active until Trend >= -20 bp
+→ Rising remains active until Trend <= +20 bp
+```
+
+This is the **provisionally preferred** Trend State Classification / stabilization rule.
+
+It is not yet a final production rule. Human review must explicitly accept or reject it before Macro Adjustment validation begins.
+
+---
+
+# 11. Post-Task-2 Challenger Discussion — Current Minus Trailing Average
+
+An alternative Trend family was considered conceptually:
 
 ```text
 current smoothed yield - trailing moving average
@@ -614,16 +754,16 @@ M5(t) - M120(t)
 
 This family is **not currently scheduled as a validation task**.
 
-## 8.1 Decisive semantic difference
+## 11.1 Decisive semantic difference
 
 The current endpoint-change Trend asks:
 
 > How much have yields changed over the broader horizon?
 
-For example:
+The current preferred example is:
 
 ```text
-M5(t) - M5(t-63)
+M5(t) - M5(t-126)
 ```
 
 The moving-average-reference alternative asks:
@@ -638,7 +778,7 @@ M5(t) - M60(t)
 
 These are related but not equivalent economic questions.
 
-## 8.2 Duration Constituent ownership concern
+## 11.2 Duration Constituent ownership concern
 
 Duration Evaluation asks how favorable or unfavorable current **Duration-relevant rates conditions** are for an ETF's interest-rate sensitivity. Within that role, Trend is intended to represent **directional rates conditions**.
 
@@ -648,149 +788,73 @@ This creates a risk that Duration absorbs information about **relative yield lev
 
 That distinction matters because relative/high yield level can also carry information relevant to **Rates Valuation**. A measure that interprets “yield remains high relative to recent history” as an adverse Duration Trend can therefore blur constituent ownership and create avoidable overlap between Duration and Rates Valuation.
 
-This is a deeper issue than threshold calibration.
+This is a deeper issue than threshold calibration or State stabilization.
 
-## 8.3 Current decision on the challenger
+## 11.3 Current decision on the challenger
 
 Do not replace the endpoint-change Trend with a current-minus-trailing-average formulation at this stage.
 
-Task 2 did not show that the 3M endpoint-change Trend is generally broken. It showed:
+The current evidence supports:
 
 ```text
 6M endpoint Trend
-→ too stale in some sustained reversals
+→ broad enough to remain distinct from Recent Move
+→ preferred to 9M / 12M because the longer horizons add inertia
+→ retains economically useful broad-vs-recent disagreement
 
-3M endpoint Trend
-→ materially improves those reversals
-→ remains distinct from Recent Move
-
-remaining material issue
-→ State Classification around the fixed threshold
+remaining State issue
+→ boundary stability
+→ addressed more directly by hysteresis than by changing Trend semantics
 ```
 
-Therefore the next step is to resolve the demonstrated classification problem rather than change the underlying Trend semantics.
-
-If Task 2B still leaves material economic contradictions after a defensible State Classification is tested, the Trend measurement itself may be reopened. At that point, MA-based challengers may be considered explicitly, with constituent ownership and direction-vs-relative-level semantics evaluated before any empirical parameter search.
+If the Human Trend / Core Review Gate finds a material residual contradiction that hysteresis does not resolve, the Trend measurement itself may be reopened under a separate explicitly scoped task.
 
 Do not launch an MA-reference comparison merely because the formulation is familiar from technical analysis.
 
 ---
 
-# 9. Task 2B — Required Trend State-Classification Validation
+# 12. Human Trend / Core Review Gate
 
-Task 2B is now mandatory before the Human Trend / Core Review Gate.
-
-## 9.1 Primary question
-
-Task 2B asks:
-
-> Given the provisionally preferred 3M overlapping Trend Value, does the State Classification convert that continuous Value into `Falling / Stable / Rising` in a way that is economically meaningful, sufficiently stable, and appropriate for Duration Core Rule Cases?
-
-The task is about the **classification of the selected Trend Value**, not about selecting another Trend horizon or another Trend semantic concept.
-
-## 9.2 Fixed inputs
-
-Keep fixed unless a later human prompt explicitly changes scope:
-
-```text
-Short        → 6M Treasury
-Intermediate → 10Y Treasury
-Long         → 30Y Treasury
-
-Trend Value
-→ M5(t) - M5(t-63)
-
-Recent Move Value
-→ M5(t) - M5(t-21)
-
-Recent Move threshold
-→ ±10 bp
-
-5-observation endpoint/reference smoothing
-
-Task-1 Core Rule Mapping and candidate sets
-```
-
-Do not:
-
-- return to the 6M Trend as a competing candidate;
-- reopen overlapping vs non-overlapping construction;
-- introduce current-minus-moving-average Trend semantics;
-- change Recent Move in the same task;
-- change smoothing in the same task;
-- use forward returns or ETF returns as labels.
-
-These restrictions isolate State Classification.
-
-## 9.3 Candidate classification mechanics are not yet fixed
-
-The exact alternative classification candidates for Task 2B must be specified by human review before Codex execution.
-
-Codex must not invent threshold values, volatility scaling, hysteresis, persistence filters, or other stabilization rules on its own.
-
-The current baseline is:
-
-```text
-Falling < -25 bp
-Stable  = [-25 bp, +25 bp]
-Rising  > +25 bp
-```
-
-The next prompt should identify a small, explicit candidate set designed to test the specific boundary problem found in Task 2.
-
-## 9.4 Required diagnostics once candidates are fixed
-
-At minimum, Task 2B should evaluate:
-
-- State frequency by tenor;
-- transition frequency and episode persistence;
-- short boundary-return episodes;
-- how often small Value changes around a boundary create materially different Core Rule Cases;
-- the 2022 10Y and 30Y boundary examples identified by Task 2;
-- relevant 1987, 2008, and 2023 boundary-return examples;
-- whether genuine reversals such as 1980 remain recognized at economically reasonable times;
-- whether mixed Rule Cases remain interpretable;
-- whether settled Core cells remain coherent;
-- whether Task-1/Task-2 provisional mixed-cell judgments are strengthened, weakened, reopened, or unchanged.
-
-The goal is not to maximize Stable occupancy or minimize switching.
-
-## 9.5 Required conclusion
-
-Task 2B must determine whether:
-
-```text
-Current ±25 bp Trend classification can be retained
-```
-
-or whether a specifically tested alternative should replace it.
-
-It must also state whether any material residual problem now points to:
-
-```text
-Trend Value definition itself
-Recent Move definition
-endpoint smoothing
-Core Rule Mapping
-```
-
-rather than State Classification.
-
-If a material residual problem remains outside State Classification, stop and report it. Do not redesign another layer automatically.
-
----
-
-# 10. Human Trend / Core Review Gate
-
-After Task 2B, stop.
+The next step is human review.
 
 Do not automatically proceed to Macro Adjustment.
+
+The current candidate package for review is:
+
+```text
+Representative tenors
+Short        → 6M
+Intermediate → 10Y
+Long         → 30Y
+
+Trend Value
+→ M5(t) - M5(t-126)
+
+Trend State Classification
+→ common directional entry threshold ±25 bp
+→ 5 bp hysteresis band
+→ directional exit through ±20 bp
+
+Recent Move
+→ M5(t) - M5(t-21)
+→ ±10 bp working threshold
+→ unchanged in the Trend review
+
+Endpoint smoothing
+→ 5 valid observations
+→ unchanged
+
+Core Rule Mapping
+→ settled cells retained
+→ provisional / unresolved mixed cells remain subject to human review
+```
 
 Required review output:
 
 ```text
 Accepted / rejected Trend Value definition
-Accepted / rejected Trend State Classification
+Accepted / rejected common ±25 bp directional entry threshold
+Accepted / rejected 5 bp hysteresis stabilization
 Recent Move definition status
 Recommended Core Rule Table
 Remaining provisional / unresolved Core cells
@@ -799,13 +863,25 @@ Need to reopen Trend measurement: yes / no
 Need to reopen Recent Move or smoothing: yes / no
 ```
 
-Human review decides whether the Trend / Recent / Core package is sufficiently settled for Macro validation.
+The human review must distinguish:
 
-If Trend measurement itself must be reopened, possible challengers may include MA-based directional constructions, but only under a separate explicitly scoped task.
+```text
+Component-level adequacy
+```
+
+from:
+
+```text
+whether a particular downstream ETF exposure receives a preferred Core score
+```
+
+Downstream behavior may expose a Component problem, but must not become the calibration target for the Component.
+
+If Trend measurement itself must be reopened, possible challengers may include MA-based constructions, but only under a separate explicitly scoped task.
 
 ---
 
-# 11. Task 3 — Macro Adjustment Validation
+# 13. Task 3 — Macro Adjustment Validation
 
 Task 3 begins only after the Human Trend / Core Review Gate accepts the required Core inputs.
 
@@ -815,7 +891,7 @@ Its fixed inputs are the accepted:
 representative tenors
 Recent Move definition
 Trend Value definition
-Trend State Classification
+Trend State Classification / stabilization
 Core Rule Mapping
 ```
 
@@ -873,7 +949,7 @@ with concise economic reasoning.
 
 ---
 
-# 12. Deliverables
+# 14. Deliverables and Artifact Status
 
 ## Completed Task 1
 
@@ -883,7 +959,7 @@ validation/261002_duration/task1_core/results.csv
 validation/261002_duration/task1_core/report.md
 ```
 
-## Completed Task 2
+## Completed initial Task 2
 
 ```text
 validation/261002_duration/task2_trend/analysis.py
@@ -891,21 +967,43 @@ validation/261002_duration/task2_trend/comparison.csv
 validation/261002_duration/task2_trend/report.md
 ```
 
-## Task 2B
+These artifacts retain the original 3M-preference analysis for historical traceability. That preference is superseded by the later horizon review.
 
-Use the existing validation campaign:
+## Completed horizon re-review
+
+The human-review notebook is:
+
+```text
+bondview_duration_trend_horizon_6m_9m_12m_review.ipynb
+```
+
+This notebook is the current supporting artifact for the 6M / 9M / 12M horizon decision.
+
+The older:
+
+```text
+bondview_duration_2022_10y_trend_visual_check.ipynb
+```
+
+is tied to the superseded 3M Trend interpretation and should not be used as current design evidence without that qualification.
+
+## Corrected 6M State-stabilization review
+
+The corrected stabilization review has been completed against the frozen Task-1 6M baseline.
+
+If this review is formalized in the repository, use the existing validation campaign:
 
 ```text
 validation/261002_duration/
 ```
 
-Create a task subdirectory only when the exact State-Classification candidate set is fixed. A suitable name is:
+with a suitable subdirectory such as:
 
 ```text
 validation/261002_duration/task2b_trend_state/
 ```
 
-Expected artifacts:
+Expected reproducibility artifacts should include:
 
 ```text
 analysis.py
@@ -913,11 +1011,13 @@ comparison.csv
 report.md
 ```
 
-The report must contain Codex's own economic analysis and recommendation, not only numerical diagnostics.
+An inspection notebook may also be retained as a human-review companion, but the report should contain the actual economic interpretation and recommendation rather than relying on notebook outputs alone.
+
+Do not treat generated artifacts as design authority until the Human Trend / Core Review Gate accepts the corresponding conclusion.
 
 ## Trend / Core Review Gate
 
-After Task 2B and human review, record the accepted conclusion in:
+After human acceptance, record the accepted conclusion in:
 
 ```text
 validation/261002_duration/core_conclusion/
@@ -937,12 +1037,12 @@ with filenames reflecting the actual analysis implementation and report.
 
 ---
 
-# 13. Explicit Non-Goals
+# 15. Explicit Non-Goals
 
 Codex must not:
 
 - redesign Bondview system architecture;
-- optimize scores, tenors, horizons, thresholds, or smoothing by forward returns;
+- optimize scores, tenors, horizons, thresholds, persistence, hysteresis, or smoothing by forward returns;
 - treat historical events as supervised target labels;
 - infer cardinal utility from ordinal scores;
 - reintroduce preferred-duration / distance scoring;
@@ -951,12 +1051,13 @@ Codex must not:
 - design Curve Evaluation;
 - force Duration and Curve to use disjoint observations;
 - treat lower mixed-state frequency as inherently better;
-- infer that more Stable observations are inherently better;
+- infer that more or fewer Stable observations are inherently better;
+- treat fewer State transitions as inherently better;
+- choose a Component threshold or stabilization rule because it improves downstream ETF Core scores;
 - automatically replace Trend with a current-minus-moving-average technical indicator;
 - blur Direction information with Rates Valuation merely to improve transition behavior;
-- let Codex invent new classification mechanics not specified by the human-reviewed Task-2B prompt;
-- alter endpoint smoothing during Task 2B unless explicitly instructed;
-- alter Recent Move during Task 2B unless explicitly instructed;
+- alter endpoint smoothing during the current Trend review unless explicitly instructed;
+- alter Recent Move during the current Trend review unless explicitly instructed;
 - automatically proceed to Macro Adjustment before the Human Trend / Core Review Gate is accepted.
 
 The objective is to establish an interpretable and economically coherent Duration Evaluation design, not to maximize predictive fit or produce the smoothest historical State sequence.
