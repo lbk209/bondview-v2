@@ -216,52 +216,17 @@ The exact method and State semantics belong to the relevant Component design.
 
 ### 3.2.2 Rule Mapping and Coverage
 
-The participating Component States form a **Rule Case**. A Rule Case describes the relevant analytical conditions; it does not by itself include downstream ETF Exposure Profile characteristics.
+The participating Component States form a **Rule Case**. A Rule Case represents one concrete combination of analytical conditions used by a Rule Mapping.
 
-```text
-Component States → Rule Case
-```
-
-Rule Mapping then maps the Rule Case to the result required by the applicable model purpose. When Rule Mapping belongs to an ETF Constituent Evaluation, the mapping may additionally consume the applicable ETF Exposure Profile characteristics. In that case, the mapped result is already exposure-specific.
-
-```text
-Component States
-    ↓
-Rule Case
-    │
-    │       applicable ETF Exposure Profile characteristics
-    │                      ↓
-    └──────────────> [Rule Mapping]
-                           ↓
-                     Mapped Result
-```
-
-For example:
-
-```text
-Long-End Yield Trend State = Falling
-        +
-Recent Long-End Yield Move State = Falling
-        ↓
-Duration Rule Case = Falling × Falling
-        │
-        │        Duration Exposure = Long
-        │                  ↓
-        └──────> [Core Duration Rule Mapping]
-                           ↓
-                 Core Duration Evaluation Result
-```
-
-The resulting Core Duration Evaluation Result is the evaluation of the applicable Duration Exposure under that market Rule Case. It is not an ETF-independent Duration score to which Duration Exposure is applied afterward. The same Rule Case may therefore map differently for materially different ETF Exposure Profiles.
+Rule Mapping maps a Rule Case, together with any additional inputs defined by the applicable model responsibility, to a model-specific result. The inputs and semantics of that result belong to the Component, Evaluation, or other responsibility that owns the mapping.
 
 A Rule Table groups the mappings required for one defined model purpose, while its Coverage Strategy determines how the valid Rule Case space is handled, including explicit mappings, fallback behavior, justified interpolation, or other model-specific treatment of valid uncovered cases.
 
-Rule Mapping is reusable as a calculation structure, but the economic meaning of a mapping remains owned by the Component, Evaluation, or other model-specific responsibility that uses it.
+Rule Mapping is reusable as a calculation structure, but the economic meaning of a mapping remains owned by the model-specific responsibility that uses it.
 
 Where a model assigns different semantic roles to Component groups, such as Core Evaluation and Macro Adjustment, those roles must remain distinct even when similar calculation mechanics are used. Components assigned different roles must not be flattened into interchangeable peer contributions unless the applicable model design explicitly defines them as peers.
 
 System-wide principles for reusable mechanics are defined in Section 6.3.
-
 
 ## 3.3 Component Construction and Identity
 
