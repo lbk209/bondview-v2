@@ -145,9 +145,9 @@ The Component retains one authoritative meaning, while downstream consumers may 
 
 A Component's Value calculation, State Classification, parameters, and State semantics must be defined from the economic concept represented by that Component and its authoritative upstream inputs. They must not be conditioned on the identity, characteristics, desired result, or observed behavior of a downstream consumer.
 
-Downstream evaluation or Diagnostics may reveal that a Component definition is economically inadequate and therefore motivate review of that Component. Any resulting revision must nevertheless be justified at the Component level and become part of the canonical Component specification; it must not be calibrated separately to improve the behavior of a particular evaluator, ETF Exposure Profile, Rule Mapping, or downstream result.
+Downstream evaluation or Diagnostics may reveal that a Component definition is economically inadequate and therefore motivate review of that Component. Any resulting revision must be justified at the Component level and incorporated into its canonical specification rather than calibrated to obtain a preferred result from a particular downstream evaluator or exposure.
 
-A parameter may vary across Component instances only when that parameterization is itself part of the canonical Component specification. For example, market or tenor may justify distinct Component instances or parameters when they materially change the economic concept or its measurement. Downstream exposure categories or evaluation outcomes must not be used as an implicit substitute for such Component-level parameterization.
+For example, instability observed in Duration Evaluation may justify reviewing the classification of a Yield Trend Component. However, the Trend threshold or stabilization rule should then be chosen because it better represents the intended Yield Trend state, not because a particular Short, Intermediate, or Long Duration Exposure produces more desirable evaluation scores under that setting.
 
 ### 3.1.2 Component Value, State, and Preparation Flow
 
@@ -226,14 +226,14 @@ Rule Mapping then maps the Rule Case to the result required by the applicable mo
 
 ```text
 Component States
-        ↓
+    ↓
 Rule Case
-        │
-        │       applicable ETF Exposure Profile characteristics
-        │                        ↓
-        └──────────────→ [Rule Mapping]
-                                 ↓
-                         Mapped Result
+    │
+    │       applicable ETF Exposure Profile characteristics
+    │                      ↓
+    └──────────────> [Rule Mapping]
+                           ↓
+                     Mapped Result
 ```
 
 For example:
@@ -245,11 +245,11 @@ Recent Long-End Yield Move State = Falling
         ↓
 Duration Rule Case = Falling × Falling
         │
-        │       Duration Exposure = Long
-        │                 ↓
-        └──────→ [Core Duration Rule Mapping]
+        │        Duration Exposure = Long
+        │                  ↓
+        └──────> [Core Duration Rule Mapping]
                            ↓
-               Core Duration Evaluation Result
+                 Core Duration Evaluation Result
 ```
 
 The resulting Core Duration Evaluation Result is the evaluation of the applicable Duration Exposure under that market Rule Case. It is not an ETF-independent Duration score to which Duration Exposure is applied afterward. The same Rule Case may therefore map differently for materially different ETF Exposure Profiles.
