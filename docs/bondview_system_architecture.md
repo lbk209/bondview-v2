@@ -143,6 +143,12 @@ State: Rising
 
 The Component retains one authoritative meaning, while downstream consumers may assign it different roles within their own economic models.
 
+A Component's Value calculation, State Classification, parameters, and State semantics must be defined from the economic concept represented by that Component and its authoritative upstream inputs. They must not be conditioned on the identity, characteristics, desired result, or observed behavior of a downstream consumer.
+
+Downstream evaluation or Diagnostics may reveal that a Component definition is economically inadequate and therefore motivate review of that Component. Any resulting revision must be justified at the Component level and incorporated into its canonical specification rather than calibrated to obtain a preferred result from a particular downstream evaluator or exposure.
+
+For example, instability observed in Duration Evaluation may justify reviewing the classification of a Yield Trend Component. However, the Trend threshold or stabilization rule should then be chosen because it better represents the intended Yield Trend state, not because a particular Short, Intermediate, or Long Duration Exposure produces more desirable evaluation scores under that setting.
+
 ### 3.1.2 Component Value, State, and Preparation Flow
 
 A **Component Value** is the calculated quantitative or structured representation of a Component before discrete classification.
@@ -210,10 +216,18 @@ The exact method and State semantics belong to the relevant Component design.
 
 ### 3.2.2 Rule Mapping and Coverage
 
-Rule Mapping operates on combinations of Component States. The participating States form a Rule Case, which is then mapped to a model-specific result.
+The participating Component States form a **Rule Case**. A Rule Case describes the relevant analytical conditions used by a Rule Mapping.
+
+Rule Mapping maps a Rule Case, together with applicable model-specific input where required, to a model-specific result. The inputs and semantics of that result belong to the Component, Evaluation, or other model-specific responsibility that owns the mapping.
 
 ```text
-Component States → Rule Case → [Rule Mapping] → Mapped Result
+Rule Case
+    +
+applicable model-specific input
+        ↓
+[Rule Mapping]
+        ↓
+Mapped Result
 ```
 
 For example:
@@ -223,14 +237,16 @@ Long-End Yield Trend State = Falling
         +
 Recent Long-End Yield Move State = Falling
         ↓
-Rule Case = Falling × Falling
+Duration Rule Case = Falling × Falling
+        +
+Duration Exposure = Long
         ↓
-[Rule Mapping]
+[Core Duration Rule Mapping]
         ↓
-Mapped Result = Very favorable for long-duration exposure
+Core Duration Evaluation Result
 ```
 
-This is an illustrative mapping for a long-duration exposure, not an ETF-independent Duration judgment. The same Component States may map differently for materially different ETF Exposure Profiles.
+The resulting Core Duration Evaluation Result is the evaluation of the applicable Duration Exposure under that market Rule Case. It is not an ETF-independent Duration score to which Duration Exposure is applied afterward. The same Rule Case may therefore map differently for materially different ETF Exposure Profiles.
 
 A Rule Table groups the mappings required for one defined model purpose, while its Coverage Strategy determines how the valid Rule Case space is handled, including explicit mappings, fallback behavior, justified interpolation, or other model-specific treatment of valid uncovered cases.
 
@@ -403,7 +419,13 @@ Core Evaluation Result
 Constituent Evaluation Result
 ```
 
-Core Evaluation first interprets the ETF exposure under the Components used for that evaluator. Macro Adjustment then modifies that already exposure-specific result using applicable Macroeconomic Components.
+Core Evaluation first interprets the ETF exposure under the Components used for that evaluator. The ETF Exposure Profile therefore participates in producing the Core Evaluation Result; Core Evaluation does not first produce an ETF-independent favorability score and then apply the Profile as a separate adjustment.
+
+Where Core Evaluation uses Rule Mapping, the applicable Component States form the Rule Case and the relevant ETF Exposure Profile characteristics provide the applicable model-specific input, following the Rule Mapping structure defined in Section 3.2.2. The resulting Core Evaluation Result is therefore already exposure-specific.
+
+The ETF Exposure Profile characteristics used by Core Evaluation remain downstream evaluation inputs. They do not become part of the upstream Component definition or alter the Component Value or State used to form the Rule Case.
+
+Macro Adjustment then modifies that already exposure-specific result using applicable Macroeconomic Components.
 
 The Core Evaluation Result must preserve enough semantics or lineage to identify the exposure characteristics and Component conditions that materially produced the result.
 
@@ -612,6 +634,9 @@ The following dependency constraints apply:
 
 - Bond Analysis must not depend on ETF Evaluation logic.
 - ETF Evaluation may consume Components but must not redefine them.
+- No downstream consumer input or result may become an input to upstream Feature Calculation, Component Calculation, State Classification, or Component parameter selection unless that information has independently been defined as part of the authoritative Component specification.
+- Given the same accepted Raw Observations and the same Resolved Model Specification, the same Component instance must produce the same authoritative Value and State regardless of which downstream consumer requests or uses it.
+- ETF Exposure Profile characteristics participate in the applicable Constituent Evaluation after Components have been produced; they must not flow upstream to alter the Components used by that evaluation.
 - Core Evaluation and Macro Adjustment must remain semantically distinct where an applicable Constituent Evaluation defines both stages.
 - Components assigned to different evaluator roles must not be flattened into interchangeable peer contributions unless the evaluator-specific design explicitly defines them as peers.
 - Diagnostics may consume authoritative outputs and their dependency lineage but must not modify them or create a parallel authoritative analytical or evaluation path.
@@ -660,6 +685,7 @@ The system architecture should be reviewed when a proposed change would:
 - create a new system-level Result Boundary;
 - introduce a new independent market-level interpretation or assessment between Components and ETF Evaluation;
 - make Bond Analysis depend on ETF-specific evaluation logic;
+- make a Component definition, parameter, or State Classification depend on a downstream consumer, ETF Exposure Profile, Rule Mapping outcome, or desired evaluation behavior rather than on the Component's own canonical specification;
 - introduce a structural Component subtype that changes upstream processing or interfaces;
 - materially change the Component lineage or traceability contract;
 - collapse distinguishable Constituent Evaluations into a monolithic exposure, price, or return model that removes their separate economic responsibilities or traceable results;
