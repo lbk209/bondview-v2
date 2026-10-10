@@ -167,17 +167,18 @@ Let `M5(t)` denote the mean of the last five accepted valid yield observations e
 Trend Value (bp) = M5(t) - M5(t-126)
 ```
 
-The trend uses an approximately six-month overlapping endpoint change. The common directional entry threshold is `±25 bp` for each representative tenor. The following **Hybrid-P3/H5** State Classification is accepted:
+The six-month endpoint-change horizon represents established yield direction while allowing Recent Yield Move to capture shorter-horizon confirmation or opposition. Longer horizons add unnecessary inertia for this purpose. A current-minus-trailing-average measure was not adopted because it may primarily describe a yield level relative to recent history rather than an ongoing directional change, blurring the boundary with Rates Valuation.
 
-- **Stable → Rising:** Trend Value `> +25 bp` on three consecutive valid observations.
-- **Stable → Falling:** Trend Value `< -25 bp` on three consecutive valid observations.
-- **Rising → Stable:** Trend Value `<= +20 bp` (5 bp hysteresis exit).
-- **Falling → Stable:** Trend Value `>= -20 bp` (5 bp hysteresis exit).
-- **Pending entry:** A Stable observation or a candidate in the opposite direction resets the pending count as appropriate. Until confirmation, remain Stable.
-- **Direct opposite crossing:** If an established Rising State sees Trend `< -25 bp`, or Falling sees Trend `> +25 bp`, exit to Stable on that observation. Count it as observation one of the three needed to confirm the opposite State; do **not** switch directly to the opposite directional State. No special direct-reversal bypass is accepted.
-- **Initialization and gaps:** Match the historical fixture's convention: initialize the first valid State of an accepted structural segment using its plain ±25 bp classification, and reset the State and pending counter at structural segment boundaries. Invalid observations do not count toward confirmation. This initialization convention should be explicit in the implementation and diagnostics.
+The common directional entry threshold is `±25 bp` for each representative tenor. The accepted **Hybrid-P3/H5** State Classification has one explicit direct-reversal exception, with the following precedence:
 
-The persistence check applies to *directional entry from Stable*, not to exits from an established Rising/Falling State. Hysteresis applies to *exit from an established direction*, not to entry. This asymmetry deliberately rejects unconfirmed directional crossings while allowing an established condition to survive small threshold retreats.
+1. **Direct directional reversal (highest priority):** If the current established State is `Rising` and Trend Value becomes `< -25 bp`, transition directly to `Falling` on that observation. Symmetrically, established `Falling` transitions directly to `Rising` when Trend Value becomes `> +25 bp`. This crosses the entire neutral region; it does not require Persistence-3. Reset any pending entry count.
+2. **Directional exit by hysteresis:** If no direct-reversal condition applies, `Rising` becomes `Stable` when Trend Value is `<= +20 bp`; `Falling` becomes `Stable` when Trend Value is `>= -20 bp`. Otherwise retain the established directional State.
+3. **Directional entry from Stable:** When the current State is `Stable`, enter `Rising` only after three consecutive valid observations with Trend Value `> +25 bp`, or enter `Falling` only after three consecutive valid observations with Trend Value `< -25 bp`. Until then remain `Stable`. A neutral or opposing candidate resets or replaces the pending confirmation sequence.
+4. **Initialization and gaps:** At the first calculable observation in each accepted structural segment, initialize from the plain `±25 bp` classification. Reset the State and pending entry counter at structural segment boundaries. Invalid observations do not count toward confirmation.
+
+**The direct-reversal exception applies only while the opposite directional State is still established.** Once a sequence has already exited to `Stable`, subsequent entry into either direction requires normal Persistence-3 confirmation, regardless of the magnitude of its Trend Value. For example, `Rising (+30) → Falling (-30)` is immediate, whereas `Rising (+30) → Stable (+18) → Stable (-30)` remains pending until Falling is confirmed. An established Falling State exits to Stable at `-20 bp` or above, even if it was entered through a direct reversal.
+
+This rule distinguishes small boundary fluctuations, for which persistence and hysteresis are useful, from a direct crossing of both directional thresholds. It preserves the accepted long-horizon Trend semantics without adding new magnitude thresholds or changing Recent Yield Move.
 
 For numerical consistency, retain the source fixture's unit conventions: the formulas above express yield changes in basis points, irrespective of how source yields are stored.
 
@@ -236,6 +237,8 @@ Both equalities are acceptable, and both occur in the selected mapping. Under a 
 
 The Trend State determines primary directional context. Recent Move affects the strength and interpretation of the resulting Core evaluation without routinely overturning that context. Longer Duration Exposure allows stronger favorable and unfavorable **categories** under aligned directional conditions; scores must not be treated as proportional to modified duration or expected price movement.
 
+Historical review found meaningful occurrences of all nine Rule Cases and frequent same-date differences among the representative Treasury tenors. These findings support exposure-local classification and evaluation; they do not by themselves establish the numerical superiority of one adjacent ordinal category over another.
+
 ## 3.6 Macro Adjustment
 
 Duration Macro Adjustment follows an already exposure-specific Core Result and may use relevant macroeconomic Components such as Inflation Trend and Policy Direction. It must not independently rebuild a second rates-direction model or double-count mechanisms already expressed by Core.
@@ -250,11 +253,11 @@ Acceptance of the Core design does **not** constitute acceptance of the Macro Ad
 
 ## 3.7 Core Decision and Validation Summary
 
-**Decision (2026-10-10):** The six-month overlapping Trend, common ±25 bp directional threshold, Hybrid-P3/H5 Trend stabilization, existing Recent Move definition, and complete seven-level, exposure-specific, weak Trend-first Core Rule Table are **accepted for Duration Core**. This decision supersedes the earlier validation plan's provisional preference for pure 5 bp hysteresis. Detailed exploratory comparisons remain in separate review and validation artifacts.
+**Accepted Core design (2026-10-10):** The six-month overlapping Yield Trend, common `±25 bp` threshold, Hybrid-P3/H5 stabilization with immediate direct opposite-direction crossings, unchanged Recent Yield Move definition, and the complete exposure-specific seven-level Core Rule Table are accepted. The direct-reversal exception clarifies the accepted transition semantics; previous provisional stabilization conventions do not override this definition.
 
-**Completed narrow consistency checks:** The nine-case table is total and respects the tested ordinal/tenor constraints; eight targeted hybrid transition sequences passed; all 38,330 historically classified observations were replayed across four valid data segments without violating the accepted transition invariants; the frozen source's reference dates precede each `as_of` and the recorded feature arithmetic agrees with its source fields. These are **mechanical and internal-consistency** checks, not evidence of superior predictive returns or proof of economic correctness.
+**Validation conclusion:** Historical review and consistency checks found no material contradiction in the selected Component definitions, exposure-local Rule Mapping, or ordinary State transitions. All nine Rule Cases are historically represented, and the mapping satisfies its intended ordinal and exposure-order constraints. The direct-reversal exception did not occur in the frozen historical fixture and is specified as a deliberate boundary rule rather than an empirically optimized choice. These findings establish internal consistency, **not** predictive performance or economic optimality. Detailed experiments and intermediate comparisons remain outside this design document.
 
-**Explicit remaining work:** Specify and accept Duration Macro Adjustment, then diagnose the complete Duration Constituent while retaining Core, Macro action, and final Result side by side. Do not reopen this Core decision solely to improve back-fitted historical outcomes; require a concrete economic, data-integrity, or architecture-level contradiction.
+**Remaining work:** Specify and accept Duration Macro Adjustment, then conduct historical diagnostics of the completed Duration Constituent with Core Result, Macro action, and final Result separately visible. Reopen Core only when a substantive economic, data-integrity, or architectural contradiction warrants revision.
 
 ---
 
