@@ -120,11 +120,17 @@ Macro action, where applicable
 final Constituent Evaluation Result
 ```
 
+## 2.5 Constituent Design Documentation Structure
+
+Each Constituent design should explain its economic question and scope, a concise evaluation overview, relevant Components and ETF-specific inputs, Core Evaluation logic, applicable Macro Adjustment, Result semantics and traceability, and accepted design conclusions and limitations.
+
+This is a **documentation convention**, not a requirement that Constituents use identical Components, calculations, Rule Tables, Macro mechanisms, or Result scales. The headings and internal level of detail may vary; inapplicable material can be omitted or identified as such. Keep exploration, validation workflows, and test logs outside this document unless a finding is necessary to understand an accepted design decision.
+
 ---
 
 # 3. Duration Evaluation
 
-## 3.1 Economic Question
+## 3.1 Economic Question and Scope
 
 Duration Evaluation asks:
 
@@ -132,9 +138,34 @@ Duration Evaluation asks:
 
 It evaluates the ETF's sensitivity to changes in the relevant Treasury rate segment. It does **not** independently evaluate overall ETF attractiveness, rates compensation / carry, curve shape, credit, positioning, implementation quality, or risk-adjusted expected return. These distinctions belong to other evaluation responsibilities. A favorable Core Duration score does not itself imply that higher duration has superior risk-adjusted attractiveness.
 
-## 3.2 Exposure Representation
+## 3.2 Evaluation Overview
 
-The accepted Core fixture uses these economic centers:
+Duration Core relates market direction at the ETF exposure's representative Treasury tenor to the ETF's Duration Exposure. Macro Adjustment, when designed and accepted, will subsequently qualify that already exposure-specific Core Result.
+
+```text
+ETF Duration Exposure → Representative Treasury tenor
+                                ↓
+                   Tenor-local Yield Trend State
+                   + Recent Yield Move State
+                                ↓
+Duration Exposure ───────→ [Core Rule Mapping]
+                                ↓
+                     Core Duration Evaluation Result
+                                ↓
+Macroeconomic Components → [Macro Adjustment — TBD]
+                                ↓
+                       Duration Evaluation Result
+```
+
+Market Component Values and States are defined for the applicable Treasury tenor, independently of the downstream ETF evaluator. The Duration Exposure category selects the applicable exposure-specific Core mapping; it does not redefine or recalibrate those Components. There is no authoritative ETF-independent preferred-duration score between the Components and the Core Result.
+
+The **Core design is accepted**; the Macro Adjustment mapping and the completed Duration Evaluation Result remain to be specified.
+
+## 3.3 Inputs and Exposure Representation
+
+### Duration Exposure and representative Treasury tenor
+
+The accepted exposure categories and their representative Treasury tenors are:
 
 | Duration Exposure | Representative Treasury tenor |
 |---|---|
@@ -142,47 +173,42 @@ The accepted Core fixture uses these economic centers:
 | Intermediate | 10Y |
 | Long | 30Y |
 
-The tenor is selected by the economic center of the Duration Exposure. Each exposure uses the Trend and Recent Move States of its **own** representative Treasury tenor. An ETF Exposure Profile participates directly in its Core Evaluation; the system must not first construct an ETF-independent preferred-duration score.
+Each tenor represents the economic center of its Duration Exposure category; it is **not** an assertion that an ETF's numerical duration equals the tenor's maturity. Each exposure uses the Yield Trend and Recent Yield Move States of its **own** representative Treasury tenor, while its exposure category selects the corresponding Core Rule Mapping column. Consequently, different exposures may occupy different Rule Cases on the same date.
 
-The exposure taxonomy may be expanded if the ETF universe later requires additional economically distinct clusters. This does not change the accepted fixture without an explicit design revision.
+These exposure characteristics come from the ETF Exposure Profile. The taxonomy may be expanded if the ETF universe later requires additional economically distinct Duration clusters, but that would require an explicit revision of the accepted design.
 
-## 3.3 Core Components and Accepted State Definitions
+### Yield Trend — broader directional condition
 
-Duration Core uses:
-
-```text
-Yield Trend State
-× Recent Yield Move State
-× Duration Exposure
-→ Core Duration Evaluation Result
-```
-
-**Yield Trend** describes the broader or established rates direction. **Recent Yield Move** describes the shorter-horizon move that confirms, pauses, or challenges that direction; it is not a forecast of a future Trend State.
-
-### Accepted Trend definition
-
-Let `M5(t)` denote the mean of the last five accepted valid yield observations ending at observation `t`, expressed in **basis points** (multiply source yields in percent by 100), with the same source, historical availability, and structural-segment conventions as the frozen Task-1 fixture.
+**Yield Trend** describes the broader or established Treasury rates direction. Let `M5(t)` denote the mean of the last five accepted valid yield observations ending at observation `t`, expressed in **basis points**. If source yields are expressed in percent, multiply by 100 to obtain basis points. Lookback offsets refer to accepted observation indices within a continuous structural data segment, not calendar days.
 
 ```text
 Trend Value (bp) = M5(t) - M5(t-126)
 ```
 
-The six-month endpoint-change horizon represents established yield direction while allowing Recent Yield Move to capture shorter-horizon confirmation or opposition. Longer horizons add unnecessary inertia for this purpose. A current-minus-trailing-average measure was not adopted because it may primarily describe a yield level relative to recent history rather than an ongoing directional change, blurring the boundary with Rates Valuation.
+This six-month overlapping endpoint-change horizon represents established yield direction while allowing Recent Yield Move to capture shorter-horizon confirmation or opposition. Longer horizons add unnecessary inertia for this purpose. A current-minus-trailing-average measure was not adopted because it may primarily represent yield level relative to recent history rather than ongoing direction, blurring the boundary with Rates Valuation.
 
-The common directional entry threshold is `±25 bp` for each representative tenor. The accepted **Hybrid-P3/H5** State Classification has one explicit direct-reversal exception, with the following precedence:
+The directional entry thresholds are common to all three representative Treasury tenors:
 
-1. **Direct directional reversal (highest priority):** If the current established State is `Rising` and Trend Value becomes `< -25 bp`, transition directly to `Falling` on that observation. Symmetrically, established `Falling` transitions directly to `Rising` when Trend Value becomes `> +25 bp`. This crosses the entire neutral region; it does not require Persistence-3. Reset any pending entry count.
-2. **Directional exit by hysteresis:** If no direct-reversal condition applies, `Rising` becomes `Stable` when Trend Value is `<= +20 bp`; `Falling` becomes `Stable` when Trend Value is `>= -20 bp`. Otherwise retain the established directional State.
-3. **Directional entry from Stable:** When the current State is `Stable`, enter `Rising` only after three consecutive valid observations with Trend Value `> +25 bp`, or enter `Falling` only after three consecutive valid observations with Trend Value `< -25 bp`. Until then remain `Stable`. A neutral or opposing candidate resets or replaces the pending confirmation sequence.
-4. **Initialization and gaps:** At the first calculable observation in each accepted structural segment, initialize from the plain `±25 bp` classification. Reset the State and pending entry counter at structural segment boundaries. Invalid observations do not count toward confirmation.
+```text
+Rising candidate:   Trend Value > +25 bp
+Falling candidate:  Trend Value < -25 bp
+Otherwise:          no new directional candidate
+```
 
-**The direct-reversal exception applies only while the opposite directional State is still established.** Once a sequence has already exited to `Stable`, subsequent entry into either direction requires normal Persistence-3 confirmation, regardless of the magnitude of its Trend Value. For example, `Rising (+30) → Falling (-30)` is immediate, whereas `Rising (+30) → Stable (+18) → Stable (-30)` remains pending until Falling is confirmed. An established Falling State exits to Stable at `-20 bp` or above, even if it was entered through a direct reversal.
+The accepted **Hybrid-P3/H5 State Classification** combines three-observation directional-entry persistence with 5 bp directional-exit hysteresis, with an immediate direct-reversal exception. Evaluate its rules in the following priority order:
 
-This rule distinguishes small boundary fluctuations, for which persistence and hysteresis are useful, from a direct crossing of both directional thresholds. It preserves the accepted long-horizon Trend semantics without adding new magnitude thresholds or changing Recent Yield Move.
+1. **Direct directional reversal — highest priority.** If the established State is `Rising` and Trend Value becomes `< -25 bp`, transition directly to `Falling` on that observation. Conversely, established `Falling` transitions directly to `Rising` when Trend Value becomes `> +25 bp`. No Persistence-3 confirmation is required for a direct crossing of both directional thresholds; clear any pending entry count.
+2. **Directional exit — hysteresis.** Otherwise, established `Rising` becomes `Stable` when Trend Value is `<= +20 bp`, and established `Falling` becomes `Stable` when Trend Value is `>= -20 bp`. Retain the directional State while its exit condition is not met.
+3. **Entry from Stable — persistence.** An already `Stable` State enters `Rising` only after three consecutive valid observations with Trend Value `> +25 bp`, or enters `Falling` only after three consecutive valid observations with Trend Value `< -25 bp`. Before confirmation, remain `Stable`. A neutral or opposing candidate resets or replaces the pending confirmation sequence.
+4. **Initialization and structural gaps.** At the first calculable observation in each accepted structural segment, initialize from the plain `±25 bp` classification. Reset both State and pending confirmation count at structural segment boundaries. Invalid observations do not count toward confirmation.
 
-For numerical consistency, retain the source fixture's unit conventions: the formulas above express yield changes in basis points, irrespective of how source yields are stored.
+The direct-reversal exception operates **only while the prior directional State is still established**. Once that State has already exited to `Stable`, a new directional entry requires Persistence-3 regardless of Trend magnitude. For example, `Rising (+30) → Falling (-30)` is immediate, while `Rising (+30) → Stable (+18) → Stable (-30)` remains pending until Falling is confirmed. An established Falling State, including one entered through direct reversal, exits to Stable at `-20 bp` or above.
 
-### Accepted Recent Move definition
+The intent is to suppress ambiguous boundary fluctuations without delaying a direct crossing of the entire opposite directional range. This changes the classification of **Trend**, not the calculation of Trend Value or the classification of Recent Yield Move. The stabilized Trend State need not equal the plain classification of the current Trend Value on every observation.
+
+### Recent Yield Move — shorter-horizon condition
+
+**Recent Yield Move** describes a shorter-horizon yield move that confirms, pauses, or challenges the broader Trend; it is **not** a forecast of a future Trend State.
 
 ```text
 Recent Move Value (bp) = M5(t) - M5(t-21)
@@ -192,27 +218,22 @@ Stable: -10 bp <= value <= +10 bp
 Rising: value > +10 bp
 ```
 
-Recent Move keeps the existing plain classification; Hybrid-P3/H5 is a **Trend-only** stabilization rule.
+Recent Yield Move retains plain threshold classification. Hybrid-P3/H5 applies to **Yield Trend only**. Both Component calculations use the same valid-observation, structural-segment, and basis-point conventions described above, irrespective of how source yields are stored.
 
-## 3.4 Core Result Semantics
+## 3.4 Core Evaluation
 
-The accepted seven-level Core result scale is **ordinal**:
+The accepted Core Rule Mapping is:
 
 ```text
-+3 strongly favorable
-+2 favorable
-+1 mildly favorable
- 0 neutral
--1 mildly unfavorable
--2 unfavorable
--3 strongly unfavorable
+Yield Trend State
+× Recent Yield Move State
+× Duration Exposure
+→ Core Duration Evaluation Result
 ```
 
-These codes specify economically interpretable order, **not cardinal differences, expected price returns, or risk-adjusted attractiveness**. The greater potential result magnitude for Long versus Short Duration reflects how consequential a given yield-direction environment is for the exposure, not a guarantee that more duration is preferable after carry, compensation, risk, and other Constituents are considered.
+The Trend State establishes the primary directional context. Recent Move confirms or challenges it and may affect the strength of the Core judgment without routinely overturning its direction. **Weak Trend-first priority** permits tied ordinal outcomes; it does not require different scores for every Rule Case or an expanded score scale.
 
-## 3.5 Accepted Core Rule Mapping
-
-The accepted table resolves the previously ambiguous Task-1 cells using **weak Trend-first priority**, while retaining the existing single-valued cells and the earlier Task-1 provisional selections. Weak priority permits tied ordinal scores; it is not an obligation to distinguish all nine Rule Cases or expand the seven-level scale.
+### Accepted Core Rule Table
 
 | Trend | Recent Move | Short | Intermediate | Long |
 |---|---|---:|---:|---:|
@@ -226,38 +247,56 @@ The accepted table resolves the previously ambiguous Task-1 cells using **weak T
 | Rising | Stable | -1 | -1 | -2 |
 | Rising | Rising | -1 | -2 | -3 |
 
-For comparable exposure-local interpretations, the favorable-score ordering is non-increasing as the case moves from `Falling × Falling` toward `Rising × Rising` in the table. In particular:
+For comparable exposure-local interpretations, the favorable-score ordering is non-increasing down the table from `Falling × Falling` toward `Rising × Rising`. In particular:
 
 ```text
 Falling × Rising >= Stable × Falling
 Stable × Rising >= Rising × Falling
 ```
 
-Both equalities are acceptable, and both occur in the selected mapping. Under a falling-yield condition, `Long >= Intermediate >= Short`; under a rising-yield condition, `Short >= Intermediate >= Long`. These comparisons refer to *scores for the same rule case*, not to a claim that different Treasury tenors share the same State on any historical date.
+Both equalities are permitted and hold for the accepted mapping. Within a *common Rule Case*, under falling-yield conditions `Long >= Intermediate >= Short`, whereas under rising-yield conditions `Short >= Intermediate >= Long`. This does **not** imply that the three representative Treasury tenors have the same State on any given date.
 
-The Trend State determines primary directional context. Recent Move affects the strength and interpretation of the resulting Core evaluation without routinely overturning that context. Longer Duration Exposure allows stronger favorable and unfavorable **categories** under aligned directional conditions; scores must not be treated as proportional to modified duration or expected price movement.
+Longer Duration Exposure can have stronger favorable or unfavorable **categories** when directions align, reflecting the greater consequence of a given yield-direction condition for the exposure. These category differences are not proportional measures of modified duration or forecast price movement.
 
-Historical review found meaningful occurrences of all nine Rule Cases and frequent same-date differences among the representative Treasury tenors. These findings support exposure-local classification and evaluation; they do not by themselves establish the numerical superiority of one adjacent ordinal category over another.
+## 3.5 Macro Adjustment
 
-## 3.6 Macro Adjustment
+Duration Macro Adjustment, when defined, will operate on the already exposure-specific Core Duration Evaluation Result. Potentially relevant macroeconomic Components include **Inflation Trend** and **Policy Direction**.
 
-Duration Macro Adjustment follows an already exposure-specific Core Result and may use relevant macroeconomic Components such as Inflation Trend and Policy Direction. It must not independently rebuild a second rates-direction model or double-count mechanisms already expressed by Core.
+Its role is to modify, constrain, or qualify that Core judgment using economically distinct information. It must not independently reconstruct another rates-direction model or double-count mechanisms already represented by Core.
 
 ### Accepted Duration Macro mapping
 
 ```text
-TBD — separate Macro Adjustment design / acceptance stage
+TBD — separate Macro Adjustment design and acceptance stage
 ```
 
-Acceptance of the Core design does **not** constitute acceptance of the Macro Adjustment or the final Duration Evaluation Result.
+Accepting the Core design does **not** constitute acceptance of the Macro Adjustment or final Duration Evaluation Result.
 
-## 3.7 Core Decision and Validation Summary
+## 3.6 Result Semantics and Traceability
 
-**Accepted Core design (2026-10-10):** The six-month overlapping Yield Trend, common `±25 bp` threshold, Hybrid-P3/H5 stabilization with immediate direct opposite-direction crossings, unchanged Recent Yield Move definition, and the complete exposure-specific seven-level Core Rule Table are accepted. The direct-reversal exception clarifies the accepted transition semantics; previous provisional stabilization conventions do not override this definition.
+The accepted Core Duration Evaluation Result has a **seven-level ordinal scale**:
 
-**Validation conclusion:** Historical review and consistency checks found no material contradiction in the selected Component definitions, exposure-local Rule Mapping, or ordinary State transitions. All nine Rule Cases are historically represented, and the mapping satisfies its intended ordinal and exposure-order constraints. The direct-reversal exception did not occur in the frozen historical fixture and is specified as a deliberate boundary rule rather than an empirically optimized choice. These findings establish internal consistency, **not** predictive performance or economic optimality. Detailed experiments and intermediate comparisons remain outside this design document.
+```text
++3 strongly favorable
++2 favorable
++1 mildly favorable
+ 0 neutral
+-1 mildly unfavorable
+-2 unfavorable
+-3 strongly unfavorable
+```
 
-**Remaining work:** Specify and accept Duration Macro Adjustment, then conduct historical diagnostics of the completed Duration Constituent with Core Result, Macro action, and final Result separately visible. Reopen Core only when a substantive economic, data-integrity, or architectural contradiction warrants revision.
+These codes denote ordered economic judgments, **not cardinal differences, expected price returns, or risk-adjusted attractiveness**. In particular, stronger Long Duration scores under favorable rate-direction conditions do not guarantee that Long Duration is preferable after yield/carry, compensation, risk, and other Constituents are considered.
+
+To explain a Duration result, preserve the relevant ETF Duration Exposure and representative tenor, the tenor-local Component Values and States, the applicable Core Rule Case and Core Result, any eventual Macro action, and the final Duration Evaluation Result. This lineage must keep Core and Macro judgments distinguishable; the final Result's additional semantics remain subject to Macro Adjustment design.
+
+## 3.7 Accepted Design, Validation, and Limitations
+
+**Accepted Core design (2026-10-10).** The six-month overlapping Yield Trend, common `±25 bp` entry thresholds, Hybrid-P3/H5 with immediate direct opposite-direction crossings, unchanged one-month Recent Yield Move and `±10 bp` thresholds, and the complete exposure-specific seven-level Core Rule Table are the accepted Duration Core contract. Earlier provisional alternatives do not supersede these definitions.
+
+**Validation conclusion.** Historical review found meaningful occurrences of all nine Trend × Recent Move Rule Cases and frequent same-date differences across representative Treasury tenors, supporting exposure-local Core Evaluation. Historical review and consistency checks identified no material contradiction in the accepted Component definitions, ordinary State transitions, Rule Mapping, or intended exposure ordering. The immediate direct-reversal exception did **not** occur in the frozen historical dataset; it is a deliberate boundary convention, not an empirically optimized rule. Historical consistency does not uniquely determine adjacent ordinal categories, establish predictive investment performance, or prove economic optimality.
+
+**Remaining limitations and work.** Duration Macro Adjustment and the full Duration Evaluation Result are not yet accepted. After Macro design is completed, run integrated historical diagnostics that expose the Core Result, Macro action, and final Result separately. Reopen the Core design only if a substantive economic, data-integrity, or architectural contradiction warrants it. Detailed experiments, implementation tasks, and intermediate validation logs remain outside this design document.
 
 ---
 
