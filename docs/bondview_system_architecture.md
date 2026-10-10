@@ -194,7 +194,7 @@ Their structure is reusable across the architecture, while concrete calculation 
 
 ### 3.2.1 State Classification
 
-State Classification operates on one Component Value and, where discrete classification is useful, produces a Component State.
+State Classification assigns a Component State using the Component Value and, where applicable, the classification context required by the method.
 
 ```text
 Component Value → [State Classification] → Component State
@@ -211,6 +211,8 @@ Long-End Yield Trend State = Falling
 ```
 
 The classification method may use thresholds, buckets, smoothing, hysteresis, historical percentiles, or other justified mechanics.
+
+Some classification methods are stateless, while others may depend on prior Component Values, previously established States, or pending confirmation conditions. Such stateful behavior, including initialization and reset rules, must be defined by the canonical Component specification and remain reproducible independently of downstream consumers.
 
 The exact method and State semantics belong to the relevant Component design.
 
@@ -424,6 +426,8 @@ Core Evaluation first interprets the ETF exposure under the Components used for 
 Where Core Evaluation uses Rule Mapping, the applicable Component States form the Rule Case and the relevant ETF Exposure Profile characteristics provide the applicable model-specific input, following the Rule Mapping structure defined in Section 3.2.2. The resulting Core Evaluation Result is therefore already exposure-specific.
 
 The ETF Exposure Profile characteristics used by Core Evaluation remain downstream evaluation inputs. They do not become part of the upstream Component definition or alter the Component Value or State used to form the Rule Case.
+
+ETF Exposure Profile characteristics may determine which already-defined market- or tenor-specific Component instances are relevant to a Constituent Evaluation. Such selection must not alter the selected Components' definitions, Values, or States.
 
 Macro Adjustment then modifies that already exposure-specific result using applicable Macroeconomic Components.
 
