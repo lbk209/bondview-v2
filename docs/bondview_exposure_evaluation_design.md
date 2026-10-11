@@ -49,6 +49,8 @@ Constituent Evaluation Results
 Exposure Evaluation Result
 ```
 
+Each Constituent Evaluation operates within its accepted exposure coverage. ETF Exposure Profile characteristics not adequately covered by the existing design require explicit handling rather than an implicit extension of the evaluation model.
+
 The current Constituent Evaluations are:
 
 ```text
