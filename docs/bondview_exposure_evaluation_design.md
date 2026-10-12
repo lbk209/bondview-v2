@@ -304,51 +304,157 @@ To explain a Duration result, preserve the relevant ETF Duration Exposure and re
 
 # 4. Curve Evaluation
 
-## 4.1 Economic Question
+**Design status — Provisional (not accepted).** This section records a proposed economic structure for review and MVP investigation. Except for the general scope already stated in the system architecture, its candidate Components, exposure representation, Core interpretation, and Result semantics are **not** accepted Curve contracts. Numerical parameters, Rule Cases, and scores remain open. The accepted Duration Core design in Section 3 must not be inferred to apply to Curve.
+
+## 4.1 Economic Question and Scope
 
 Curve Evaluation asks:
 
-> Is the ETF's maturity / curve exposure appropriate under current term-structure conditions?
+> Is the ETF's structural maturity / curve exposure relatively favorable or unfavorable under current Treasury term-structure conditions?
 
-Curve Evaluation focuses on relative term-structure configuration and maturity-location effects.
+Its proposed subject is **relative maturity-location and curve-shape effects**, rather than the absolute interest-rate sensitivity of the ETF or the compensation received for accepting that exposure.
 
-It may consume some of the same Treasury observations or Components used by Duration Evaluation, but it should answer a different economic question.
+- **Duration** interprets yield-direction conditions for the exposure's interest-rate sensitivity, using the relevant tenor-local Components.
+- **Curve** interprets relative yield relationships and their changes across maturities for the ETF's maturity exposure.
+- **Rates Valuation** evaluates yield / carry and other compensation for accepting rates exposure, including term compensation where economically justified.
 
-## 4.2 Core Components
+These distinctions concern **economic questions**, not mutually exclusive observations. The same Treasury yields or yield-direction Components may legitimately inform multiple Constituents when their interpretation is different. Duplicating essentially the same price effect or carry judgment must nevertheless be avoided in Core design and later Evaluation Combination.
 
-```text
-TBD
-```
+Curve Core is an interpretation of observed current and historical conditions, **not a forecast** of future steepening, flattening, relative returns, or ETF prices. This is the same interpretive standard applied to Duration Core.
 
-## 4.3 ETF Exposure Profile Characteristics
+## 4.2 Evaluation Overview
 
-```text
-TBD
-```
-
-## 4.4 Core Logic
+The provisional analytical structure is:
 
 ```text
-TBD
+Treasury Raw Observations
+           ↓
+   [Feature Calculation]
+           ↓
+Curve Configuration + Curve Movement
+  (candidate Component Values / States)
+           │
+           │          ETF Curve Exposure
+           │        (structural benchmark /
+           │          product characteristics)
+           │                   │
+           └─────────┬─────────┘
+                     ↓
+             [Curve Core Evaluation]
+                     ↓
+          Core Curve Evaluation Result
+                     ↓
+          [Macro Adjustment — TBD,
+             only if justified]
+                     ↓
+             Curve Evaluation Result
 ```
+
+Component calculations and classifications belong upstream in Bond Analysis and remain **independent of ETF Exposure Profiles**. The Curve Exposure Profile selects or characterizes the relevant exposure at Core Evaluation; it does not change Component definitions, parameters, Values, or States. The diagram proposes no mandatory Macro Adjustment and does not imply an accepted final Constituent Result.
+
+## 4.3 Inputs and Exposure Representation
+
+### ETF Curve Exposure — structural maturity characteristics
+
+The preferred source is the ETF's **declared product design and reference benchmark**, not a classification estimated from the ETF's traded-price time history. The relevant descriptions may include target maturity bands, benchmark construction, physical-bond versus futures exposure, and, where available, explicit sensitivity measures. Actual-holdings or tracking-quality verification remains outside this Profile responsibility.
+
+A practical **candidate MVP taxonomy** is:
+
+| Curve Exposure | Intended structural meaning | Status |
+|---|---|---|
+| Short-end | Predominant exposure near the short maturity segment | Proposed |
+| Belly | Predominant exposure near intermediate maturities | Proposed |
+| Long-end | Predominant exposure near the long maturity segment | Proposed |
+
+A representative maturity location may approximate a concentrated benchmark exposure. It does **not** fully specify sensitivity to non-parallel yield-curve changes. Two instruments with similar total duration or a similar headline maturity can have different distributions of interest-rate sensitivity across tenors. A key-rate duration profile or an appropriately documented maturity-distribution proxy may be needed for barbell, broad-maturity, STRIPS, futures-based, or otherwise atypical exposures. The initial MVP need not require full key-rate duration data for every synthetic exposure.
+
+**Pending design decisions:** the accepted exposure taxonomy and covered ETF universe; the conditions under which representative location is insufficient; acceptable benchmark-based approximations; and treatment of exposure structures that cannot be characterized reliably from product documentation. A fixed structural profile used in historical scenarios must not be described as the ETF's actual historical holdings or sensitivity.
+
+### Curve Configuration — relative yield levels
+
+**Candidate Component concept:** the prevailing relative configuration of Treasury yields across selected maturity segments, such as a positive, approximately flat, or inverted slope.
+
+For an illustrative long–short segment pair:
+
+```text
+Slope Value(t) = Yield_long(t) - Yield_short(t)
+Candidate States: Positive / Flat / Inverted
+```
+
+A term-structure configuration is not a forecast and not automatically a favorable or unfavorable exposure judgment. A positive curve alone, for example, does not establish that Long-end exposure is preferable; any carry or roll-down interpretation must be reconciled with Rates Valuation.
+
+**Pending Component design:** which tenor pairs or multiple segments matter; whether one slope adequately represents belly and long-end exposures; whether a separate curvature concept is needed; exact Value definitions and source observations; classification boundaries and stability mechanics. State labels above are candidates, not accepted classifications.
+
+### Curve Movement — changes in relative yields
+
+**Candidate Component concept:** the direction of change in the *relative* configuration of Treasury yields, not merely the absolute direction of an individual tenor's yield.
+
+For the same illustrative slope:
+
+```text
+Curve Movement Value(t) = Slope Value(t) - Slope Value(t-h)
+Candidate States: Steepening / Stable / Flattening
+```
+
+Configuration describes the **level** of the spread; Movement describes its **change**. A curve may remain inverted while steepening, or remain positive while flattening. These are distinct economic conditions, although they use related source observations.
+
+A flattening event can occur while both yields rise, both fall, or move in opposite directions. Absolute rate direction is separately interpreted in Duration; any Curve classification that explicitly distinguishes bull/bear steepening or flattening must demonstrate why that additional distinction belongs in Curve rather than reproducing Duration.
+
+**Pending Component design and MVP research:** movement horizon, smoothing, thresholds, stabilization, segment-specific movements versus one aggregate measure, and the possible need for curvature-change information. Consistency with any reused canonical tenor-local Yield Trend Component is required; reusing observations does not authorize redefining that Component for Curve.
+
+## 4.4 Core Evaluation
+
+The **candidate**, not accepted, Core structure is:
+
+```text
+Curve Configuration State
+× Curve Movement State
+× ETF Curve Exposure characteristics
+→ Core Curve Evaluation Result
+```
+
+The provisional purpose of this mapping is to judge the relative suitability of an exposure's maturity location or distribution under the observed configuration and curve-shape movement. It must be **exposure-specific** rather than an ETF-independent preferred-maturity score subsequently adjusted for ETF characteristics.
+
+A useful *candidate analytical reference* is a **parallel yield change**, under which curve shape does not change. Departures from that reference distinguish relative yield movements across maturity segments. When making price-effect comparisons, exposure sensitivities must be appropriately normalized; a given number of basis points does not imply equal returns across exposures with different dollar durations.
+
+For example, if 2Y yields rise by 60 bp while 10Y yields rise by 20 bp, the 10Y–2Y slope falls by 40 bp (flattening). That creates a relative yield-change distinction between the two maturity locations. It does **not** by itself establish the 10Y ETF's total return, an unconditional buy signal, or continuation of the flattening.
+
+The following substantive design questions remain open:
+
+- Does Configuration change the economic interpretation of Movement, and if so through what mechanism other than carry / roll-down already owned by Rates Valuation?
+- Should the full Configuration × Movement combination form the Rule Case, or should Configuration initially remain descriptive context? Neither priority nor a Rule Table is accepted.
+- How should belly exposures, multiple curve segments, distributed sensitivities, and non-parallel twists be mapped without merely reproducing Duration judgments?
+- Is the parallel-shift reference sufficiently well-defined for ordinal relative judgments, and what sensitivity normalization is needed?
+
+**No Curve Rule Table or ordinal score assignment is accepted yet.** The MVP may compare explicit provisional mappings, but its experimental defaults must be labeled as such and must not be elevated into the authoritative design by implementation alone.
 
 ## 4.5 Macro Adjustment
 
 ```text
-TBD, if applicable
+TBD — no separate Curve Macro Adjustment has been justified or accepted.
 ```
 
-## 4.6 Result Semantics
+Policy expectations, inflation-related information, and term-premium mechanisms may influence the term structure, but their relevance alone does not establish a need for a sequential post-Core correction. If a distinct Curve economic question requires such information, first examine whether it belongs in the appropriate upstream Components and Curve Core. Do not implement a placeholder Macro adjustment merely to complete the diagram.
 
-```text
-TBD
-```
+## 4.6 Result Semantics and Traceability
 
-## 4.7 Validation Summary
+**Proposed Core meaning:** an exposure-specific, **relative** judgment about the favorability of the ETF's structural maturity exposure under observed term-structure conditions, distinct from absolute yield-direction suitability and rates compensation.
 
-```text
-TBD
-```
+A favorable Curve Core Result would **not** mean that the ETF will rise in price, earn a positive return, outperform all other ETFs, or that yield-curve movements are forecast to persist. It can therefore coexist without contradiction with an unfavorable Duration Core Result for the same ETF.
+
+**Pending decisions:** the precise neutral/reference condition, the amount and type of sensitivity normalization, whether to use an ordinal scale at all, the number and labels of Result categories, and how to distinguish neighboring categories economically. Curve need not copy Duration's seven-level scores or cardinalize their differences.
+
+Traceability should preserve the ETF's documented Curve Exposure representation and its approximation status, the relevant curve segments, the Configuration and Movement Component Values / States, the applicable Core Rule Case or equivalent evaluation basis, and the resulting Core judgment. If a Macro stage is eventually justified, its action and the final Constituent Result must remain separately identifiable.
+
+## 4.7 Provisional Design, Validation Needs, and Limitations
+
+**Provisional design basis:** a structural ETF Curve Exposure defined from product/benchmark information; distinct ETF-independent candidate Components for Curve Configuration and Curve Movement; exposure-specific Core interpretation of relative maturity conditions; and an explicitly nonforecast Result meaning. These are research propositions, **not accepted Curve model parameters or mappings**.
+
+**Design decisions required before a Core contract can be accepted:** the role of Configuration in Core, exposure representation and coverage, economically justified comparison/reference semantics, overlap boundaries with Duration and Rates Valuation, and Core Result categories/mapping.
+
+**MVP-suitable investigations:** candidate Treasury segments and shape measures; lookback horizons, smoothing, thresholds, and stabilization; observation coverage and structural gaps; frequencies and persistence of candidate Component States / Rule Cases; behavior under parallel shifts, twists, inversions and reinversions, and belly-led moves; sensitivity to exposure representation and alternative provisional mappings. Historical analysis may reveal inconsistency or weak interpretation but does not alone validate future relative returns or establish the correct economic mapping.
+
+The Curve MVP is a **research instrument**, not implementation acceptance. Subsequent review should update this section with accepted definitions and concise validation conclusions, while retaining detailed experimental evidence in `validation/`.
 
 ---
 
