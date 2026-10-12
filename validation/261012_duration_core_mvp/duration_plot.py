@@ -48,18 +48,34 @@ def create_chart(results, exposure="Intermediate", start=None, end=None):
     custom_columns = ["yield_pct", "trend_value_bp", "trend_state", "recent_move_value_bp",
                       "recent_move_state", "rule_case", "core_score"]
     customdata = plotted[custom_columns].astype(object).where(plotted[custom_columns].notna(), None).to_numpy()
-    hover = ("Date: %{x|%Y-%m-%d}<br>Treasury yield: %{customdata[0]:.2f}%"
-             "<br>Trend: %{customdata[1]:.2f} bp (%{customdata[2]})"
-             "<br>Recent Move: %{customdata[3]:.2f} bp (%{customdata[4]})"
-             "<br>Rule Case: %{customdata[5]}<br>Core score: %{customdata[6]}<extra></extra>")
+
+    # Show the Component details once, on the yield trace. The score trace shows
+    # only its own ordinal value in the unified hover. Format missing values as
+    # N/A instead of passing nulls through numeric Plotly format specifiers.
+    def component_text(value, state):
+        if pd.isna(value) or pd.isna(state):
+            return "N/A"
+        return f"{float(value):+.2f} bp ({state})"
+
+    hover_details = [
+        (f"Trend: {component_text(trend, trend_state)}<br>"
+         f"Recent Move: {component_text(move, move_state)}<br>"
+         f"Rule Case: {case if pd.notna(case) else 'N/A'}")
+        for trend, trend_state, move, move_state, case in zip(
+            plotted["trend_value_bp"], plotted["trend_state"],
+            plotted["recent_move_value_bp"], plotted["recent_move_state"],
+            plotted["rule_case"])
+    ]
+
     figure = make_subplots(specs=[[{"secondary_y": True}]])
     figure.add_trace(go.Scatter(x=plotted["date"], y=plotted["yield_pct"].astype(float),
                                name="Treasury yield", mode="lines", connectgaps=False,
-                               customdata=customdata, hovertemplate=hover,
+                               customdata=customdata, text=hover_details,
+                               hovertemplate="Treasury yield: %{y:.2f}%<br>%{text}<extra></extra>",
                                line={"color": "#2563eb"}), secondary_y=False)
     figure.add_trace(go.Scatter(x=plotted["date"], y=plotted["core_score"].astype(float),
                                name="Core Duration score", mode="lines", connectgaps=False,
-                               customdata=customdata, hovertemplate=hover,
+                               hovertemplate="Core score: %{y:.0f}<extra></extra>",
                                line={"shape": "hv", "color": "#b45309"}), secondary_y=True)
     figure.update_yaxes(title_text="Treasury yield (%)", secondary_y=False)
     figure.update_yaxes(title_text="Core Duration score (ordinal)", tickmode="array",
@@ -81,17 +97,21 @@ def create_chart(results, exposure="Intermediate", start=None, end=None):
 
 
 class DurationControls:
-    """Notebook presentation state: retain custom dates across preset changes.
+    """Notebook presentation state for exposure and historical period controls.
 
-    This lightweight UI owner handles callbacks and presentation only. It owns a
-    copy of the loaded rows; no acquisition or calculation modules are imported.
+    Returning to Custom leaves the selected historical-event dates intact so
+    users can extend the event window manually. No acquisition or calculation
+    modules are imported.
     """
 
     def __init__(self, results, historical_events):
         self.results = results.copy(deep=True)
-        self.events = {name: dict(window) for name, window in historical_events.items()}
+        # Chronological ordering is independent of YAML declaration order.
+        self.events = dict(sorted(
+            ((name, dict(window)) for name, window in historical_events.items()),
+            key=lambda item: (item[1]["start"], item[1]["end"], item[0]),
+        ))
         start, end = common_available_range(self.results)
-        self.custom_dates = (start, end)
         self._updating = False
         self.exposure = widgets.Dropdown(
             options=[(f"{name} / {rows['representative_tenor'].iloc[0]}", name)
@@ -115,16 +135,14 @@ class DurationControls:
             try:
                 custom = self.period.value == "Custom period"
                 self.start.disabled = self.end.disabled = not custom
-                if custom:
-                    self.start.value, self.end.value = self.custom_dates
-                else:
+                if not custom:
                     window = self.events[self.period.value]
                     self.start.value = date.fromisoformat(window["start"])
                     self.end.value = date.fromisoformat(window["end"])
+                # Returning to Custom enables the current event dates, without
+                # restoring any earlier manually selected range.
             finally:
                 self._updating = False
-        elif self.period.value == "Custom period":
-            self.custom_dates = (self.start.value, self.end.value)
         self.render()
 
     def figure(self):
