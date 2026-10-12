@@ -1,0 +1,38 @@
+# Defaults reproduce the accepted 2026-10-10 Duration Core definition.
+# Changing analytical parameters or rules creates an experimental variant.
+trend:
+  lookback_observations: 126
+  smoothing_observations: 5
+  entry_threshold_bp: 25
+  stabilization_enabled: true
+  persistence: 3
+  hysteresis_bp: 5
+  direct_reversal: true
+recent_move:
+  lookback_observations: 21
+  threshold_bp: 10
+exposures:
+  Short: {representative_tenor: 6M, series_id: DGS6MO}
+  Intermediate: {representative_tenor: 10Y, series_id: DGS10}
+  Long: {representative_tenor: 30Y, series_id: DGS30}
+rules:
+  'Falling × Falling': {Short: 1, Intermediate: 2, Long: 3}
+  'Falling × Stable': {Short: 1, Intermediate: 1, Long: 2}
+  'Falling × Rising': {Short: 1, Intermediate: 1, Long: 1}
+  'Stable × Falling': {Short: 1, Intermediate: 1, Long: 1}
+  'Stable × Stable': {Short: 0, Intermediate: 0, Long: 0}
+  'Stable × Rising': {Short: -1, Intermediate: -1, Long: -1}
+  'Rising × Falling': {Short: -1, Intermediate: -1, Long: -1}
+  'Rising × Stable': {Short: -1, Intermediate: -1, Long: -2}
+  'Rising × Rising': {Short: -1, Intermediate: -2, Long: -3}
+# Date presets from validation/261002_duration/task1_core/analysis.py EVENTS.
+historical_events:
+  Volcker: {start: '1981-07-01', end: '1981-10-31'}
+  1994 tightening: {start: '1994-02-01', end: '1994-11-30'}
+  Russia LTCM: {start: '1998-08-01', end: '1998-10-31'}
+  GFC: {start: '2008-09-01', end: '2008-12-31'}
+  Taper tantrum: {start: '2013-05-01', end: '2013-09-30'}
+  2022 tightening: {start: '2022-01-01', end: '2022-10-31'}
+  1987 crash: {start: '1987-08-01', end: '1987-10-31'}
+  COVID: {start: '2020-02-01', end: '2020-03-31'}
+  2023 long-end selloff: {start: '2023-07-01', end: '2023-10-31'}
