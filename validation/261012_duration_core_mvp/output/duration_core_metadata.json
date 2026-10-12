@@ -6,7 +6,7 @@
     "yield": "percent",
     "component_values": "basis_points"
   },
-  "generated_at_utc": "2026-10-12T03:56:57.175443+00:00",
+  "generated_at_utc": "2026-10-12T05:50:58.712281+00:00",
   "configuration": {
     "trend": {
       "lookback_observations": 126,
