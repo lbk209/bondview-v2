@@ -1,0 +1,194 @@
+{
+  "format_version": 1,
+  "result_kind": "Core Duration Evaluation Result",
+  "score_semantics": "Seven-level ordinal economic judgment, not a return estimate",
+  "units": {
+    "yield": "percent",
+    "component_values": "basis_points"
+  },
+  "generated_at_utc": "2026-10-12T03:40:49.702689+00:00",
+  "configuration": {
+    "trend": {
+      "lookback_observations": 126,
+      "smoothing_observations": 5,
+      "entry_threshold_bp": 25,
+      "stabilization_enabled": true,
+      "persistence": 3,
+      "hysteresis_bp": 5,
+      "direct_reversal": true
+    },
+    "recent_move": {
+      "lookback_observations": 21,
+      "threshold_bp": 10
+    },
+    "exposures": {
+      "Short": {
+        "representative_tenor": "6M",
+        "series_id": "DGS6MO"
+      },
+      "Intermediate": {
+        "representative_tenor": "10Y",
+        "series_id": "DGS10"
+      },
+      "Long": {
+        "representative_tenor": "30Y",
+        "series_id": "DGS30"
+      }
+    },
+    "rules": {
+      "Falling × Falling": {
+        "Short": 1,
+        "Intermediate": 2,
+        "Long": 3
+      },
+      "Falling × Stable": {
+        "Short": 1,
+        "Intermediate": 1,
+        "Long": 2
+      },
+      "Falling × Rising": {
+        "Short": 1,
+        "Intermediate": 1,
+        "Long": 1
+      },
+      "Stable × Falling": {
+        "Short": 1,
+        "Intermediate": 1,
+        "Long": 1
+      },
+      "Stable × Stable": {
+        "Short": 0,
+        "Intermediate": 0,
+        "Long": 0
+      },
+      "Stable × Rising": {
+        "Short": -1,
+        "Intermediate": -1,
+        "Long": -1
+      },
+      "Rising × Falling": {
+        "Short": -1,
+        "Intermediate": -1,
+        "Long": -1
+      },
+      "Rising × Stable": {
+        "Short": -1,
+        "Intermediate": -1,
+        "Long": -2
+      },
+      "Rising × Rising": {
+        "Short": -1,
+        "Intermediate": -2,
+        "Long": -3
+      }
+    },
+    "historical_events": {
+      "Volcker": {
+        "start": "1981-07-01",
+        "end": "1981-10-31"
+      },
+      "1994 tightening": {
+        "start": "1994-02-01",
+        "end": "1994-11-30"
+      },
+      "Russia LTCM": {
+        "start": "1998-08-01",
+        "end": "1998-10-31"
+      },
+      "GFC": {
+        "start": "2008-09-01",
+        "end": "2008-12-31"
+      },
+      "Taper tantrum": {
+        "start": "2013-05-01",
+        "end": "2013-09-30"
+      },
+      "2022 tightening": {
+        "start": "2022-01-01",
+        "end": "2022-10-31"
+      },
+      "1987 crash": {
+        "start": "1987-08-01",
+        "end": "1987-10-31"
+      },
+      "COVID": {
+        "start": "2020-02-01",
+        "end": "2020-03-31"
+      },
+      "2023 long-end selloff": {
+        "start": "2023-07-01",
+        "end": "2023-10-31"
+      }
+    }
+  },
+  "calculation_fingerprint": "50e0018b602d1209553ab05b9f985675d61e74d912daa507b54699a579a8be88",
+  "source_snapshot": {
+    "series": {
+      "DGS6MO": {
+        "series_id": "DGS6MO",
+        "url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS6MO&cosd=1900-01-01",
+        "units": "percent",
+        "retrieved_at_utc": "2026-10-12T03:40:48.125150+00:00",
+        "source_start": "1981-09-01",
+        "source_end": "2026-10-08",
+        "sha256": "ae007eca5c340dbaf2178f0511890ee4a2102dc8a522a0aac98095593bf264b5",
+        "accepted_start": "1981-09-01",
+        "accepted_end": "2026-10-08",
+        "accepted_observations": 11276
+      },
+      "DGS10": {
+        "series_id": "DGS10",
+        "url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS10&cosd=1900-01-01",
+        "units": "percent",
+        "retrieved_at_utc": "2026-10-12T03:40:48.549903+00:00",
+        "source_start": "1962-01-02",
+        "source_end": "2026-10-08",
+        "sha256": "624f2a18b0c5642c72dbf8c58cf54b9dcee50d7d8cb3b7809b9416dabd09dd55",
+        "accepted_start": "1962-01-02",
+        "accepted_end": "2026-10-08",
+        "accepted_observations": 16178
+      },
+      "DGS30": {
+        "series_id": "DGS30",
+        "url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS30&cosd=1900-01-01",
+        "units": "percent",
+        "retrieved_at_utc": "2026-10-12T03:40:48.668131+00:00",
+        "source_start": "1977-02-15",
+        "source_end": "2026-10-08",
+        "sha256": "8f2efb4b329996209c1557e619c6bb6580851892721e11629a0a705ff876ab03",
+        "accepted_start": "1977-02-15",
+        "accepted_end": "2026-10-08",
+        "accepted_observations": 11414
+      }
+    },
+    "acceptance_policy": "Routine missing observations skipped, never filled; DGS30 2002-02-18 through 2006-02-08 excluded; lookbacks and state reset per structural segment."
+  },
+  "coverage": {
+    "Short": {
+      "source_start": "1981-09-01",
+      "source_end": "2026-10-08",
+      "rows": 11768,
+      "core_start": "1982-03-16",
+      "core_end": "2026-10-08",
+      "available_results": 11146
+    },
+    "Intermediate": {
+      "source_start": "1962-01-02",
+      "source_end": "2026-10-08",
+      "rows": 16898,
+      "core_start": "1962-07-10",
+      "core_end": "2026-10-08",
+      "available_results": 16048
+    },
+    "Long": {
+      "source_start": "1977-02-15",
+      "source_end": "2026-10-08",
+      "rows": 12953,
+      "core_start": "1977-08-23",
+      "core_end": "2026-10-08",
+      "available_results": 11154
+    }
+  },
+  "csv_sha256": "8f6b8b9acb392bde14291df34e2bdd3ed5a329d896ddcbcee934fd6bd54394bf",
+  "rows": 41619
+}

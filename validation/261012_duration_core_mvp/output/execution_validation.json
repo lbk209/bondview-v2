@@ -1,0 +1,22 @@
+{
+  "verified_at_utc": "2026-10-12T03:46:55.752357+00:00",
+  "full_notebook": {
+    "passed": true,
+    "forced_fresh_fred": true,
+    "code_cells_executed": 7,
+    "primary_plotly_outputs": 1
+  },
+  "visualization_only": {
+    "passed": true,
+    "fresh_kernel": true,
+    "primary_plotly_outputs": 1,
+    "upstream_imports_blocked": [
+      "fred_data",
+      "duration_components",
+      "duration_core"
+    ],
+    "all_exposure_event_combinations": true,
+    "dgs30_gap_window": true
+  },
+  "execution": "Poetry Python 3.12, nbclient NotebookClient, notebook directory as kernel working directory; no Python path changes"
+}
